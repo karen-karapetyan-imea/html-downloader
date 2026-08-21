@@ -1,17 +1,27 @@
 #!/usr/bin/env bash
-# Long-running weekly loop: discover + download for saatchi, artsper, artsy.
+# Long-running weekly loop for a single marketplace: discover + download.
 # Cadence is anchored to each cycle's start time (7 days), not finish time.
 #
-# Requires: .venv installed and proxy.txt present in the project root.
-# Start once (survives until reboot / kill):
-#   nohup ./scripts/run_weekly.sh >> logs/nohup.out 2>&1 &
+# Usage:
+#   ./scripts/run_weekly.sh saatchi|artsper|artsy
+#
+# Prefer starting all three in parallel via:
+#   ./scripts/start_weekly_tmux.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 WEEK_SECS=$((7 * 24 * 60 * 60))
-MARKETPLACES=(saatchi artsper artsy)
+
+marketplace="${1:-}"
+case "${marketplace}" in
+  saatchi|artsper|artsy) ;;
+  *)
+    echo "usage: $0 saatchi|artsper|artsy" >&2
+    exit 2
+    ;;
+esac
 
 cd "${PROJECT_ROOT}"
 
@@ -28,16 +38,15 @@ if [[ ! -f "${PROJECT_ROOT}/proxy.txt" ]]; then
 fi
 
 mkdir -p "${PROJECT_ROOT}/logs"
-LOG_FILE="${PROJECT_ROOT}/logs/weekly-$(date -u +%Y%m%d-%H%M%S).log"
+LOG_FILE="${PROJECT_ROOT}/logs/weekly-${marketplace}-$(date -u +%Y%m%d-%H%M%S).log"
 
 exec > >(tee -a "${LOG_FILE}") 2>&1
 
-echo "=== weekly scraper started $(date -u -Iseconds) ==="
+echo "=== weekly scraper (${marketplace}) started $(date -u -Iseconds) ==="
 echo "project=${PROJECT_ROOT}"
 echo "log=${LOG_FILE}"
 
-run_marketplace() {
-  local marketplace="$1"
+run_cycle() {
   local discover_args=(
     discover
     --marketplace "${marketplace}"
@@ -63,14 +72,12 @@ while true; do
   start=$(date +%s)
   echo "=== cycle start $(date -u -Iseconds) (epoch=${start}) ==="
 
-  for marketplace in "${MARKETPLACES[@]}"; do
-    if run_marketplace "${marketplace}"; then
-      :
-    else
-      rc=$?
-      echo "error: ${marketplace} failed (exit=${rc}); continuing" >&2
-    fi
-  done
+  if run_cycle; then
+    :
+  else
+    rc=$?
+    echo "error: ${marketplace} cycle failed (exit=${rc}); will wait for next week" >&2
+  fi
 
   now=$(date +%s)
   remaining=$((start + WEEK_SECS - now))

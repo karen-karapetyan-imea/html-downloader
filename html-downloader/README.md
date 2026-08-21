@@ -47,19 +47,33 @@ Flags: `--date YYYY-MM-DD`, `--workers`, `--rps`, `--skip-existing`, `--urls` (o
 
 ## Weekly runs
 
-`scripts/run_weekly.sh` runs discover + download for **saatchi**, **artsper**, and **artsy**, then sleeps until **7 days from that cycle’s start** before repeating. One marketplace failure is logged; the loop continues.
+Each marketplace runs in its own weekly loop (discover + download, then sleep until **7 days from that cycle’s start**). Start all three **in parallel** via tmux:
 
 ```bash
 cd html-downloader
-chmod +x scripts/run_weekly.sh
-mkdir -p logs
-nohup ./scripts/run_weekly.sh >> logs/nohup.out 2>&1 &
+chmod +x scripts/*.sh
+./scripts/start_weekly_tmux.sh
 ```
 
-Logs also go to `logs/weekly-YYYYMMDD-HHMMSS.log`. The process stops on reboot or kill; restart the command above to resume.
+Sessions: `crawl-saatchi`, `crawl-artsper`, `crawl-artsy`.
+
+```bash
+tmux ls
+tmux attach -t crawl-saatchi   # detach: Ctrl-b then d
+./scripts/stop_weekly_tmux.sh  # stop all three
+```
+
+Single marketplace (e.g. for debugging):
+
+```bash
+./scripts/run_weekly.sh saatchi
+```
+
+Logs: `logs/weekly-{marketplace}-YYYYMMDD-HHMMSS.log`. Sessions die on reboot; re-run `start_weekly_tmux.sh` to resume.
 
 ## Tests
 
 ```bash
 pytest
 ```
+
