@@ -8,3 +8,4 @@ data/
 state/*.json
 proxy.txt
 .env
+logs/

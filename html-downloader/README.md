@@ -45,6 +45,19 @@ python -m html_downloader download --marketplace saatchi --proxy-file proxy.txt 
 
 Flags: `--date YYYY-MM-DD`, `--workers`, `--rps`, `--skip-existing`, `--urls` (override job `urls.txt`).
 
+## Weekly runs
+
+`scripts/run_weekly.sh` runs discover + download for **saatchi**, **artsper**, and **artsy**, then sleeps until **7 days from that cycle’s start** before repeating. One marketplace failure is logged; the loop continues.
+
+```bash
+cd html-downloader
+chmod +x scripts/run_weekly.sh
+mkdir -p logs
+nohup ./scripts/run_weekly.sh >> logs/nohup.out 2>&1 &
+```
+
+Logs also go to `logs/weekly-YYYYMMDD-HHMMSS.log`. The process stops on reboot or kill; restart the command above to resume.
+
 ## Tests
 
 ```bash
