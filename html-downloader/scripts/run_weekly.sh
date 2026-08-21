@@ -13,6 +13,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 WEEK_SECS=$((7 * 24 * 60 * 60))
+PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 marketplace="${1:-}"
 case "${marketplace}" in
@@ -25,12 +26,11 @@ esac
 
 cd "${PROJECT_ROOT}"
 
-if [[ ! -f "${PROJECT_ROOT}/.venv/bin/activate" ]]; then
-  echo "error: missing venv at ${PROJECT_ROOT}/.venv" >&2
+if [[ ! -x "${PYTHON}" ]]; then
+  echo "error: missing venv python at ${PYTHON}" >&2
+  echo "create it with: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt" >&2
   exit 1
 fi
-# shellcheck source=/dev/null
-source "${PROJECT_ROOT}/.venv/bin/activate"
 
 if [[ ! -f "${PROJECT_ROOT}/proxy.txt" ]]; then
   echo "error: missing proxy.txt at ${PROJECT_ROOT}/proxy.txt" >&2
@@ -39,12 +39,6 @@ fi
 
 mkdir -p "${PROJECT_ROOT}/logs"
 LOG_FILE="${PROJECT_ROOT}/logs/weekly-${marketplace}-$(date -u +%Y%m%d-%H%M%S).log"
-
-exec > >(tee -a "${LOG_FILE}") 2>&1
-
-echo "=== weekly scraper (${marketplace}) started $(date -u -Iseconds) ==="
-echo "project=${PROJECT_ROOT}"
-echo "log=${LOG_FILE}"
 
 run_cycle() {
   local discover_args=(
@@ -59,34 +53,44 @@ run_cycle() {
   fi
 
   echo "--- ${marketplace}: discover $(date -u -Iseconds) ---"
-  python -m html_downloader "${discover_args[@]}"
+  "${PYTHON}" -m html_downloader "${discover_args[@]}"
 
   echo "--- ${marketplace}: download $(date -u -Iseconds) ---"
-  python -m html_downloader download \
+  "${PYTHON}" -m html_downloader download \
     --marketplace "${marketplace}" \
     --proxy-file proxy.txt \
     --skip-existing
 }
 
-while true; do
-  start=$(date +%s)
-  echo "=== cycle start $(date -u -Iseconds) (epoch=${start}) ==="
+main() {
+  echo "=== weekly scraper (${marketplace}) started $(date -u -Iseconds) ==="
+  echo "project=${PROJECT_ROOT}"
+  echo "python=${PYTHON}"
+  echo "log=${LOG_FILE}"
 
-  if run_cycle; then
-    :
-  else
-    rc=$?
-    echo "error: ${marketplace} cycle failed (exit=${rc}); will wait for next week" >&2
-  fi
+  while true; do
+    start=$(date +%s)
+    echo "=== cycle start $(date -u -Iseconds) (epoch=${start}) ==="
 
-  now=$(date +%s)
-  remaining=$((start + WEEK_SECS - now))
-  echo "=== cycle done $(date -u -Iseconds); elapsed=$((now - start))s ==="
+    if run_cycle; then
+      :
+    else
+      rc=$?
+      echo "error: ${marketplace} cycle failed (exit=${rc}); will wait for next week" >&2
+    fi
 
-  if (( remaining > 0 )); then
-    echo "sleeping ${remaining}s until next cycle ($(date -u -d "@$((start + WEEK_SECS))" -Iseconds 2>/dev/null || date -u -r "$((start + WEEK_SECS))" -Iseconds 2>/dev/null || echo "start+${WEEK_SECS}s"))"
-    sleep "${remaining}"
-  else
-    echo "cycle overran one week by $((-remaining))s; starting next cycle immediately"
-  fi
-done
+    now=$(date +%s)
+    remaining=$((start + WEEK_SECS - now))
+    echo "=== cycle done $(date -u -Iseconds); elapsed=$((now - start))s ==="
+
+    if (( remaining > 0 )); then
+      echo "sleeping ${remaining}s until next cycle ($(date -u -d "@$((start + WEEK_SECS))" -Iseconds 2>/dev/null || date -u -r "$((start + WEEK_SECS))" -Iseconds 2>/dev/null || echo "start+${WEEK_SECS}s"))"
+      sleep "${remaining}"
+    else
+      echo "cycle overran one week by $((-remaining))s; starting next cycle immediately"
+    fi
+  done
+}
+
+# Keep pane output and a log file without process-substitution (unreliable under tmux).
+main 2>&1 | tee -a "${LOG_FILE}"

@@ -21,9 +21,10 @@ data/{marketplace}/{YYYY-MM-DD}/
 ```bash
 cd html-downloader
 python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-dev.txt
+.venv/bin/pip install -r requirements-dev.txt
 ```
+
+Weekly scripts call `.venv/bin/python` directly (do not rely on `source .venv/bin/activate`). If you moved the project directory, recreate the venv with the commands above.
 
 Copy `proxy.txt` (`host:port:user:pass` per line). Download always requires at least one proxy.
 
