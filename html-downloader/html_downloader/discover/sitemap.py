@@ -16,7 +16,7 @@ from xml.etree import ElementTree as ET
 import httpx
 
 from html_downloader.discover.registry import entity_key_from_url, load_entity_keys, load_urls, normalize_url
-from html_downloader.discover.urls import artsy_entity_from_url, saatchi_entity_from_url
+from html_downloader.discover.urls import artmajeur_entity_from_url, artsy_entity_from_url, saatchi_entity_from_url
 
 LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,9 @@ DEFAULT_SAATCHI_INDEX = "https://www.saatchiart.com/sitemap.xml"
 ARTSY_ARTIST_INDEX = "https://www.artsy.net/sitemap-artists.xml"
 ARTSY_ARTWORK_INDEX = "https://www.artsy.net/sitemap-artworks.xml"
 DEFAULT_ARTSY_INDEXES = (ARTSY_ARTIST_INDEX, ARTSY_ARTWORK_INDEX)
+DEFAULT_ARTMAJEUR_INDEX = "https://www.artmajeur.com/sitemap.xml"
 _ARTSPER_CHILD_RE = ("artist", "artwork")
+_ARTMAJEUR_CHILD_RE = ("members", "artworks")
 _SAATCHI_CHILD_RE = ("artwork", "profile")
 _RETRYABLE_STATUS = frozenset({429, 500, 502, 503, 504})
 
@@ -103,6 +105,15 @@ def filter_saatchi_child_sitemaps(urls: Iterable[str]) -> list[str]:
     for url in urls:
         lower = url.lower()
         if any(token in lower for token in _SAATCHI_CHILD_RE):
+            selected.append(url)
+    return selected
+
+
+def filter_artmajeur_child_sitemaps(urls: Iterable[str]) -> list[str]:
+    selected: list[str] = []
+    for url in urls:
+        lower = url.lower()
+        if any(token in lower for token in _ARTMAJEUR_CHILD_RE):
             selected.append(url)
     return selected
 
@@ -494,6 +505,62 @@ def fetch_artsy_sitemap_entries(
             session.close()
 
 
+def fetch_artmajeur_sitemap_entries(
+    index_url: str = DEFAULT_ARTMAJEUR_INDEX,
+    *,
+    concurrency: int = 8,
+    proxy: dict[str, str] | None = None,
+    fetch_bytes: FetchBytesFn | None = None,
+) -> list[SitemapEntry]:
+    """Fetch ArtMajeur member/artwork entity URLs from sitemap index (Cloudflare)."""
+    session: Any | None = None
+    owned_session = False
+    active_fetch = fetch_bytes
+
+    if active_fetch is None:
+        from curl_cffi import Session
+
+        session = Session(impersonate="chrome")
+        owned_session = True
+
+        def active_fetch(url: str, _session: Any = session, _proxy: dict[str, str] | None = proxy) -> bytes:
+            return fetch_sitemap_bytes_stealth(url, session=_session, proxy=_proxy)
+
+    try:
+        index_xml = active_fetch(index_url)
+        child_urls = filter_artmajeur_child_sitemaps(parse_child_sitemap_locs(index_xml))
+        LOGGER.info("artmajeur sitemap child maps=%s", len(child_urls))
+
+        entries: list[SitemapEntry] = []
+        with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
+            futures = {pool.submit(active_fetch, child_url): child_url for child_url in child_urls}
+            for future in as_completed(futures):
+                child_url = futures[future]
+                try:
+                    xml_bytes = future.result()
+                except Exception as exc:
+                    LOGGER.warning("child sitemap failed url=%s error=%s", child_url, exc)
+                    continue
+                for url, lastmod in parse_url_entries(xml_bytes):
+                    normalized = normalize_url(url)
+                    key = artmajeur_entity_from_url(normalized)
+                    if key is None:
+                        continue
+                    entity_type, entity_id = key
+                    entries.append(
+                        SitemapEntry(
+                            url=normalized,
+                            lastmod=lastmod,
+                            entity_type=entity_type,
+                            entity_id=entity_id,
+                        )
+                    )
+        return entries
+    finally:
+        if owned_session and session is not None and hasattr(session, "close"):
+            session.close()
+
+
 def known_artsy_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]:
     """Load known Artsy entity keys (type, slug) from URL list / JSONL files."""
     keys: set[tuple[str, str]] = set()
@@ -509,6 +576,16 @@ def known_saatchi_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]
     keys: set[tuple[str, str]] = set()
     for url in load_urls(paths):
         key = saatchi_entity_from_url(url)
+        if key is not None:
+            keys.add(key)
+    return keys
+
+
+def known_artmajeur_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]:
+    """Load known ArtMajeur entity keys from URL list / JSONL files."""
+    keys: set[tuple[str, str]] = set()
+    for url in load_urls(paths):
+        key = artmajeur_entity_from_url(url)
         if key is not None:
             keys.add(key)
     return keys
@@ -602,6 +679,8 @@ def known_keys_from_sources(
             keys |= known_artsy_keys_from_paths(known_paths)
         elif source == "saatchi":
             keys |= known_saatchi_keys_from_paths(known_paths)
+        elif source == "artmajeur":
+            keys |= known_artmajeur_keys_from_paths(known_paths)
         else:
             keys |= load_entity_keys(known_paths)
     return keys

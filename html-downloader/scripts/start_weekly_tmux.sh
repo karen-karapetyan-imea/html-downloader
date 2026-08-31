@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Start three tmux sessions so saatchi, artsper, and artsy run in parallel.
+# Start four tmux sessions so saatchi, artsper, artsy, and artmajeur run in parallel.
 #
-# Sessions: crawl-saatchi, crawl-artsper, crawl-artsy
+# Sessions: crawl-saatchi, crawl-artsper, crawl-artsy, crawl-artmajeur
 # Attach:   tmux attach -t crawl-saatchi
 # List:     tmux ls
 # Stop one: tmux kill-session -t crawl-saatchi

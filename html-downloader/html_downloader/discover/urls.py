@@ -1,4 +1,4 @@
-"""URL parsing helpers for Artsper, Saatchi, and Artsy."""
+"""URL parsing helpers for Artsper, Saatchi, Artsy, and ArtMajeur."""
 
 from __future__ import annotations
 
@@ -49,6 +49,38 @@ ARTSY_ARTWORK_RE = re.compile(
 ARTSY_ARTIST_RE = re.compile(
     r"artsy\.net/artist/([a-z0-9-]+)/?(?:[?#].*)?$",
     re.IGNORECASE,
+)
+ARTMAJEUR_ARTWORK_RE = re.compile(
+    r"artmajeur\.com/[^/]+/(?:[a-z]{2}/)?artworks/(\d+)/",
+    re.IGNORECASE,
+)
+ARTMAJEUR_ARTIST_RE = re.compile(
+    r"artmajeur\.com/([a-z0-9_-]+)/?$",
+    re.IGNORECASE,
+)
+
+_ARTMAJEUR_RESERVED = frozenset(
+    {
+        "en",
+        "fr",
+        "de",
+        "es",
+        "it",
+        "pt",
+        "nl",
+        "pl",
+        "ru",
+        "ja",
+        "zh",
+        "magazine",
+        "help",
+        "search",
+        "blog",
+        "faq",
+        "www",
+        "api",
+        "cdn-cgi",
+    }
 )
 
 
@@ -109,4 +141,17 @@ def artsy_entity_from_url(url: str) -> tuple[str, str] | None:
     artist = ARTSY_ARTIST_RE.search(url)
     if artist:
         return "artist", artist.group(1).lower()
+    return None
+
+
+def artmajeur_entity_from_url(url: str) -> tuple[str, str] | None:
+    """Return ('artwork'|'artist', external_id) for ArtMajeur entity page URLs."""
+    artwork = ARTMAJEUR_ARTWORK_RE.search(url)
+    if artwork:
+        return "artwork", artwork.group(1)
+    artist = ARTMAJEUR_ARTIST_RE.search(url)
+    if artist:
+        slug = artist.group(1).lower()
+        if slug not in _ARTMAJEUR_RESERVED:
+            return "artist", slug
     return None

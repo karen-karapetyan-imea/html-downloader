@@ -116,9 +116,9 @@ def _require_proxy_if_needed(
         return proxies[0] if proxies else None
 
     if not proxy_file:
-        raise ValueError("Artsy sitemap fetch requires --proxy-file")
+        raise ValueError(f"{spec.name} sitemap fetch requires --proxy-file")
     proxies = load_proxy_list(proxy_file)
     if not proxies:
         raise ValueError("--proxy-file is required and must contain at least one host:port:user:pass")
-    LOGGER.info("using proxy for artsy sitemap fetch")
+    LOGGER.info("using proxy for %s sitemap fetch", spec.name)
     return proxies[0]

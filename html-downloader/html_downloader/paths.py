@@ -9,7 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_ROOT = PROJECT_ROOT / "data"
 DEFAULT_STATE_ROOT = PROJECT_ROOT / "state"
 
-MARKETPLACES: tuple[str, ...] = ("saatchi", "artsper", "artsy")
+MARKETPLACES: tuple[str, ...] = ("saatchi", "artsper", "artsy", "artmajeur")
 
 
 def utc_today() -> date:

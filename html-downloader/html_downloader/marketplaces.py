@@ -8,9 +8,11 @@ from typing import Any
 
 from html_downloader.discover.sitemap import (
     DEFAULT_ARTSY_INDEXES,
+    DEFAULT_ARTMAJEUR_INDEX,
     DEFAULT_INDEX,
     DEFAULT_SAATCHI_INDEX,
     SitemapEntry,
+    fetch_artmajeur_sitemap_entries,
     fetch_artsper_sitemap_entries,
     fetch_artsy_sitemap_entries,
     fetch_saatchi_sitemap_entries,
@@ -45,6 +47,12 @@ SPECS: dict[str, MarketplaceSpec] = {
         default_concurrency=8,
         uses_stealth_proxy=True,
     ),
+    "artmajeur": MarketplaceSpec(
+        name="artmajeur",
+        default_indexes=(DEFAULT_ARTMAJEUR_INDEX,),
+        default_concurrency=8,
+        uses_stealth_proxy=True,
+    ),
 }
 
 
@@ -67,6 +75,11 @@ def fetch_entries(
         return fetch_saatchi_sitemap_entries(index_list[0], concurrency=concurrency)
     if spec.name == "artsper":
         return fetch_artsper_sitemap_entries(index_list[0], concurrency=concurrency)
+    if spec.name == "artmajeur":
+        kwargs: dict[str, Any] = {"concurrency": concurrency}
+        if proxy is not None:
+            kwargs["proxy"] = proxy
+        return fetch_artmajeur_sitemap_entries(index_list[0], **kwargs)
     kwargs: dict[str, Any] = {"concurrency": concurrency}
     if proxy is not None:
         kwargs["proxy"] = proxy
