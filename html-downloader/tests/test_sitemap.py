@@ -3,9 +3,11 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from html_downloader.discover.sitemap import (
+    DEFAULT_ARTMAJEUR_INDEX,
     DEFAULT_SAATCHI_INDEX,
     SitemapEntry,
     diff_sitemap_entries,
+    fetch_artmajeur_sitemap_entries,
     fetch_artsy_sitemap_entries,
     fetch_saatchi_sitemap_entries,
     filter_saatchi_child_sitemaps,
@@ -94,6 +96,36 @@ SAATCHI_PROFILES_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
   <url>
     <loc>https://www.saatchiart.com/radeksmach</loc>
     <lastmod>2026-06-02T00:00:00+00:00</lastmod>
+  </url>
+</urlset>"""
+
+ARTMAJEUR_INDEX_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://www.artmajeur.com/sitemap-members-0.xml</loc></sitemap>
+  <sitemap><loc>https://www.artmajeur.com/sitemap-artworks-0.xml</loc></sitemap>
+</sitemapindex>"""
+
+ARTMAJEUR_MEMBERS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.artmajeur.com/jane-doe</loc>
+    <lastmod>2026-06-01T00:00:00Z</lastmod>
+  </url>
+</urlset>"""
+
+ARTMAJEUR_MALFORMED_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.artmajeur.com/bad-user/artworks/99999/title&broken</loc>
+    <lastmod>2026-06-01T00:00:00Z</lastmod>
+  </url>
+</urlset>"""
+
+ARTMAJEUR_ARTWORKS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.artmajeur.com/jane-doe/artworks/12345/title</loc>
+    <lastmod>2026-06-02T00:00:00Z</lastmod>
   </url>
 </urlset>"""
 
@@ -193,6 +225,29 @@ def test_fetch_saatchi_sitemap_entries() -> None:
     by_key = {(e.entity_type, e.entity_id): e for e in entries}
     assert ("artwork", "9336593") in by_key
     assert ("artist", "radeksmach") in by_key
+    assert len(by_key) == 2
+
+
+def test_fetch_artmajeur_skips_malformed_child_sitemap() -> None:
+    fixtures = {
+        DEFAULT_ARTMAJEUR_INDEX: ARTMAJEUR_INDEX_XML,
+        "https://www.artmajeur.com/sitemap-members-0.xml": ARTMAJEUR_MEMBERS_URLSET,
+        "https://www.artmajeur.com/sitemap-artworks-0.xml": ARTMAJEUR_MALFORMED_URLSET,
+    }
+
+    def fake_fetch(url: str) -> bytes:
+        return fixtures[url]
+
+    entries = fetch_artmajeur_sitemap_entries(fetch_bytes=fake_fetch, concurrency=2)
+    by_key = {(e.entity_type, e.entity_id): e for e in entries}
+    assert ("artist", "jane-doe") in by_key
+    assert len(by_key) == 1
+
+    fixtures["https://www.artmajeur.com/sitemap-artworks-0.xml"] = ARTMAJEUR_ARTWORKS_URLSET
+    entries = fetch_artmajeur_sitemap_entries(fetch_bytes=fake_fetch, concurrency=2)
+    by_key = {(e.entity_type, e.entity_id): e for e in entries}
+    assert ("artist", "jane-doe") in by_key
+    assert ("artwork", "12345") in by_key
     assert len(by_key) == 2
 
 

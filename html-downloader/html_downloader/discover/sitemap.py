@@ -532,29 +532,39 @@ def fetch_artmajeur_sitemap_entries(
         LOGGER.info("artmajeur sitemap child maps=%s", len(child_urls))
 
         entries: list[SitemapEntry] = []
+        skipped_child_maps: list[str] = []
         with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
             futures = {pool.submit(active_fetch, child_url): child_url for child_url in child_urls}
             for future in as_completed(futures):
                 child_url = futures[future]
                 try:
                     xml_bytes = future.result()
+                    for url, lastmod in parse_url_entries(xml_bytes):
+                        normalized = normalize_url(url)
+                        key = artmajeur_entity_from_url(normalized)
+                        if key is None:
+                            continue
+                        entity_type, entity_id = key
+                        entries.append(
+                            SitemapEntry(
+                                url=normalized,
+                                lastmod=lastmod,
+                                entity_type=entity_type,
+                                entity_id=entity_id,
+                            )
+                        )
+                except ET.ParseError as exc:
+                    LOGGER.warning("child sitemap parse failed url=%s error=%s", child_url, exc)
+                    skipped_child_maps.append(child_url)
                 except Exception as exc:
                     LOGGER.warning("child sitemap failed url=%s error=%s", child_url, exc)
-                    continue
-                for url, lastmod in parse_url_entries(xml_bytes):
-                    normalized = normalize_url(url)
-                    key = artmajeur_entity_from_url(normalized)
-                    if key is None:
-                        continue
-                    entity_type, entity_id = key
-                    entries.append(
-                        SitemapEntry(
-                            url=normalized,
-                            lastmod=lastmod,
-                            entity_type=entity_type,
-                            entity_id=entity_id,
-                        )
-                    )
+                    skipped_child_maps.append(child_url)
+        if skipped_child_maps:
+            LOGGER.warning(
+                "artmajeur sitemap skipped child maps=%s sample=%s",
+                len(skipped_child_maps),
+                skipped_child_maps[:5],
+            )
         return entries
     finally:
         if owned_session and session is not None and hasattr(session, "close"):
