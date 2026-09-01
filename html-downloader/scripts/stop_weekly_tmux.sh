@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-MARKETPLACES=(saatchi artsper artsy)
+MARKETPLACES=(saatchi artsper artsy artmajeur singulart)
 
 if ! command -v tmux >/dev/null 2>&1; then
   echo "error: tmux is not installed" >&2

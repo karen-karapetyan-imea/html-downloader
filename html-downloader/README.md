@@ -1,6 +1,6 @@
 # html-downloader
 
-Standalone sitemap discovery and stealth HTML download for **Saatchi Art**, **Artsper**, and **Artsy**. No parsing, no database.
+Standalone sitemap discovery and stealth HTML download for **Saatchi Art**, **Artsper**, **Artsy**, **ArtMajeur**, and **Singulart**. No parsing, no database.
 
 Crawls write to dated job folders:
 
@@ -34,6 +34,7 @@ Copy `proxy.txt` (`host:port:user:pass` per line). Download always requires at l
 python -m html_downloader discover --marketplace saatchi
 python -m html_downloader discover --marketplace artsper --incremental --update-state
 python -m html_downloader discover --marketplace artsy --proxy-file proxy.txt --incremental
+python -m html_downloader discover --marketplace singulart --incremental --update-state
 ```
 
 Writes `data/{marketplace}/{YYYY-MM-DD}/urls.txt` (what to download) and `sitemap_all.txt` (full entity list). `--incremental` diffs against `state/{marketplace}_lastmod.json` and prior `results.jsonl` files.
@@ -42,6 +43,7 @@ Writes `data/{marketplace}/{YYYY-MM-DD}/urls.txt` (what to download) and `sitema
 
 ```bash
 python -m html_downloader download --marketplace saatchi --proxy-file proxy.txt --skip-existing
+python -m html_downloader download --marketplace singulart --proxy-file proxy.txt --skip-existing
 ```
 
 Flags: `--date YYYY-MM-DD`, `--workers`, `--rps`, `--skip-existing`, `--urls` (override job `urls.txt`).

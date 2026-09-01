@@ -5,12 +5,15 @@ from unittest.mock import MagicMock, patch
 from html_downloader.discover.sitemap import (
     DEFAULT_ARTMAJEUR_INDEX,
     DEFAULT_SAATCHI_INDEX,
+    DEFAULT_SINGULART_INDEX,
     SitemapEntry,
     diff_sitemap_entries,
     fetch_artmajeur_sitemap_entries,
     fetch_artsy_sitemap_entries,
     fetch_saatchi_sitemap_entries,
+    fetch_singulart_sitemap_entries,
     filter_saatchi_child_sitemaps,
+    filter_singulart_child_sitemaps,
     is_sitemap_index,
     known_keys_from_sources,
     known_saatchi_keys_from_paths,
@@ -126,6 +129,33 @@ ARTMAJEUR_ARTWORKS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
   <url>
     <loc>https://www.artmajeur.com/jane-doe/artworks/12345/title</loc>
     <lastmod>2026-06-02T00:00:00Z</lastmod>
+  </url>
+</urlset>"""
+
+SINGULART_INDEX_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://www.singulart.com/en/sitemap-artists-en-1.xml</loc></sitemap>
+  <sitemap><loc>https://www.singulart.com/en/sitemap-artworks-en-1.xml</loc></sitemap>
+  <sitemap><loc>https://www.singulart.com/en/sitemap-collections-en.xml</loc></sitemap>
+  <sitemap><loc>https://www.singulart.com/en/sitemap-searches-en.xml</loc></sitemap>
+</sitemapindex>"""
+
+SINGULART_ARTISTS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.singulart.com/en/artist/alexandre-taillandier-2</loc>
+    <lastmod>2026-07-16T15:21:24+02:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.singulart.com/en/artist/graeme-williams-7?page=2</loc>
+  </url>
+</urlset>"""
+
+SINGULART_ARTWORKS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.singulart.com/en/artworks/philippa-paterson-charred-black-crow-28</loc>
+    <lastmod>2026-07-17T05:20:51+02:00</lastmod>
   </url>
 </urlset>"""
 
@@ -269,3 +299,46 @@ def test_known_keys_from_sources_saatchi(tmp_path) -> None:
     )
     keys = known_keys_from_sources(known_paths=[path], source="saatchi")
     assert keys == {("artist", "735695")}
+
+
+def test_filter_singulart_child_sitemaps() -> None:
+    urls = [
+        "https://www.singulart.com/en/sitemap-artists-en-1.xml",
+        "https://www.singulart.com/en/sitemap-artworks-en-1.xml",
+        "https://www.singulart.com/en/sitemap-collections-en.xml",
+        "https://www.singulart.com/en/sitemap-searches-en.xml",
+        "https://www.singulart.com/en/sitemap-site-en.xml",
+    ]
+    filtered = filter_singulart_child_sitemaps(urls)
+    assert filtered == [
+        "https://www.singulart.com/en/sitemap-artists-en-1.xml",
+        "https://www.singulart.com/en/sitemap-artworks-en-1.xml",
+    ]
+
+
+def test_fetch_singulart_sitemap_entries() -> None:
+    fixtures = {
+        DEFAULT_SINGULART_INDEX: SINGULART_INDEX_XML,
+        "https://www.singulart.com/en/sitemap-artists-en-1.xml": SINGULART_ARTISTS_URLSET,
+        "https://www.singulart.com/en/sitemap-artworks-en-1.xml": SINGULART_ARTWORKS_URLSET,
+    }
+
+    def fake_fetch(url: str) -> bytes:
+        return fixtures[url]
+
+    entries = fetch_singulart_sitemap_entries(fetch_bytes=fake_fetch, concurrency=2)
+    by_key = {(e.entity_type, e.entity_id): e for e in entries}
+    assert ("artist", "2") in by_key
+    assert ("artwork", "28") in by_key
+    assert len(by_key) == 2
+    assert by_key[("artist", "2")].lastmod == "2026-07-16T15:21:24+02:00"
+
+
+def test_known_keys_from_sources_singulart(tmp_path) -> None:
+    path = tmp_path / "urls.txt"
+    path.write_text(
+        "https://www.singulart.com/en/artworks/philippa-paterson-charred-black-crow-28\n",
+        encoding="utf-8",
+    )
+    keys = known_keys_from_sources(known_paths=[path], source="singulart")
+    assert keys == {("artwork", "28")}

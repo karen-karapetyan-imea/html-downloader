@@ -4,6 +4,7 @@ from html_downloader.discover.urls import (
     saatchi_artist_from_url,
     saatchi_artwork_from_url,
     saatchi_entity_from_url,
+    singulart_entity_from_url,
 )
 
 
@@ -58,3 +59,24 @@ def test_artsy_artist_url() -> None:
 def test_artsy_rejects_nested_paths() -> None:
     assert artsy_entity_from_url("https://www.artsy.net/artist/pablo-picasso/auction-results") is None
     assert artsy_entity_from_url("https://www.artsy.net/artwork/foo/images") is None
+
+
+def test_singulart_artist_url() -> None:
+    url = "https://www.singulart.com/en/artist/alexandre-taillandier-2"
+    assert singulart_entity_from_url(url) == ("artist", "2")
+
+
+def test_singulart_artwork_url() -> None:
+    url = "https://www.singulart.com/en/artworks/philippa-paterson-charred-black-crow-28"
+    assert singulart_entity_from_url(url) == ("artwork", "28")
+
+
+def test_singulart_rejects_pagination_and_collections() -> None:
+    assert (
+        singulart_entity_from_url("https://www.singulart.com/en/artist/graeme-williams-7?page=2")
+        is None
+    )
+    assert (
+        singulart_entity_from_url("https://www.singulart.com/en/collection/the-shape-of-maps-27593")
+        is None
+    )

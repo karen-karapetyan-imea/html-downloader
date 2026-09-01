@@ -1,4 +1,4 @@
-"""URL parsing helpers for Artsper, Saatchi, Artsy, and ArtMajeur."""
+"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, and Singulart."""
 
 from __future__ import annotations
 
@@ -56,6 +56,15 @@ ARTMAJEUR_ARTWORK_RE = re.compile(
 )
 ARTMAJEUR_ARTIST_RE = re.compile(
     r"artmajeur\.com/([a-z0-9_-]+)/?$",
+    re.IGNORECASE,
+)
+
+SINGULART_ARTIST_RE = re.compile(
+    r"singulart\.com/(?:[a-z]{2}/)?artist/[^/?#]+-(\d+)/?$",
+    re.IGNORECASE,
+)
+SINGULART_ARTWORK_RE = re.compile(
+    r"singulart\.com/(?:[a-z]{2}/)artworks/[^/?#]+-(\d+)/?$",
     re.IGNORECASE,
 )
 
@@ -154,4 +163,17 @@ def artmajeur_entity_from_url(url: str) -> tuple[str, str] | None:
         slug = artist.group(1).lower()
         if slug not in _ARTMAJEUR_RESERVED:
             return "artist", slug
+    return None
+
+
+def singulart_entity_from_url(url: str) -> tuple[str, str] | None:
+    """Return ('artwork'|'artist', numeric_id) for Singulart entity page URLs."""
+    if "?" in url or "#" in url:
+        return None
+    artist = SINGULART_ARTIST_RE.search(url)
+    if artist:
+        return "artist", artist.group(1)
+    artwork = SINGULART_ARTWORK_RE.search(url)
+    if artwork:
+        return "artwork", artwork.group(1)
     return None
