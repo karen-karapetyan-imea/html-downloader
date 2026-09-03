@@ -1,6 +1,6 @@
 # html-downloader
 
-Standalone sitemap discovery and stealth HTML download for **Saatchi Art**, **Artsper**, **Artsy**, **ArtMajeur**, **Singulart**, **1stDibs**, and **Artfinder**. No parsing, no database.
+Standalone sitemap discovery and stealth HTML download for **Saatchi Art**, **Artsper**, **Artsy**, **ArtMajeur**, **Singulart**, **1stDibs**, **Artfinder**, and **Fine Art America**. No parsing, no database.
 
 Crawls write to dated job folders:
 
@@ -37,9 +37,10 @@ python -m html_downloader discover --marketplace artsy --proxy-file proxy.txt --
 python -m html_downloader discover --marketplace singulart --incremental --update-state
 python -m html_downloader discover --marketplace firstdibs --incremental
 python -m html_downloader discover --marketplace artfinder --incremental --update-state
+python -m html_downloader discover --marketplace fineartamerica --incremental --update-state
 ```
 
-Writes `data/{marketplace}/{YYYY-MM-DD}/urls.txt` (what to download) and `sitemap_all.txt` (full entity list). `--incremental` diffs against `state/{marketplace}_lastmod.json` and prior `results.jsonl` files. **1stDibs** crawls the art HTML sitemap branches (items, dealers, creators), resumes from `state/sitemap_crawler/`, and writes artwork/dealer/creator URLs. No `lastmod`; incremental mode detects new entities only. **Artfinder** uses the public XML sitemap index (products + artists) with `lastmod` incremental diffs.
+Writes `data/{marketplace}/{YYYY-MM-DD}/urls.txt` (what to download) and `sitemap_all.txt` (full entity list). `--incremental` diffs against `state/{marketplace}_lastmod.json` and prior `results.jsonl` files. **1stDibs** crawls the art HTML sitemap branches (items, dealers, creators), resumes from `state/sitemap_crawler/`, and writes artwork/dealer/creator URLs. No `lastmod`; incremental mode detects new entities only. **Artfinder** uses the public XML sitemap index (products + artists) with `lastmod` incremental diffs. **Fine Art America** uses artist + popular-products art sitemaps (`/profiles/{slug}`, `/featured/{slug}.html`); no `lastmod`, so incremental detects new entities only.
 
 ```bash
 python -m html_downloader discover --marketplace firstdibs --concurrency 10
@@ -54,6 +55,7 @@ python -m html_downloader download --marketplace saatchi --proxy-file proxy.txt 
 python -m html_downloader download --marketplace singulart --proxy-file proxy.txt --skip-existing
 python -m html_downloader download --marketplace firstdibs --proxy-file proxy.txt --skip-existing
 python -m html_downloader download --marketplace artfinder --proxy-file proxy.txt --skip-existing
+python -m html_downloader download --marketplace fineartamerica --proxy-file proxy.txt --skip-existing
 ```
 
 Flags: `--date YYYY-MM-DD`, `--workers`, `--rps`, `--skip-existing`, `--urls` (override job `urls.txt`).

@@ -20,6 +20,7 @@ from html_downloader.discover.urls import (
     artfinder_entity_from_url,
     artmajeur_entity_from_url,
     artsy_entity_from_url,
+    fineartamerica_entity_from_url,
     saatchi_entity_from_url,
     singulart_entity_from_url,
 )
@@ -35,10 +36,21 @@ DEFAULT_ARTSY_INDEXES = (ARTSY_ARTIST_INDEX, ARTSY_ARTWORK_INDEX)
 DEFAULT_ARTMAJEUR_INDEX = "https://www.artmajeur.com/sitemap.xml"
 DEFAULT_SINGULART_INDEX = "https://www.singulart.com/en/sitemap-index-en.xml"
 DEFAULT_ARTFINDER_INDEX = "https://www.artfinder.com/sitemap.xml"
+FINEARTAMERICA_ARTISTS_INDEX = "https://fineartamerica.com/sitemap-artists-index.xml"
+FINEARTAMERICA_POPULAR_PRODUCTS_INDEX = "https://fineartamerica.com/sitemap-popular-products.xml"
+DEFAULT_FINEARTAMERICA_INDEXES = (FINEARTAMERICA_ARTISTS_INDEX, FINEARTAMERICA_POPULAR_PRODUCTS_INDEX)
 _ARTSPER_CHILD_RE = ("artist", "artwork")
 _ARTMAJEUR_CHILD_RE = ("members", "artworks")
 _SAATCHI_CHILD_RE = ("artwork", "profile")
 _ARTFINDER_CHILD_RE = ("sitemap-products", "sitemap-artists")
+_FINEARTAMERICA_ART_MEDIA = (
+    "artwork",
+    "paintings",
+    "photographs",
+    "digital-art",
+    "drawings",
+    "mixed-media",
+)
 _RETRYABLE_STATUS = frozenset({429, 500, 502, 503, 504})
 
 FetchBytesFn = Callable[[str], bytes]
@@ -153,6 +165,19 @@ def filter_artfinder_child_sitemaps(urls: Iterable[str]) -> list[str]:
     for url in urls:
         lower = url.lower()
         if any(token in lower for token in _ARTFINDER_CHILD_RE):
+            selected.append(url)
+    return selected
+
+
+def filter_fineartamerica_child_sitemaps(urls: Iterable[str]) -> list[str]:
+    """Keep artist child maps and popular-products art-media subsets only."""
+    selected: list[str] = []
+    for url in urls:
+        lower = url.lower()
+        if "sitemap-artists-" in lower:
+            selected.append(url)
+            continue
+        if any(token in lower for token in _FINEARTAMERICA_ART_MEDIA):
             selected.append(url)
     return selected
 
@@ -757,6 +782,91 @@ def fetch_artfinder_sitemap_entries(
             http.close()
 
 
+def fetch_fineartamerica_sitemap_entries(
+    indexes: Iterable[str] = DEFAULT_FINEARTAMERICA_INDEXES,
+    *,
+    concurrency: int = 8,
+    client: httpx.Client | None = None,
+    fetch_bytes: FetchBytesFn | None = None,
+) -> list[SitemapEntry]:
+    """Fetch Fine Art America artist/artwork URLs from artists + popular-products indexes."""
+    owned_client = False
+    http: httpx.Client | None = None
+    active_fetch = fetch_bytes
+
+    if active_fetch is None:
+        owned_client = client is None
+        http = client or httpx.Client(
+            http2=False,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (compatible; FineArtAmericaSitemapFetcher/1.0; "
+                    "+https://fineartamerica.com/sitemap-artists-index.xml)"
+                ),
+                "Accept": "application/xml,text/xml,*/*",
+            },
+        )
+
+        def active_fetch(url: str, _http: httpx.Client = http) -> bytes:
+            return fetch_sitemap_bytes(_http, url)
+
+    try:
+        child_urls: list[str] = []
+        seen_children: set[str] = set()
+        for index_url in indexes:
+            index_xml = active_fetch(index_url)
+            for child_url in filter_fineartamerica_child_sitemaps(parse_child_sitemap_locs(index_xml)):
+                if child_url not in seen_children:
+                    seen_children.add(child_url)
+                    child_urls.append(child_url)
+        LOGGER.info(
+            "fineartamerica sitemap child maps=%s concurrency=%s",
+            len(child_urls),
+            concurrency,
+        )
+
+        entries: list[SitemapEntry] = []
+        skipped_child_maps: list[str] = []
+        with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
+            futures = {pool.submit(active_fetch, child_url): child_url for child_url in child_urls}
+            for future in as_completed(futures):
+                child_url = futures[future]
+                try:
+                    xml_bytes = future.result()
+                    for url, lastmod in parse_url_entries(xml_bytes):
+                        if "?" in url or "#" in url:
+                            continue
+                        normalized = normalize_url(url)
+                        key = fineartamerica_entity_from_url(normalized)
+                        if key is None:
+                            continue
+                        entity_type, entity_id = key
+                        entries.append(
+                            SitemapEntry(
+                                url=normalized,
+                                lastmod=lastmod,
+                                entity_type=entity_type,
+                                entity_id=entity_id,
+                            )
+                        )
+                except ET.ParseError as exc:
+                    LOGGER.warning("child sitemap parse failed url=%s error=%s", child_url, exc)
+                    skipped_child_maps.append(child_url)
+                except Exception as exc:
+                    LOGGER.warning("child sitemap failed url=%s error=%s", child_url, exc)
+                    skipped_child_maps.append(child_url)
+        if skipped_child_maps:
+            LOGGER.warning(
+                "fineartamerica sitemap skipped child maps=%s sample=%s",
+                len(skipped_child_maps),
+                skipped_child_maps[:5],
+            )
+        return entries
+    finally:
+        if owned_client and http is not None:
+            http.close()
+
+
 def known_artsy_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]:
     """Load known Artsy entity keys (type, slug) from URL list / JSONL files."""
     keys: set[tuple[str, str]] = set()
@@ -802,6 +912,16 @@ def known_artfinder_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str
     keys: set[tuple[str, str]] = set()
     for url in load_urls(paths):
         key = artfinder_entity_from_url(url)
+        if key is not None:
+            keys.add(key)
+    return keys
+
+
+def known_fineartamerica_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]:
+    """Load known Fine Art America entity keys from URL list / JSONL files."""
+    keys: set[tuple[str, str]] = set()
+    for url in load_urls(paths):
+        key = fineartamerica_entity_from_url(url)
         if key is not None:
             keys.add(key)
     return keys
@@ -901,6 +1021,8 @@ def known_keys_from_sources(
             keys |= known_singulart_keys_from_paths(known_paths)
         elif source == "artfinder":
             keys |= known_artfinder_keys_from_paths(known_paths)
+        elif source == "fineartamerica":
+            keys |= known_fineartamerica_keys_from_paths(known_paths)
         elif source == "firstdibs":
             from html_downloader.discover.firstdibs import known_firstdibs_keys_from_paths
 

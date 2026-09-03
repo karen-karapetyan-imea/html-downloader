@@ -11,6 +11,7 @@ from html_downloader.discover.sitemap import (
     DEFAULT_ARTFINDER_INDEX,
     DEFAULT_ARTSY_INDEXES,
     DEFAULT_ARTMAJEUR_INDEX,
+    DEFAULT_FINEARTAMERICA_INDEXES,
     DEFAULT_INDEX,
     DEFAULT_SAATCHI_INDEX,
     DEFAULT_SINGULART_INDEX,
@@ -19,6 +20,7 @@ from html_downloader.discover.sitemap import (
     fetch_artmajeur_sitemap_entries,
     fetch_artsper_sitemap_entries,
     fetch_artsy_sitemap_entries,
+    fetch_fineartamerica_sitemap_entries,
     fetch_saatchi_sitemap_entries,
     fetch_singulart_sitemap_entries,
 )
@@ -76,6 +78,12 @@ SPECS: dict[str, MarketplaceSpec] = {
         default_concurrency=4,
         uses_stealth_proxy=False,
     ),
+    "fineartamerica": MarketplaceSpec(
+        name="fineartamerica",
+        default_indexes=tuple(DEFAULT_FINEARTAMERICA_INDEXES),
+        default_concurrency=8,
+        uses_stealth_proxy=False,
+    ),
 }
 
 
@@ -115,6 +123,8 @@ def fetch_entries(
         return fetch_firstdibs_sitemap_entries(index_list, **kwargs)
     if spec.name == "artfinder":
         return fetch_artfinder_sitemap_entries(index_list[0], concurrency=concurrency)
+    if spec.name == "fineartamerica":
+        return fetch_fineartamerica_sitemap_entries(index_list, concurrency=concurrency)
     kwargs = {"concurrency": concurrency}
     if proxy is not None:
         kwargs["proxy"] = proxy

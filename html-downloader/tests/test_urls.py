@@ -2,6 +2,7 @@ from html_downloader.discover.urls import (
     artfinder_entity_from_url,
     artsper_entity_from_url,
     artsy_entity_from_url,
+    fineartamerica_entity_from_url,
     firstdibs_entity_from_url,
     saatchi_artist_from_url,
     saatchi_artwork_from_url,
@@ -131,3 +132,24 @@ def test_artfinder_rejects_query_locale_and_shop() -> None:
         )
         is None
     )
+
+
+def test_fineartamerica_artist_url() -> None:
+    url = "https://fineartamerica.com/profiles/aaronblaise"
+    assert fineartamerica_entity_from_url(url) == ("artist", "aaronblaise")
+
+
+def test_fineartamerica_artwork_url() -> None:
+    url = "https://fineartamerica.com/featured/poolside-glamour-slim-aarons.html"
+    assert fineartamerica_entity_from_url(url) == ("artwork", "poolside-glamour-slim-aarons")
+
+
+def test_fineartamerica_rejects_shop_query_and_merch() -> None:
+    assert fineartamerica_entity_from_url("https://fineartamerica.com/profiles/aaronblaise/shop") is None
+    assert (
+        fineartamerica_entity_from_url(
+            "https://fineartamerica.com/featured/poolside-glamour-slim-aarons.html?utm=1"
+        )
+        is None
+    )
+    assert fineartamerica_entity_from_url("https://fineartamerica.com/shop/canvas+prints") is None

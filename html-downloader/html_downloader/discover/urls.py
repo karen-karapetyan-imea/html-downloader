@@ -1,4 +1,4 @@
-"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, and 1stDibs."""
+"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, Fine Art America, and 1stDibs."""
 
 from __future__ import annotations
 
@@ -81,6 +81,14 @@ ARTFINDER_ARTWORK_RE = re.compile(
 )
 ARTFINDER_ARTIST_RE = re.compile(
     r"artfinder\.com/artist/([a-z0-9_-]+)/?$",
+    re.IGNORECASE,
+)
+FINEARTAMERICA_ARTIST_RE = re.compile(
+    r"fineartamerica\.com/profiles/([a-z0-9_-]+)/?$",
+    re.IGNORECASE,
+)
+FINEARTAMERICA_ARTWORK_RE = re.compile(
+    r"fineartamerica\.com/featured/([a-z0-9_-]+)\.html/?$",
     re.IGNORECASE,
 )
 
@@ -231,6 +239,24 @@ def artfinder_entity_from_url(url: str) -> tuple[str, str] | None:
     if artwork:
         return "artwork", artwork.group(1).lower()
     artist = ARTFINDER_ARTIST_RE.search(url)
+    if artist:
+        return "artist", artist.group(1).lower()
+    return None
+
+
+def fineartamerica_entity_from_url(url: str) -> tuple[str, str] | None:
+    """Return ('artwork'|'artist', slug) for Fine Art America entity page URLs.
+
+    Artist: /profiles/{slug} (no nested /shop|/art/...).
+    Artwork: /featured/{slug}.html
+    Rejects query/fragment.
+    """
+    if "?" in url or "#" in url:
+        return None
+    artwork = FINEARTAMERICA_ARTWORK_RE.search(url)
+    if artwork:
+        return "artwork", artwork.group(1).lower()
+    artist = FINEARTAMERICA_ARTIST_RE.search(url)
     if artist:
         return "artist", artist.group(1).lower()
     return None

@@ -5,16 +5,21 @@ from unittest.mock import MagicMock, patch
 from html_downloader.discover.sitemap import (
     DEFAULT_ARTFINDER_INDEX,
     DEFAULT_ARTMAJEUR_INDEX,
+    DEFAULT_FINEARTAMERICA_INDEXES,
     DEFAULT_SAATCHI_INDEX,
     DEFAULT_SINGULART_INDEX,
+    FINEARTAMERICA_ARTISTS_INDEX,
+    FINEARTAMERICA_POPULAR_PRODUCTS_INDEX,
     SitemapEntry,
     diff_sitemap_entries,
     fetch_artfinder_sitemap_entries,
     fetch_artmajeur_sitemap_entries,
     fetch_artsy_sitemap_entries,
+    fetch_fineartamerica_sitemap_entries,
     fetch_saatchi_sitemap_entries,
     fetch_singulart_sitemap_entries,
     filter_artfinder_child_sitemaps,
+    filter_fineartamerica_child_sitemaps,
     filter_saatchi_child_sitemaps,
     filter_singulart_child_sitemaps,
     is_sitemap_index,
@@ -418,3 +423,89 @@ def test_known_keys_from_sources_artfinder(tmp_path) -> None:
     )
     keys = known_keys_from_sources(known_paths=[path], source="artfinder")
     assert keys == {("artwork", "dama-33")}
+
+
+FINEARTAMERICA_ARTISTS_INDEX_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://fineartamerica.com/sitemap-artists-1.xml</loc></sitemap>
+</sitemapindex>"""
+
+FINEARTAMERICA_PRODUCTS_INDEX_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://fineartamerica.com/sitemap-best-selling-artwork-0.xml</loc></sitemap>
+  <sitemap><loc>https://fineartamerica.com/sitemap-best-selling-coffee-mugs-0.xml</loc></sitemap>
+  <sitemap><loc>https://fineartamerica.com/sitemap-popular-paintings-0.xml</loc></sitemap>
+</sitemapindex>"""
+
+FINEARTAMERICA_ARTISTS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://fineartamerica.com/profiles/aaronblaise</loc>
+  </url>
+  <url>
+    <loc>https://fineartamerica.com/profiles/aaronblaise/shop</loc>
+  </url>
+</urlset>"""
+
+FINEARTAMERICA_ARTWORK_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://fineartamerica.com/featured/poolside-glamour-slim-aarons.html</loc>
+  </url>
+</urlset>"""
+
+FINEARTAMERICA_PAINTINGS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://fineartamerica.com/featured/27-birds-jennifer-lommers.html</loc>
+  </url>
+</urlset>"""
+
+
+def test_filter_fineartamerica_child_sitemaps() -> None:
+    urls = [
+        "https://fineartamerica.com/sitemap-artists-1.xml",
+        "https://fineartamerica.com/sitemap-best-selling-artwork-0.xml",
+        "https://fineartamerica.com/sitemap-best-selling-coffee-mugs-0.xml",
+        "https://fineartamerica.com/sitemap-popular-paintings-0.xml",
+    ]
+    filtered = filter_fineartamerica_child_sitemaps(urls)
+    assert filtered == [
+        "https://fineartamerica.com/sitemap-artists-1.xml",
+        "https://fineartamerica.com/sitemap-best-selling-artwork-0.xml",
+        "https://fineartamerica.com/sitemap-popular-paintings-0.xml",
+    ]
+
+
+def test_fetch_fineartamerica_sitemap_entries() -> None:
+    fixtures = {
+        FINEARTAMERICA_ARTISTS_INDEX: FINEARTAMERICA_ARTISTS_INDEX_XML,
+        FINEARTAMERICA_POPULAR_PRODUCTS_INDEX: FINEARTAMERICA_PRODUCTS_INDEX_XML,
+        "https://fineartamerica.com/sitemap-artists-1.xml": FINEARTAMERICA_ARTISTS_URLSET,
+        "https://fineartamerica.com/sitemap-best-selling-artwork-0.xml": FINEARTAMERICA_ARTWORK_URLSET,
+        "https://fineartamerica.com/sitemap-popular-paintings-0.xml": FINEARTAMERICA_PAINTINGS_URLSET,
+    }
+
+    def fake_fetch(url: str) -> bytes:
+        return fixtures[url]
+
+    entries = fetch_fineartamerica_sitemap_entries(
+        DEFAULT_FINEARTAMERICA_INDEXES,
+        fetch_bytes=fake_fetch,
+        concurrency=2,
+    )
+    by_key = {(e.entity_type, e.entity_id): e for e in entries}
+    assert ("artist", "aaronblaise") in by_key
+    assert ("artwork", "poolside-glamour-slim-aarons") in by_key
+    assert ("artwork", "27-birds-jennifer-lommers") in by_key
+    assert len(by_key) == 3
+
+
+def test_known_keys_from_sources_fineartamerica(tmp_path) -> None:
+    path = tmp_path / "urls.txt"
+    path.write_text(
+        "https://fineartamerica.com/featured/poolside-glamour-slim-aarons.html\n",
+        encoding="utf-8",
+    )
+    keys = known_keys_from_sources(known_paths=[path], source="fineartamerica")
+    assert keys == {("artwork", "poolside-glamour-slim-aarons")}
