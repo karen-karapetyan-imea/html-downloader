@@ -3,7 +3,7 @@
 # Cadence is anchored to each cycle's start time (7 days), not finish time.
 #
 # Usage:
-#   ./scripts/run_weekly.sh saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica
+#   ./scripts/run_weekly.sh saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon
 #
 # Prefer starting all three in parallel via:
 #   ./scripts/start_weekly_tmux.sh
@@ -17,9 +17,9 @@ PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 marketplace="${1:-}"
 case "${marketplace}" in
-  saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica) ;;
+  saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon) ;;
   *)
-    echo "usage: $0 saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica" >&2
+    echo "usage: $0 saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon" >&2
     exit 2
     ;;
 esac

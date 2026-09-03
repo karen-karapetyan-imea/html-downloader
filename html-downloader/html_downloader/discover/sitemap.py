@@ -21,6 +21,7 @@ from html_downloader.discover.urls import (
     artmajeur_entity_from_url,
     artsy_entity_from_url,
     fineartamerica_entity_from_url,
+    phaidon_entity_from_url,
     saatchi_entity_from_url,
     singulart_entity_from_url,
 )
@@ -39,6 +40,7 @@ DEFAULT_ARTFINDER_INDEX = "https://www.artfinder.com/sitemap.xml"
 FINEARTAMERICA_ARTISTS_INDEX = "https://fineartamerica.com/sitemap-artists-index.xml"
 FINEARTAMERICA_POPULAR_PRODUCTS_INDEX = "https://fineartamerica.com/sitemap-popular-products.xml"
 DEFAULT_FINEARTAMERICA_INDEXES = (FINEARTAMERICA_ARTISTS_INDEX, FINEARTAMERICA_POPULAR_PRODUCTS_INDEX)
+DEFAULT_PHAIDON_INDEX = "https://www.phaidon.com/sitemap.xml"
 _ARTSPER_CHILD_RE = ("artist", "artwork")
 _ARTMAJEUR_CHILD_RE = ("members", "artworks")
 _SAATCHI_CHILD_RE = ("artwork", "profile")
@@ -179,6 +181,19 @@ def filter_fineartamerica_child_sitemaps(urls: Iterable[str]) -> list[str]:
             continue
         if any(token in lower for token in _FINEARTAMERICA_ART_MEDIA):
             selected.append(url)
+    return selected
+
+
+def filter_phaidon_child_sitemaps(urls: Iterable[str]) -> list[str]:
+    """Keep default-locale Shopify product sitemaps only (skip /en-* locales)."""
+    selected: list[str] = []
+    for url in urls:
+        lower = url.lower()
+        if "sitemap_products_" not in lower:
+            continue
+        if "/en-" in lower:
+            continue
+        selected.append(url)
     return selected
 
 
@@ -867,6 +882,82 @@ def fetch_fineartamerica_sitemap_entries(
             http.close()
 
 
+def fetch_phaidon_sitemap_entries(
+    index_url: str = DEFAULT_PHAIDON_INDEX,
+    *,
+    concurrency: int = 2,
+    client: httpx.Client | None = None,
+    fetch_bytes: FetchBytesFn | None = None,
+) -> list[SitemapEntry]:
+    """Fetch Phaidon product URLs from default-locale Shopify product sitemaps."""
+    owned_client = False
+    http: httpx.Client | None = None
+    active_fetch = fetch_bytes
+
+    if active_fetch is None:
+        owned_client = client is None
+        http = client or httpx.Client(
+            http2=False,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (compatible; PhaidonSitemapFetcher/1.0; "
+                    "+https://www.phaidon.com/sitemap.xml)"
+                ),
+                "Accept": "application/xml,text/xml,*/*",
+            },
+        )
+
+        def active_fetch(url: str, _http: httpx.Client = http) -> bytes:
+            return fetch_sitemap_bytes(_http, url)
+
+    try:
+        index_xml = active_fetch(index_url)
+        # Preserve query strings on child locs (Shopify ?from=&to=).
+        child_urls = filter_phaidon_child_sitemaps(parse_child_sitemap_locs(index_xml))
+        LOGGER.info("phaidon sitemap child maps=%s concurrency=%s", len(child_urls), concurrency)
+
+        entries: list[SitemapEntry] = []
+        skipped_child_maps: list[str] = []
+        with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
+            futures = {pool.submit(active_fetch, child_url): child_url for child_url in child_urls}
+            for future in as_completed(futures):
+                child_url = futures[future]
+                try:
+                    xml_bytes = future.result()
+                    for url, lastmod in parse_url_entries(xml_bytes):
+                        if "?" in url or "#" in url:
+                            continue
+                        normalized = normalize_url(url)
+                        key = phaidon_entity_from_url(normalized)
+                        if key is None:
+                            continue
+                        entity_type, entity_id = key
+                        entries.append(
+                            SitemapEntry(
+                                url=normalized,
+                                lastmod=lastmod,
+                                entity_type=entity_type,
+                                entity_id=entity_id,
+                            )
+                        )
+                except ET.ParseError as exc:
+                    LOGGER.warning("child sitemap parse failed url=%s error=%s", child_url, exc)
+                    skipped_child_maps.append(child_url)
+                except Exception as exc:
+                    LOGGER.warning("child sitemap failed url=%s error=%s", child_url, exc)
+                    skipped_child_maps.append(child_url)
+        if skipped_child_maps:
+            LOGGER.warning(
+                "phaidon sitemap skipped child maps=%s sample=%s",
+                len(skipped_child_maps),
+                skipped_child_maps[:5],
+            )
+        return entries
+    finally:
+        if owned_client and http is not None:
+            http.close()
+
+
 def known_artsy_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]:
     """Load known Artsy entity keys (type, slug) from URL list / JSONL files."""
     keys: set[tuple[str, str]] = set()
@@ -922,6 +1013,16 @@ def known_fineartamerica_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str
     keys: set[tuple[str, str]] = set()
     for url in load_urls(paths):
         key = fineartamerica_entity_from_url(url)
+        if key is not None:
+            keys.add(key)
+    return keys
+
+
+def known_phaidon_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]:
+    """Load known Phaidon entity keys from URL list / JSONL files."""
+    keys: set[tuple[str, str]] = set()
+    for url in load_urls(paths):
+        key = phaidon_entity_from_url(url)
         if key is not None:
             keys.add(key)
     return keys
@@ -1023,6 +1124,8 @@ def known_keys_from_sources(
             keys |= known_artfinder_keys_from_paths(known_paths)
         elif source == "fineartamerica":
             keys |= known_fineartamerica_keys_from_paths(known_paths)
+        elif source == "phaidon":
+            keys |= known_phaidon_keys_from_paths(known_paths)
         elif source == "firstdibs":
             from html_downloader.discover.firstdibs import known_firstdibs_keys_from_paths
 

@@ -13,6 +13,7 @@ from html_downloader.discover.sitemap import (
     DEFAULT_ARTMAJEUR_INDEX,
     DEFAULT_FINEARTAMERICA_INDEXES,
     DEFAULT_INDEX,
+    DEFAULT_PHAIDON_INDEX,
     DEFAULT_SAATCHI_INDEX,
     DEFAULT_SINGULART_INDEX,
     SitemapEntry,
@@ -21,6 +22,7 @@ from html_downloader.discover.sitemap import (
     fetch_artsper_sitemap_entries,
     fetch_artsy_sitemap_entries,
     fetch_fineartamerica_sitemap_entries,
+    fetch_phaidon_sitemap_entries,
     fetch_saatchi_sitemap_entries,
     fetch_singulart_sitemap_entries,
 )
@@ -84,6 +86,12 @@ SPECS: dict[str, MarketplaceSpec] = {
         default_concurrency=8,
         uses_stealth_proxy=False,
     ),
+    "phaidon": MarketplaceSpec(
+        name="phaidon",
+        default_indexes=(DEFAULT_PHAIDON_INDEX,),
+        default_concurrency=2,
+        uses_stealth_proxy=False,
+    ),
 }
 
 
@@ -125,6 +133,8 @@ def fetch_entries(
         return fetch_artfinder_sitemap_entries(index_list[0], concurrency=concurrency)
     if spec.name == "fineartamerica":
         return fetch_fineartamerica_sitemap_entries(index_list, concurrency=concurrency)
+    if spec.name == "phaidon":
+        return fetch_phaidon_sitemap_entries(index_list[0], concurrency=concurrency)
     kwargs = {"concurrency": concurrency}
     if proxy is not None:
         kwargs["proxy"] = proxy

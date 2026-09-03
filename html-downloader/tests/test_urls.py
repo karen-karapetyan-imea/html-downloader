@@ -4,6 +4,7 @@ from html_downloader.discover.urls import (
     artsy_entity_from_url,
     fineartamerica_entity_from_url,
     firstdibs_entity_from_url,
+    phaidon_entity_from_url,
     saatchi_artist_from_url,
     saatchi_artwork_from_url,
     saatchi_entity_from_url,
@@ -153,3 +154,14 @@ def test_fineartamerica_rejects_shop_query_and_merch() -> None:
         is None
     )
     assert fineartamerica_entity_from_url("https://fineartamerica.com/shop/canvas+prints") is None
+
+
+def test_phaidon_product_url() -> None:
+    url = "https://www.phaidon.com/products/cook-in-a-book"
+    assert phaidon_entity_from_url(url) == ("product", "cook-in-a-book")
+
+
+def test_phaidon_rejects_locale_query_and_collections() -> None:
+    assert phaidon_entity_from_url("https://www.phaidon.com/en-us/products/cook-in-a-book") is None
+    assert phaidon_entity_from_url("https://www.phaidon.com/products/cook-in-a-book?utm=1") is None
+    assert phaidon_entity_from_url("https://www.phaidon.com/collections/art") is None

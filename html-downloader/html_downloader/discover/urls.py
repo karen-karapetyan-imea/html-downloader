@@ -1,4 +1,4 @@
-"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, Fine Art America, and 1stDibs."""
+"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, Fine Art America, Phaidon, and 1stDibs."""
 
 from __future__ import annotations
 
@@ -89,6 +89,10 @@ FINEARTAMERICA_ARTIST_RE = re.compile(
 )
 FINEARTAMERICA_ARTWORK_RE = re.compile(
     r"fineartamerica\.com/featured/([a-z0-9_-]+)\.html/?$",
+    re.IGNORECASE,
+)
+PHAIDON_PRODUCT_RE = re.compile(
+    r"phaidon\.com/products/([a-z0-9-]+)/?$",
     re.IGNORECASE,
 )
 
@@ -259,4 +263,18 @@ def fineartamerica_entity_from_url(url: str) -> tuple[str, str] | None:
     artist = FINEARTAMERICA_ARTIST_RE.search(url)
     if artist:
         return "artist", artist.group(1).lower()
+    return None
+
+
+def phaidon_entity_from_url(url: str) -> tuple[str, str] | None:
+    """Return ('product', slug) for Phaidon product page URLs.
+
+    Accepts only default-locale /products/{slug} paths.
+    Rejects query/fragment and locale-prefixed paths such as /en-us/products/...
+    """
+    if "?" in url or "#" in url:
+        return None
+    product = PHAIDON_PRODUCT_RE.search(url)
+    if product:
+        return "product", product.group(1).lower()
     return None

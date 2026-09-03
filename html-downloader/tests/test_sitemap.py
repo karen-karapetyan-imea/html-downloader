@@ -6,6 +6,7 @@ from html_downloader.discover.sitemap import (
     DEFAULT_ARTFINDER_INDEX,
     DEFAULT_ARTMAJEUR_INDEX,
     DEFAULT_FINEARTAMERICA_INDEXES,
+    DEFAULT_PHAIDON_INDEX,
     DEFAULT_SAATCHI_INDEX,
     DEFAULT_SINGULART_INDEX,
     FINEARTAMERICA_ARTISTS_INDEX,
@@ -16,10 +17,12 @@ from html_downloader.discover.sitemap import (
     fetch_artmajeur_sitemap_entries,
     fetch_artsy_sitemap_entries,
     fetch_fineartamerica_sitemap_entries,
+    fetch_phaidon_sitemap_entries,
     fetch_saatchi_sitemap_entries,
     fetch_singulart_sitemap_entries,
     filter_artfinder_child_sitemaps,
     filter_fineartamerica_child_sitemaps,
+    filter_phaidon_child_sitemaps,
     filter_saatchi_child_sitemaps,
     filter_singulart_child_sitemaps,
     is_sitemap_index,
@@ -509,3 +512,68 @@ def test_known_keys_from_sources_fineartamerica(tmp_path) -> None:
     )
     keys = known_keys_from_sources(known_paths=[path], source="fineartamerica")
     assert keys == {("artwork", "poolside-glamour-slim-aarons")}
+
+
+PHAIDON_INDEX_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://www.phaidon.com/sitemap_products_1.xml?from=1&amp;to=2</loc></sitemap>
+  <sitemap><loc>https://www.phaidon.com/en-us/sitemap_products_1.xml?from=1&amp;to=2</loc></sitemap>
+  <sitemap><loc>https://www.phaidon.com/sitemap_collections_1.xml?from=1&amp;to=2</loc></sitemap>
+  <sitemap><loc>https://www.phaidon.com/sitemap_blogs_1.xml</loc></sitemap>
+</sitemapindex>"""
+
+PHAIDON_PRODUCTS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.phaidon.com/products/cook-in-a-book</loc>
+    <lastmod>2026-09-03T10:11:56+01:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.phaidon.com/</loc>
+  </url>
+  <url>
+    <loc>https://www.phaidon.com/en-us/products/cook-in-a-book</loc>
+  </url>
+</urlset>"""
+
+
+def test_filter_phaidon_child_sitemaps() -> None:
+    urls = [
+        "https://www.phaidon.com/sitemap_products_1.xml?from=1&to=2",
+        "https://www.phaidon.com/en-us/sitemap_products_1.xml?from=1&to=2",
+        "https://www.phaidon.com/sitemap_collections_1.xml?from=1&to=2",
+        "https://www.phaidon.com/sitemap_blogs_1.xml",
+    ]
+    filtered = filter_phaidon_child_sitemaps(urls)
+    assert filtered == [
+        "https://www.phaidon.com/sitemap_products_1.xml?from=1&to=2",
+    ]
+
+
+def test_fetch_phaidon_sitemap_entries() -> None:
+    child = "https://www.phaidon.com/sitemap_products_1.xml?from=1&to=2"
+    fixtures = {
+        DEFAULT_PHAIDON_INDEX: PHAIDON_INDEX_XML,
+        child: PHAIDON_PRODUCTS_URLSET,
+    }
+
+    def fake_fetch(url: str) -> bytes:
+        return fixtures[url]
+
+    entries = fetch_phaidon_sitemap_entries(fetch_bytes=fake_fetch, concurrency=2)
+    by_key = {(e.entity_type, e.entity_id): e for e in entries}
+    assert by_key == {
+        ("product", "cook-in-a-book"): entries[0],
+    }
+    assert by_key[("product", "cook-in-a-book")].lastmod == "2026-09-03T10:11:56+01:00"
+    assert by_key[("product", "cook-in-a-book")].url == "https://www.phaidon.com/products/cook-in-a-book"
+
+
+def test_known_keys_from_sources_phaidon(tmp_path) -> None:
+    path = tmp_path / "urls.txt"
+    path.write_text(
+        "https://www.phaidon.com/products/cook-in-a-book\n",
+        encoding="utf-8",
+    )
+    keys = known_keys_from_sources(known_paths=[path], source="phaidon")
+    assert keys == {("product", "cook-in-a-book")}

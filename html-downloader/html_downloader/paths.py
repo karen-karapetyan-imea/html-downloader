@@ -18,6 +18,7 @@ MARKETPLACES: tuple[str, ...] = (
     "firstdibs",
     "artfinder",
     "fineartamerica",
+    "phaidon",
 )
 
 
