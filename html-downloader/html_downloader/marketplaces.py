@@ -6,13 +6,16 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from html_downloader.discover.firstdibs import DEFAULT_1STDIBS_SEEDS, fetch_firstdibs_sitemap_entries
 from html_downloader.discover.sitemap import (
+    DEFAULT_ARTFINDER_INDEX,
     DEFAULT_ARTSY_INDEXES,
     DEFAULT_ARTMAJEUR_INDEX,
     DEFAULT_INDEX,
     DEFAULT_SAATCHI_INDEX,
     DEFAULT_SINGULART_INDEX,
     SitemapEntry,
+    fetch_artfinder_sitemap_entries,
     fetch_artmajeur_sitemap_entries,
     fetch_artsper_sitemap_entries,
     fetch_artsy_sitemap_entries,
@@ -61,6 +64,18 @@ SPECS: dict[str, MarketplaceSpec] = {
         default_concurrency=8,
         uses_stealth_proxy=False,
     ),
+    "firstdibs": MarketplaceSpec(
+        name="firstdibs",
+        default_indexes=DEFAULT_1STDIBS_SEEDS,
+        default_concurrency=10,
+        uses_stealth_proxy=False,
+    ),
+    "artfinder": MarketplaceSpec(
+        name="artfinder",
+        default_indexes=(DEFAULT_ARTFINDER_INDEX,),
+        default_concurrency=4,
+        uses_stealth_proxy=False,
+    ),
 }
 
 
@@ -93,7 +108,14 @@ def fetch_entries(
         if proxy is not None:
             kwargs["proxy"] = proxy
         return fetch_singulart_sitemap_entries(index_list[0], **kwargs)
-    kwargs: dict[str, Any] = {"concurrency": concurrency}
+    if spec.name == "firstdibs":
+        kwargs = {"concurrency": concurrency}
+        if proxy is not None:
+            kwargs["proxy"] = proxy
+        return fetch_firstdibs_sitemap_entries(index_list, **kwargs)
+    if spec.name == "artfinder":
+        return fetch_artfinder_sitemap_entries(index_list[0], concurrency=concurrency)
+    kwargs = {"concurrency": concurrency}
     if proxy is not None:
         kwargs["proxy"] = proxy
     return fetch_artsy_sitemap_entries(index_list, **kwargs)

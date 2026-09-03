@@ -17,6 +17,7 @@ import httpx
 
 from html_downloader.discover.registry import entity_key_from_url, load_entity_keys, load_urls, normalize_url
 from html_downloader.discover.urls import (
+    artfinder_entity_from_url,
     artmajeur_entity_from_url,
     artsy_entity_from_url,
     saatchi_entity_from_url,
@@ -33,9 +34,11 @@ ARTSY_ARTWORK_INDEX = "https://www.artsy.net/sitemap-artworks.xml"
 DEFAULT_ARTSY_INDEXES = (ARTSY_ARTIST_INDEX, ARTSY_ARTWORK_INDEX)
 DEFAULT_ARTMAJEUR_INDEX = "https://www.artmajeur.com/sitemap.xml"
 DEFAULT_SINGULART_INDEX = "https://www.singulart.com/en/sitemap-index-en.xml"
+DEFAULT_ARTFINDER_INDEX = "https://www.artfinder.com/sitemap.xml"
 _ARTSPER_CHILD_RE = ("artist", "artwork")
 _ARTMAJEUR_CHILD_RE = ("members", "artworks")
 _SAATCHI_CHILD_RE = ("artwork", "profile")
+_ARTFINDER_CHILD_RE = ("sitemap-products", "sitemap-artists")
 _RETRYABLE_STATUS = frozenset({429, 500, 502, 503, 504})
 
 FetchBytesFn = Callable[[str], bytes]
@@ -141,6 +144,15 @@ def filter_singulart_child_sitemaps(urls: Iterable[str]) -> list[str]:
         if any(token in lower for token in _SINGULART_CHILD_EXCLUDE):
             continue
         if "artist" in lower or "artwork" in lower:
+            selected.append(url)
+    return selected
+
+
+def filter_artfinder_child_sitemaps(urls: Iterable[str]) -> list[str]:
+    selected: list[str] = []
+    for url in urls:
+        lower = url.lower()
+        if any(token in lower for token in _ARTFINDER_CHILD_RE):
             selected.append(url)
     return selected
 
@@ -267,6 +279,8 @@ def _looks_like_html_challenge(body: bytes) -> bool:
     if b"just a moment" in sample or b"cf-chl" in sample or b"cloudflare" in sample:
         return True
     if b"human verification" in sample or b"awswaf" in sample:
+        return True
+    if b"_fs-ch" in sample or b"client-detection" in sample:
         return True
     return False
 
@@ -668,6 +682,81 @@ def fetch_singulart_sitemap_entries(
             session.close()
 
 
+def fetch_artfinder_sitemap_entries(
+    index_url: str = DEFAULT_ARTFINDER_INDEX,
+    *,
+    concurrency: int = 4,
+    client: httpx.Client | None = None,
+    fetch_bytes: FetchBytesFn | None = None,
+) -> list[SitemapEntry]:
+    """Fetch Artfinder product/artist entity URLs from the public XML sitemap index."""
+    owned_client = False
+    http: httpx.Client | None = None
+    active_fetch = fetch_bytes
+
+    if active_fetch is None:
+        owned_client = client is None
+        http = client or httpx.Client(
+            http2=False,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (compatible; ArtfinderSitemapFetcher/1.0; "
+                    "+https://www.artfinder.com/sitemap.xml)"
+                ),
+                "Accept": "application/xml,text/xml,*/*",
+            },
+        )
+
+        def active_fetch(url: str, _http: httpx.Client = http) -> bytes:
+            return fetch_sitemap_bytes(_http, url)
+
+    try:
+        index_xml = active_fetch(index_url)
+        child_urls = filter_artfinder_child_sitemaps(parse_child_sitemap_locs(index_xml))
+        LOGGER.info("artfinder sitemap child maps=%s concurrency=%s", len(child_urls), concurrency)
+
+        entries: list[SitemapEntry] = []
+        skipped_child_maps: list[str] = []
+        with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
+            futures = {pool.submit(active_fetch, child_url): child_url for child_url in child_urls}
+            for future in as_completed(futures):
+                child_url = futures[future]
+                try:
+                    xml_bytes = future.result()
+                    for url, lastmod in parse_url_entries(xml_bytes):
+                        if "?" in url or "#" in url:
+                            continue
+                        normalized = normalize_url(url)
+                        key = artfinder_entity_from_url(normalized)
+                        if key is None:
+                            continue
+                        entity_type, entity_id = key
+                        entries.append(
+                            SitemapEntry(
+                                url=normalized,
+                                lastmod=lastmod,
+                                entity_type=entity_type,
+                                entity_id=entity_id,
+                            )
+                        )
+                except ET.ParseError as exc:
+                    LOGGER.warning("child sitemap parse failed url=%s error=%s", child_url, exc)
+                    skipped_child_maps.append(child_url)
+                except Exception as exc:
+                    LOGGER.warning("child sitemap failed url=%s error=%s", child_url, exc)
+                    skipped_child_maps.append(child_url)
+        if skipped_child_maps:
+            LOGGER.warning(
+                "artfinder sitemap skipped child maps=%s sample=%s",
+                len(skipped_child_maps),
+                skipped_child_maps[:5],
+            )
+        return entries
+    finally:
+        if owned_client and http is not None:
+            http.close()
+
+
 def known_artsy_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]:
     """Load known Artsy entity keys (type, slug) from URL list / JSONL files."""
     keys: set[tuple[str, str]] = set()
@@ -703,6 +792,16 @@ def known_singulart_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str
     keys: set[tuple[str, str]] = set()
     for url in load_urls(paths):
         key = singulart_entity_from_url(url)
+        if key is not None:
+            keys.add(key)
+    return keys
+
+
+def known_artfinder_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str]]:
+    """Load known Artfinder entity keys from URL list / JSONL files."""
+    keys: set[tuple[str, str]] = set()
+    for url in load_urls(paths):
+        key = artfinder_entity_from_url(url)
         if key is not None:
             keys.add(key)
     return keys
@@ -800,6 +899,12 @@ def known_keys_from_sources(
             keys |= known_artmajeur_keys_from_paths(known_paths)
         elif source == "singulart":
             keys |= known_singulart_keys_from_paths(known_paths)
+        elif source == "artfinder":
+            keys |= known_artfinder_keys_from_paths(known_paths)
+        elif source == "firstdibs":
+            from html_downloader.discover.firstdibs import known_firstdibs_keys_from_paths
+
+            keys |= known_firstdibs_keys_from_paths(known_paths)
         else:
             keys |= load_entity_keys(known_paths)
     return keys

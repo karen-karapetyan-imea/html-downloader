@@ -1,4 +1,4 @@
-"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, and Singulart."""
+"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, and 1stDibs."""
 
 from __future__ import annotations
 
@@ -65,6 +65,22 @@ SINGULART_ARTIST_RE = re.compile(
 )
 SINGULART_ARTWORK_RE = re.compile(
     r"singulart\.com/(?:[a-z]{2}/)artworks/[^/?#]+-(\d+)/?$",
+    re.IGNORECASE,
+)
+FIRSTDIBS_ITEM_RE = re.compile(
+    r"1stdibs\.com/art/[^?#]*/id-a_(\d+)/?",
+    re.IGNORECASE,
+)
+FIRSTDIBS_DEALER_RE = re.compile(
+    r"1stdibs\.com/dealers/([a-z0-9_-]+)",
+    re.IGNORECASE,
+)
+ARTFINDER_ARTWORK_RE = re.compile(
+    r"artfinder\.com/product/([a-z0-9_-]+)/?$",
+    re.IGNORECASE,
+)
+ARTFINDER_ARTIST_RE = re.compile(
+    r"artfinder\.com/artist/([a-z0-9_-]+)/?$",
     re.IGNORECASE,
 )
 
@@ -176,4 +192,45 @@ def singulart_entity_from_url(url: str) -> tuple[str, str] | None:
     artwork = SINGULART_ARTWORK_RE.search(url)
     if artwork:
         return "artwork", artwork.group(1)
+    return None
+
+
+def firstdibs_entity_from_url(url: str) -> tuple[str, str] | None:
+    """Return ('item'|'dealer'|'creator', external_id) for 1stDibs entity page URLs."""
+    if "?" in url or "#" in url:
+        return None
+    lower = url.lower()
+    if "/sitemap/" in lower or "/search/" in lower or "/item/" in lower:
+        return None
+
+    from sitemap_crawler.entities import classify_url
+
+    classified = classify_url(url)
+    if classified is not None:
+        kind, key, _canonical = classified
+        return kind, key
+
+    item = FIRSTDIBS_ITEM_RE.search(url)
+    if item:
+        return "item", item.group(1)
+    dealer = FIRSTDIBS_DEALER_RE.search(url)
+    if dealer:
+        return "dealer", dealer.group(1).lower()
+    return None
+
+
+def artfinder_entity_from_url(url: str) -> tuple[str, str] | None:
+    """Return ('artwork'|'artist', slug) for Artfinder entity page URLs.
+
+    Accepts only default-locale paths (/product/{slug}/, /artist/{slug}/).
+    Rejects query/fragment and locale-prefixed paths such as /en-US/product/...
+    """
+    if "?" in url or "#" in url:
+        return None
+    artwork = ARTFINDER_ARTWORK_RE.search(url)
+    if artwork:
+        return "artwork", artwork.group(1).lower()
+    artist = ARTFINDER_ARTIST_RE.search(url)
+    if artist:
+        return "artist", artist.group(1).lower()
     return None

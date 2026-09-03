@@ -1,6 +1,8 @@
 from html_downloader.discover.urls import (
+    artfinder_entity_from_url,
     artsper_entity_from_url,
     artsy_entity_from_url,
+    firstdibs_entity_from_url,
     saatchi_artist_from_url,
     saatchi_artwork_from_url,
     saatchi_entity_from_url,
@@ -78,5 +80,54 @@ def test_singulart_rejects_pagination_and_collections() -> None:
     )
     assert (
         singulart_entity_from_url("https://www.singulart.com/en/collection/the-shape-of-maps-27593")
+        is None
+    )
+
+
+def test_firstdibs_item_url() -> None:
+    url = "https://www.1stdibs.com/art/paintings/landscape/nick-white/id-a_12382842/"
+    assert firstdibs_entity_from_url(url) == ("item", "12382842")
+
+
+def test_firstdibs_dealer_url() -> None:
+    url = "https://www.1stdibs.com/dealers/1-drop-gallery/"
+    assert firstdibs_entity_from_url(url) == ("dealer", "1-drop-gallery")
+
+
+def test_firstdibs_dealer_shop_url_maps_to_dealer() -> None:
+    url = "https://www.1stdibs.com/dealers/1-drop-gallery/shop/art/paintings/"
+    assert firstdibs_entity_from_url(url) == ("dealer", "1-drop-gallery")
+
+
+def test_firstdibs_rejects_sitemap_and_search() -> None:
+    assert (
+        firstdibs_entity_from_url("https://www.1stdibs.com/sitemap/art/items/3/6001/")
+        is None
+    )
+    assert firstdibs_entity_from_url("https://www.1stdibs.com/search/?q=foo") is None
+
+
+def test_firstdibs_creator_url() -> None:
+    url = "https://www.1stdibs.com/creators/pablo-picasso/art/paintings/"
+    assert firstdibs_entity_from_url(url) == ("creator", "pablo-picasso")
+
+
+def test_artfinder_artwork_url() -> None:
+    url = "https://www.artfinder.com/product/dama-33/"
+    assert artfinder_entity_from_url(url) == ("artwork", "dama-33")
+
+
+def test_artfinder_artist_url() -> None:
+    url = "https://www.artfinder.com/artist/sallyjfisher/"
+    assert artfinder_entity_from_url(url) == ("artist", "sallyjfisher")
+
+
+def test_artfinder_rejects_query_locale_and_shop() -> None:
+    assert artfinder_entity_from_url("https://www.artfinder.com/product/dama-33/?utm=1") is None
+    assert artfinder_entity_from_url("https://www.artfinder.com/en-US/product/dama-33/") is None
+    assert (
+        artfinder_entity_from_url(
+            "https://www.artfinder.com/art/product_category-prints/subject-abstract-conceptual/"
+        )
         is None
     )

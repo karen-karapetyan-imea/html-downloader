@@ -3,15 +3,18 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from html_downloader.discover.sitemap import (
+    DEFAULT_ARTFINDER_INDEX,
     DEFAULT_ARTMAJEUR_INDEX,
     DEFAULT_SAATCHI_INDEX,
     DEFAULT_SINGULART_INDEX,
     SitemapEntry,
     diff_sitemap_entries,
+    fetch_artfinder_sitemap_entries,
     fetch_artmajeur_sitemap_entries,
     fetch_artsy_sitemap_entries,
     fetch_saatchi_sitemap_entries,
     fetch_singulart_sitemap_entries,
+    filter_artfinder_child_sitemaps,
     filter_saatchi_child_sitemaps,
     filter_singulart_child_sitemaps,
     is_sitemap_index,
@@ -342,3 +345,76 @@ def test_known_keys_from_sources_singulart(tmp_path) -> None:
     )
     keys = known_keys_from_sources(known_paths=[path], source="singulart")
     assert keys == {("artwork", "28")}
+
+
+ARTFINDER_INDEX_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://assets.artfinder.com/sitemaps/en/sitemap-artists-1.xml</loc></sitemap>
+  <sitemap><loc>https://assets.artfinder.com/sitemaps/en/sitemap-products-1.xml</loc></sitemap>
+  <sitemap><loc>https://assets.artfinder.com/sitemaps/en/sitemap-shop-1.xml</loc></sitemap>
+  <sitemap><loc>https://assets.artfinder.com/sitemaps/en/sitemap-blog-1.xml</loc></sitemap>
+</sitemapindex>"""
+
+ARTFINDER_ARTISTS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.artfinder.com/artist/sallyjfisher/</loc>
+    <lastmod>2026-08-19</lastmod>
+  </url>
+  <url>
+    <loc>https://www.artfinder.com/en-US/artist/sallyjfisher/</loc>
+  </url>
+</urlset>"""
+
+ARTFINDER_PRODUCTS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.artfinder.com/product/dama-33/</loc>
+    <lastmod>2026-07-01</lastmod>
+  </url>
+  <url>
+    <loc>https://www.artfinder.com/product/dama-33/?utm=1</loc>
+  </url>
+</urlset>"""
+
+
+def test_filter_artfinder_child_sitemaps() -> None:
+    urls = [
+        "https://assets.artfinder.com/sitemaps/en/sitemap-artists-1.xml",
+        "https://assets.artfinder.com/sitemaps/en/sitemap-products-1.xml",
+        "https://assets.artfinder.com/sitemaps/en/sitemap-shop-1.xml",
+        "https://assets.artfinder.com/sitemaps/en/sitemap-blog-1.xml",
+    ]
+    filtered = filter_artfinder_child_sitemaps(urls)
+    assert filtered == [
+        "https://assets.artfinder.com/sitemaps/en/sitemap-artists-1.xml",
+        "https://assets.artfinder.com/sitemaps/en/sitemap-products-1.xml",
+    ]
+
+
+def test_fetch_artfinder_sitemap_entries() -> None:
+    fixtures = {
+        DEFAULT_ARTFINDER_INDEX: ARTFINDER_INDEX_XML,
+        "https://assets.artfinder.com/sitemaps/en/sitemap-artists-1.xml": ARTFINDER_ARTISTS_URLSET,
+        "https://assets.artfinder.com/sitemaps/en/sitemap-products-1.xml": ARTFINDER_PRODUCTS_URLSET,
+    }
+
+    def fake_fetch(url: str) -> bytes:
+        return fixtures[url]
+
+    entries = fetch_artfinder_sitemap_entries(fetch_bytes=fake_fetch, concurrency=2)
+    by_key = {(e.entity_type, e.entity_id): e for e in entries}
+    assert ("artist", "sallyjfisher") in by_key
+    assert ("artwork", "dama-33") in by_key
+    assert len(by_key) == 2
+    assert by_key[("artist", "sallyjfisher")].lastmod == "2026-08-19"
+
+
+def test_known_keys_from_sources_artfinder(tmp_path) -> None:
+    path = tmp_path / "urls.txt"
+    path.write_text(
+        "https://www.artfinder.com/product/dama-33/\n",
+        encoding="utf-8",
+    )
+    keys = known_keys_from_sources(known_paths=[path], source="artfinder")
+    assert keys == {("artwork", "dama-33")}
