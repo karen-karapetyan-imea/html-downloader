@@ -4,6 +4,7 @@ from html_downloader.discover.urls import (
     artsy_entity_from_url,
     fineartamerica_entity_from_url,
     firstdibs_entity_from_url,
+    mutualart_entity_from_url,
     phaidon_entity_from_url,
     saatchi_artist_from_url,
     saatchi_artwork_from_url,
@@ -199,3 +200,40 @@ def test_ugallery_rejects_static_pages_and_query() -> None:
         is None
     )
     assert ugallery_entity_from_url("https://www.ugallery.com/collections/abstract-artwork") is None
+
+
+def test_mutualart_artist_url() -> None:
+    url = "https://www.mutualart.com/Artist/Banksy/993F064E6ED15A35"
+    assert mutualart_entity_from_url(url) == ("artist", "993F064E6ED15A35")
+
+
+def test_mutualart_organization_url() -> None:
+    url = "https://www.mutualart.com/Organization/a-fantastic-find/02081EA1D4EA7618"
+    assert mutualart_entity_from_url(url) == ("organization", "02081EA1D4EA7618")
+
+
+def test_mutualart_exhibition_url() -> None:
+    url = "https://www.mutualart.com/Exhibition/-A-Body-Of-Art/1EE8BE929E8657E1"
+    assert mutualart_entity_from_url(url) == ("exhibition", "1EE8BE929E8657E1")
+
+
+def test_mutualart_auction_url() -> None:
+    url = "https://www.mutualart.com/Auction/--Art-Sale/7D66190318370CA0"
+    assert mutualart_entity_from_url(url) == ("auction", "7D66190318370CA0")
+
+
+def test_mutualart_rejects_nested_query_and_non_entity() -> None:
+    assert (
+        mutualart_entity_from_url(
+            "https://www.mutualart.com/Artist/Andy-Warhol/85A84FA828A34B78/Graphs"
+        )
+        is None
+    )
+    assert (
+        mutualart_entity_from_url(
+            "https://www.mutualart.com/Artist/Banksy/993F064E6ED15A35?utm=1"
+        )
+        is None
+    )
+    assert mutualart_entity_from_url("https://www.mutualart.com/ArtistsIndex/a/") is None
+    assert mutualart_entity_from_url("https://www.mutualart.com/sitemap") is None

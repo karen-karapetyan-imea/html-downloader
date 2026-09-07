@@ -3,7 +3,7 @@
 # Cadence is anchored to each cycle's start time (7 days), not finish time.
 #
 # Usage:
-#   ./scripts/run_weekly.sh saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon|ugallery
+#   ./scripts/run_weekly.sh saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon|ugallery|mutualart
 #
 # Prefer starting all three in parallel via:
 #   ./scripts/start_weekly_tmux.sh
@@ -17,9 +17,9 @@ PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 marketplace="${1:-}"
 case "${marketplace}" in
-  saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon|ugallery) ;;
+  saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon|ugallery|mutualart) ;;
   *)
-    echo "usage: $0 saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon|ugallery" >&2
+    echo "usage: $0 saatchi|artsper|artsy|artmajeur|singulart|firstdibs|artfinder|fineartamerica|phaidon|ugallery|mutualart" >&2
     exit 2
     ;;
 esac
@@ -48,7 +48,7 @@ run_cycle() {
     --update-state
   )
 
-  if [[ "${marketplace}" == "artsy" || "${marketplace}" == "artmajeur" ]]; then
+  if [[ "${marketplace}" == "artsy" || "${marketplace}" == "artmajeur" || "${marketplace}" == "mutualart" ]]; then
     discover_args+=(--proxy-file proxy.txt)
   fi
 

@@ -1218,6 +1218,10 @@ def known_keys_from_sources(
             keys |= known_phaidon_keys_from_paths(known_paths)
         elif source == "ugallery":
             keys |= known_ugallery_keys_from_paths(known_paths)
+        elif source == "mutualart":
+            from html_downloader.discover.mutualart import known_mutualart_keys_from_paths
+
+            keys |= known_mutualart_keys_from_paths(known_paths)
         elif source == "firstdibs":
             from html_downloader.discover.firstdibs import known_firstdibs_keys_from_paths
 

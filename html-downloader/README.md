@@ -1,6 +1,6 @@
 # html-downloader
 
-Standalone sitemap discovery and stealth HTML download for **Saatchi Art**, **Artsper**, **Artsy**, **ArtMajeur**, **Singulart**, **1stDibs**, **Artfinder**, **Fine Art America**, **Phaidon**, and **UGallery**. No parsing, no database.
+Standalone sitemap discovery and stealth HTML download for **Saatchi Art**, **Artsper**, **Artsy**, **ArtMajeur**, **Singulart**, **1stDibs**, **Artfinder**, **Fine Art America**, **Phaidon**, **UGallery**, and **MutualArt**. No parsing, no database.
 
 Crawls write to dated job folders:
 
@@ -40,9 +40,10 @@ python -m html_downloader discover --marketplace artfinder --incremental --updat
 python -m html_downloader discover --marketplace fineartamerica --incremental --update-state
 python -m html_downloader discover --marketplace phaidon --incremental --update-state
 python -m html_downloader discover --marketplace ugallery --incremental --update-state
+python -m html_downloader discover --marketplace mutualart --proxy-file proxy.txt --incremental --update-state
 ```
 
-Writes `data/{marketplace}/{YYYY-MM-DD}/urls.txt` (what to download) and `sitemap_all.txt` (full entity list). `--incremental` diffs against `state/{marketplace}_lastmod.json` and prior `results.jsonl` files. **1stDibs** crawls the art HTML sitemap branches (items, dealers, creators), resumes from `state/sitemap_crawler/`, and writes artwork/dealer/creator URLs. No `lastmod`; incremental mode detects new entities only. **Artfinder** uses the public XML sitemap index (products + artists) with `lastmod` incremental diffs. **Fine Art America** uses artist + popular-products art sitemaps (`/profiles/{slug}`, `/featured/{slug}.html`); no `lastmod`, so incremental detects new entities only. **Artspace** redirects to Phaidon; **Phaidon** discovers default-locale Shopify book products (`/products/{slug}`) with `lastmod` incremental diffs. **UGallery** uses the Shopify XML sitemap (`/products/{slug}` artworks + `/pages/{slug}` artists) with `lastmod` incremental diffs.
+Writes `data/{marketplace}/{YYYY-MM-DD}/urls.txt` (what to download) and `sitemap_all.txt` (full entity list). `--incremental` diffs against `state/{marketplace}_lastmod.json` and prior `results.jsonl` files. **1stDibs** crawls the art HTML sitemap branches (items, dealers, creators), resumes from `state/sitemap_crawler/`, and writes artwork/dealer/creator URLs. No `lastmod`; incremental mode detects new entities only. **Artfinder** uses the public XML sitemap index (products + artists) with `lastmod` incremental diffs. **Fine Art America** uses artist + popular-products art sitemaps (`/profiles/{slug}`, `/featured/{slug}.html`); no `lastmod`, so incremental detects new entities only. **Artspace** redirects to Phaidon; **Phaidon** discovers default-locale Shopify book products (`/products/{slug}`) with `lastmod` incremental diffs. **UGallery** uses the Shopify XML sitemap (`/products/{slug}` artworks + `/pages/{slug}` artists) with `lastmod` incremental diffs. **MutualArt** crawls the HTML sitemap A–Z indexes (`/Artist/`, `/Organization/`, `/Exhibition/`, `/Auction/`); discover requires `--proxy-file` (ArtistsIndex is CAPTCHA-gated). No `lastmod`; incremental detects new entities only.
 
 ```bash
 python -m html_downloader discover --marketplace firstdibs --concurrency 10
@@ -60,6 +61,7 @@ python -m html_downloader download --marketplace artfinder --proxy-file proxy.tx
 python -m html_downloader download --marketplace fineartamerica --proxy-file proxy.txt --skip-existing
 python -m html_downloader download --marketplace phaidon --proxy-file proxy.txt --skip-existing
 python -m html_downloader download --marketplace ugallery --proxy-file proxy.txt --skip-existing
+python -m html_downloader download --marketplace mutualart --proxy-file proxy.txt --skip-existing
 ```
 
 Flags: `--date YYYY-MM-DD`, `--workers`, `--rps`, `--skip-existing`, `--urls` (override job `urls.txt`).

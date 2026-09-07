@@ -1,4 +1,4 @@
-"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, Fine Art America, Phaidon, UGallery, and 1stDibs."""
+"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, Fine Art America, Phaidon, UGallery, MutualArt, and 1stDibs."""
 
 from __future__ import annotations
 
@@ -101,6 +101,22 @@ UGALLERY_ARTWORK_RE = re.compile(
 )
 UGALLERY_ARTIST_RE = re.compile(
     r"ugallery\.com/pages/([a-z0-9-]+)/?$",
+    re.IGNORECASE,
+)
+MUTUALART_ARTIST_RE = re.compile(
+    r"mutualart\.com/Artist/([^/?#]+)/([0-9A-Fa-f]{10,})/?$",
+    re.IGNORECASE,
+)
+MUTUALART_ORGANIZATION_RE = re.compile(
+    r"mutualart\.com/Organization/([^/?#]+)/([0-9A-Fa-f]{10,})/?$",
+    re.IGNORECASE,
+)
+MUTUALART_EXHIBITION_RE = re.compile(
+    r"mutualart\.com/Exhibition/([^/?#]+)/([0-9A-Fa-f]{10,})/?$",
+    re.IGNORECASE,
+)
+MUTUALART_AUCTION_RE = re.compile(
+    r"mutualart\.com/Auction/([^/?#]+)/([0-9A-Fa-f]{10,})/?$",
     re.IGNORECASE,
 )
 
@@ -324,4 +340,31 @@ def ugallery_entity_from_url(url: str) -> tuple[str, str] | None:
         if slug.startswith("a-guide") or slug.startswith("how-to"):
             return None
         return "artist", slug
+    return None
+
+
+def mutualart_entity_from_url(url: str) -> tuple[str, str] | None:
+    """Return entity type and hex id for MutualArt entity page URLs.
+
+    Accepts:
+      /Artist/{slug}/{hexId}
+      /Organization/{slug}/{hexId}
+      /Exhibition/{slug}/{hexId}
+      /Auction/{slug}/{hexId}
+    Rejects query/fragment and nested subpaths (e.g. /Artist/.../Graphs).
+    """
+    if "?" in url or "#" in url:
+        return None
+    artist = MUTUALART_ARTIST_RE.search(url)
+    if artist:
+        return "artist", artist.group(2).upper()
+    organization = MUTUALART_ORGANIZATION_RE.search(url)
+    if organization:
+        return "organization", organization.group(2).upper()
+    exhibition = MUTUALART_EXHIBITION_RE.search(url)
+    if exhibition:
+        return "exhibition", exhibition.group(2).upper()
+    auction = MUTUALART_AUCTION_RE.search(url)
+    if auction:
+        return "auction", auction.group(2).upper()
     return None

@@ -7,6 +7,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from html_downloader.discover.firstdibs import DEFAULT_1STDIBS_SEEDS, fetch_firstdibs_sitemap_entries
+from html_downloader.discover.mutualart import (
+    DEFAULT_MUTUALART_SITEMAP,
+    fetch_mutualart_sitemap_entries,
+)
 from html_downloader.discover.sitemap import (
     DEFAULT_ARTFINDER_INDEX,
     DEFAULT_ARTSY_INDEXES,
@@ -100,6 +104,12 @@ SPECS: dict[str, MarketplaceSpec] = {
         default_concurrency=8,
         uses_stealth_proxy=False,
     ),
+    "mutualart": MarketplaceSpec(
+        name="mutualart",
+        default_indexes=(DEFAULT_MUTUALART_SITEMAP,),
+        default_concurrency=4,
+        uses_stealth_proxy=True,
+    ),
 }
 
 
@@ -148,6 +158,11 @@ def fetch_entries(
         if proxy is not None:
             kwargs["proxy"] = proxy
         return fetch_ugallery_sitemap_entries(index_list[0], **kwargs)
+    if spec.name == "mutualart":
+        kwargs = {"concurrency": concurrency}
+        if proxy is not None:
+            kwargs["proxy"] = proxy
+        return fetch_mutualart_sitemap_entries(index_list[0], **kwargs)
     kwargs = {"concurrency": concurrency}
     if proxy is not None:
         kwargs["proxy"] = proxy
