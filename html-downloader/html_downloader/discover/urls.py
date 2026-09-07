@@ -1,4 +1,4 @@
-"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, Fine Art America, Phaidon, and 1stDibs."""
+"""URL parsing helpers for Artsper, Saatchi, Artsy, ArtMajeur, Singulart, Artfinder, Fine Art America, Phaidon, UGallery, and 1stDibs."""
 
 from __future__ import annotations
 
@@ -94,6 +94,30 @@ FINEARTAMERICA_ARTWORK_RE = re.compile(
 PHAIDON_PRODUCT_RE = re.compile(
     r"phaidon\.com/products/([a-z0-9-]+)/?$",
     re.IGNORECASE,
+)
+UGALLERY_ARTWORK_RE = re.compile(
+    r"ugallery\.com/products/([a-z0-9-]+)/?$",
+    re.IGNORECASE,
+)
+UGALLERY_ARTIST_RE = re.compile(
+    r"ugallery\.com/pages/([a-z0-9-]+)/?$",
+    re.IGNORECASE,
+)
+
+_UGALLERY_PAGE_RESERVED = frozenset(
+    {
+        "contact",
+        "terms",
+        "about-us",
+        "faq",
+        "for-artists",
+        "commissions",
+        "quiz",
+        "privacy-policy",
+        "accessibility",
+        "a-guide-to-choosing-art-for-your-home",
+        "how-to-decorate-your-living-room-with-original-art",
+    }
 )
 
 _ARTMAJEUR_RESERVED = frozenset(
@@ -277,4 +301,27 @@ def phaidon_entity_from_url(url: str) -> tuple[str, str] | None:
     product = PHAIDON_PRODUCT_RE.search(url)
     if product:
         return "product", product.group(1).lower()
+    return None
+
+
+def ugallery_entity_from_url(url: str) -> tuple[str, str] | None:
+    """Return ('artwork'|'artist', slug) for UGallery entity page URLs.
+
+    Artwork: /products/{slug} (full Shopify handle, including trailing digits).
+    Artist: /pages/{slug} excluding static marketing/legal pages.
+    Rejects query/fragment.
+    """
+    if "?" in url or "#" in url:
+        return None
+    artwork = UGALLERY_ARTWORK_RE.search(url)
+    if artwork:
+        return "artwork", artwork.group(1).lower()
+    artist = UGALLERY_ARTIST_RE.search(url)
+    if artist:
+        slug = artist.group(1).lower()
+        if slug in _UGALLERY_PAGE_RESERVED:
+            return None
+        if slug.startswith("a-guide") or slug.startswith("how-to"):
+            return None
+        return "artist", slug
     return None

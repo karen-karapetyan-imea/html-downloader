@@ -9,6 +9,7 @@ from html_downloader.discover.sitemap import (
     DEFAULT_PHAIDON_INDEX,
     DEFAULT_SAATCHI_INDEX,
     DEFAULT_SINGULART_INDEX,
+    DEFAULT_UGALLERY_INDEX,
     FINEARTAMERICA_ARTISTS_INDEX,
     FINEARTAMERICA_POPULAR_PRODUCTS_INDEX,
     SitemapEntry,
@@ -20,11 +21,13 @@ from html_downloader.discover.sitemap import (
     fetch_phaidon_sitemap_entries,
     fetch_saatchi_sitemap_entries,
     fetch_singulart_sitemap_entries,
+    fetch_ugallery_sitemap_entries,
     filter_artfinder_child_sitemaps,
     filter_fineartamerica_child_sitemaps,
     filter_phaidon_child_sitemaps,
     filter_saatchi_child_sitemaps,
     filter_singulart_child_sitemaps,
+    filter_ugallery_child_sitemaps,
     is_sitemap_index,
     known_keys_from_sources,
     known_saatchi_keys_from_paths,
@@ -577,3 +580,93 @@ def test_known_keys_from_sources_phaidon(tmp_path) -> None:
     )
     keys = known_keys_from_sources(known_paths=[path], source="phaidon")
     assert keys == {("product", "cook-in-a-book")}
+
+
+UGALLERY_INDEX_XML = b"""<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap><loc>https://www.ugallery.com/sitemap_products_1.xml?from=1&amp;to=2</loc></sitemap>
+  <sitemap><loc>https://www.ugallery.com/sitemap_pages_1.xml?from=1&amp;to=2</loc></sitemap>
+  <sitemap><loc>https://www.ugallery.com/sitemap_collections_1.xml?from=1&amp;to=2</loc></sitemap>
+  <sitemap><loc>https://www.ugallery.com/sitemap_blogs_1.xml</loc></sitemap>
+  <sitemap><loc>https://www.ugallery.com/sitemap_agentic_discovery.xml</loc></sitemap>
+</sitemapindex>"""
+
+UGALLERY_PRODUCTS_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.ugallery.com/products/acrylic-painting-fusion-pattern</loc>
+    <lastmod>2026-09-07T01:55:18-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.ugallery.com/products/mixed-media-artwork-grace-74523</loc>
+    <lastmod>2026-09-07T01:55:18-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.ugallery.com/</loc>
+  </url>
+</urlset>"""
+
+UGALLERY_PAGES_URLSET = b"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.ugallery.com/pages/alicia-dunn</loc>
+    <lastmod>2026-09-03T00:42:04-07:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.ugallery.com/pages/contact</loc>
+  </url>
+  <url>
+    <loc>https://www.ugallery.com/pages/faq</loc>
+  </url>
+</urlset>"""
+
+
+def test_filter_ugallery_child_sitemaps() -> None:
+    urls = [
+        "https://www.ugallery.com/sitemap_products_1.xml?from=1&to=2",
+        "https://www.ugallery.com/sitemap_pages_1.xml?from=1&to=2",
+        "https://www.ugallery.com/sitemap_collections_1.xml?from=1&to=2",
+        "https://www.ugallery.com/sitemap_blogs_1.xml",
+        "https://www.ugallery.com/sitemap_agentic_discovery.xml",
+    ]
+    filtered = filter_ugallery_child_sitemaps(urls)
+    assert filtered == [
+        "https://www.ugallery.com/sitemap_products_1.xml?from=1&to=2",
+        "https://www.ugallery.com/sitemap_pages_1.xml?from=1&to=2",
+    ]
+
+
+def test_fetch_ugallery_sitemap_entries() -> None:
+    products = "https://www.ugallery.com/sitemap_products_1.xml?from=1&to=2"
+    pages = "https://www.ugallery.com/sitemap_pages_1.xml?from=1&to=2"
+    fixtures = {
+        DEFAULT_UGALLERY_INDEX: UGALLERY_INDEX_XML,
+        products: UGALLERY_PRODUCTS_URLSET,
+        pages: UGALLERY_PAGES_URLSET,
+    }
+
+    def fake_fetch(url: str) -> bytes:
+        return fixtures[url]
+
+    entries = fetch_ugallery_sitemap_entries(fetch_bytes=fake_fetch, concurrency=2)
+    by_key = {(e.entity_type, e.entity_id): e for e in entries}
+    assert ("artwork", "acrylic-painting-fusion-pattern") in by_key
+    assert ("artwork", "mixed-media-artwork-grace-74523") in by_key
+    assert ("artist", "alicia-dunn") in by_key
+    assert ("artist", "contact") not in by_key
+    assert len(by_key) == 3
+    assert by_key[("artist", "alicia-dunn")].lastmod == "2026-09-03T00:42:04-07:00"
+
+
+def test_known_keys_from_sources_ugallery(tmp_path) -> None:
+    path = tmp_path / "urls.txt"
+    path.write_text(
+        "https://www.ugallery.com/products/acrylic-painting-fusion-pattern\n"
+        "https://www.ugallery.com/pages/alicia-dunn\n",
+        encoding="utf-8",
+    )
+    keys = known_keys_from_sources(known_paths=[path], source="ugallery")
+    assert keys == {
+        ("artwork", "acrylic-painting-fusion-pattern"),
+        ("artist", "alicia-dunn"),
+    }

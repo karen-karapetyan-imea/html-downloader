@@ -9,6 +9,7 @@ from html_downloader.discover.urls import (
     saatchi_artwork_from_url,
     saatchi_entity_from_url,
     singulart_entity_from_url,
+    ugallery_entity_from_url,
 )
 
 
@@ -165,3 +166,36 @@ def test_phaidon_rejects_locale_query_and_collections() -> None:
     assert phaidon_entity_from_url("https://www.phaidon.com/en-us/products/cook-in-a-book") is None
     assert phaidon_entity_from_url("https://www.phaidon.com/products/cook-in-a-book?utm=1") is None
     assert phaidon_entity_from_url("https://www.phaidon.com/collections/art") is None
+
+
+def test_ugallery_artwork_url() -> None:
+    url = "https://www.ugallery.com/products/acrylic-painting-fusion-pattern"
+    assert ugallery_entity_from_url(url) == ("artwork", "acrylic-painting-fusion-pattern")
+
+
+def test_ugallery_artwork_url_keeps_trailing_digits() -> None:
+    url = "https://www.ugallery.com/products/mixed-media-artwork-grace-74523"
+    assert ugallery_entity_from_url(url) == ("artwork", "mixed-media-artwork-grace-74523")
+
+
+def test_ugallery_artist_url() -> None:
+    url = "https://www.ugallery.com/pages/alicia-dunn"
+    assert ugallery_entity_from_url(url) == ("artist", "alicia-dunn")
+
+
+def test_ugallery_rejects_static_pages_and_query() -> None:
+    assert ugallery_entity_from_url("https://www.ugallery.com/pages/contact") is None
+    assert ugallery_entity_from_url("https://www.ugallery.com/pages/faq") is None
+    assert (
+        ugallery_entity_from_url(
+            "https://www.ugallery.com/pages/a-guide-to-choosing-art-for-your-home"
+        )
+        is None
+    )
+    assert (
+        ugallery_entity_from_url(
+            "https://www.ugallery.com/products/acrylic-painting-fusion-pattern?utm=1"
+        )
+        is None
+    )
+    assert ugallery_entity_from_url("https://www.ugallery.com/collections/abstract-artwork") is None
