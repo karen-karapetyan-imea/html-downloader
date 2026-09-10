@@ -1,0 +1,147 @@
+
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <link rel="shortcut icon" href="/favicon.ico" type="image/vnd.microsoft.icon">
+          
+          
+<script defer>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-M47W3V');</script>
+
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/vnd.microsoft.icon" />
+<link rel="apple-touch-icon-precomposed" sizes="57x57" href="/apple-touch-icon-57x57.png" />
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="/apple-touch-icon-114x114.png" />
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="/apple-touch-icon-72x72.png" />
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144x144.png" />
+<link rel="apple-touch-icon-precomposed" sizes="60x60" href="/apple-touch-icon-60x60.png" />
+<link rel="apple-touch-icon-precomposed" sizes="120x120" href="/apple-touch-icon-120x120.png" />
+<link rel="apple-touch-icon-precomposed" sizes="76x76" href="/apple-touch-icon-76x76.png" />
+<link rel="apple-touch-icon-precomposed" sizes="152x152" href="/apple-touch-icon-152x152.png" />
+<link rel="icon" type="image/png" href="/favicon-196x196.png" sizes="196x196" />
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+<link rel="icon" type="image/png" href="/favicon-128.png" sizes="128x128" />
+<meta name="application-name" content="&nbsp;"/>
+<meta name="msapplication-TileColor" content="#FFFFFF" />
+<meta name="msapplication-TileImage" content="/mstile-144x144.png" />
+<meta name="msapplication-square70x70logo" content="/mstile-70x70.png" />
+<meta name="msapplication-square150x150logo" content="/mstile-150x150.png" />
+<meta name="msapplication-wide310x150logo" content="/mstile-310x150.png" />
+<meta name="msapplication-square310x310logo" content="/mstile-310x310.png" />
+<meta property="fb:admins" content="1062050977" />
+
+
+<meta name="apple-itunes-app" content="app-id=944415329">
+<meta name="google-play-app" content="app-id=com.invaluable.invaluable&referrer=utm_source%3DInvaluable%20Header%20CTA%26utm_medium%3Dwebsite%26utm_campaign%3DGoogle%20Play%20App%20Download">
+
+
+<link rel="stylesheet" rel="preload" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+<link rel="stylesheet" rel="preconnect" data-href="https://use.typekit.net/zmx0kck.css?display=swap" data-optimized-fonts="true"/>
+  
+<meta name="robots" content="index, follow"></meta>
+  
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#fff">
+
+<meta name="referrer" content="origin">
+  
+          
+          <link rel="stylesheet" rel="preload" as="style" href="/search/static/dist/css/common_app.2.0.14.css">
+          <link rel="stylesheet" rel="preload" as="style" href="/search/static/dist/css/inv-common-components.2.0.14.css">
+          <link rel="stylesheet" rel="preload" as="style" href="/search/static/dist/css/v4.2.0.14.css">
+          <link crossorigin href="https://0HJBNDV358-dsn.algolia.net" rel="preconnect" />
+        </head>
+        <body>
+          <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-M47W3V"
+          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+          <div class="fullPageSpinner">
+            <img class="lazyload spinner" loading="lazy"
+            src="/img/Graphics/g_spinner.gif" alt="Loading Spinner"/>
+          </div>
+          
+          
+          <div id="mainContentContainer"></div>
+          <script>
+            /**
+             * (dyouberg) disable react-dev-tools in production
+             * This reduces the javascript size on page load noted from Lighthouse Audits
+             * See: https://github.com/facebook/react-devtools/issues/191
+             */
+            if (true && typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ === 'object') {
+              window.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = function () {}
+            }
+          </script>
+          <script async type="text/javascript">
+          if ('Search' === 'Reviews') {
+            if ('true' === 'true') {
+              (function e(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,
+              e.src="//staticw2.yotpo.com/GZbTRMDgLU3BznNtmFyLKjckxxZ2MdDee3rtI75p/widget.js";
+              var t=document.getElementsByTagName("script")[0]; t.parentNode.insertBefore(e,t)})();
+            } else {
+              (function e(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,
+              e.src="//staticw2.yotpo.com/GZ2RSBZoSJusvxO5Yzx0H7FUYNpP2vXXZfjHYksU/widget.js";
+              var t=document.getElementsByTagName("script")[0]; t.parentNode.insertBefore(e,t)})();
+            }
+            }
+          </script>
+          <script async>
+            dataLayer = window.dataLayer || [];
+            if (window.location.href.includes('lots-at-auction')) {
+              dataLayer.push({pageType: 'Artist Upcoming Lots'})
+            } else {
+              if ('Search' !== 'catalog') {
+              dataLayer.push({pageType: 'Search'})
+              }
+            }
+
+            if ({"artist":{"isLoadingArtistBio":false,"artist":null,"artistType":null,"items":null,"isLoadingSearchResults":false,"searchType":null,"followed":false,"followType":null,"soldSection":[],"subType":null,"facetCounts":{}},"auctions":{"auctions":[],"facets":{},"isLoading":false,"pagination":{},"totalElements":0,"type":null},"categories":{"isFollowingSuccess":false,"isLoadingCategories":false,"isLoadingFollowCategory":false,"isUnfollowingSuccess":false,"sessionInfo":{},"subCategories":null,"type":null},"search":{"items":null,"isLoadingSearchResults":false,"searchType":null,"followed":false,"followedKeyword":false,"localCurrencyCode":"GBP"},"homepage":{"isLoadingUpcomingAuctions":false,"upcomingAuctions":null,"type":null},"catalog":{"catalogInfo":{},"isLoadingCatalog":false,"upcomingAuctions":null,"type":null,"isLoggedIn":false,"IsTabVisible":true,"visibleLots":[],"lotInfoProperties":[],"activeFilters":{}},"pdp":{"isProd":false,"artistInfo":{"fullName":""},"breadCrumbs":null,"catalogTermsData":null,"bidderStatus":null,"algoliaParams":{},"isFollowingSeller":false,"sellerFollowCount":0,"lotLiveInfo":{},"contactInfo":{"countries":[],"smsPhone":{"smsOptIn":false,"phone":"","countryCode":""},"formErrors":{}},"subscriptionInfo":{},"asyncStatus":{},"selectedBidIncrement":-1,"selectedBidAmount":-1,"approvalInfo":{},"ccInfo":{"showCreditCardSection":false,"hasPaymentProcessing":false,"userCreditCards":[],"selectedCardDetails":{},"newlyAddedCardDetails":{},"isUseNewCard":false,"post3DSCardError":""},"bidInfo":{"errorMsg":"","dynamicPricing":{"bpPostMinMax":0,"bpPreMinMax":0,"bpSavings":0,"bpSavingsPercentage":0,"totalPostMinMax":0,"totalPreMinMax":0}},"isPromiseModalOpen":false,"isDynamicPricingModalOpen":false,"isLoading":false,"bidSubmitResponse":"none","areBillingShippingAddressSame":true,"isAlgoliaInitialized":false,"isUserVip":false,"conciergeStatus":false,"conciergeModalProps":{"showBackButton":false,"showPrevModal":false},"paymentAndTermsDetail":{"paymentMethodsText":"","acceptedCreditCards":[],"acceptedPaymentForms":"","shippingDetailsHTML":"","bidIncrements":[],"buyersPremiums":[],"conditionsOfSale":"","auctionTerms":[],"isDataAvailable":false},"dynamicTerms":[],"errors":{"lotCallFailed":false,"initialLotCallFailed":false,"bidderStatusCallFailed":false,"addToWatchListCallFailed":false,"removeToWatchListCallFailed":false,"watcherCountCallFailed":false,"sellerInfoCallFailed":false,"contactInfoCallFailed":false,"fetchCountryStatesCallFailed":false,"followUnFollowSellerCallFailed":false,"isFollowedSellerCallFailed":false,"requestForApprovalInitCallFailed":false,"updateBidTotalCallFailed":false,"notifyMecallFailed":false,"requestForApprovalCallFailed":false,"getArtistInfoCallFailed":false,"sellerCountCallFailed":false,"subscriptionInfoCallFailed":false}},"auctionHouse":{"isLoadingAuctionHouse":false,"auctionHouse":null,"auctionHouseStatus":null,"isSellerFollowed":null,"followCount":0,"upcomingAuctions":null,"auctionHouseContactInfo":null,"sessionInfo":{"oasHeaders":null,"memberId":0,"authToken":null,"isLoggedIn":false},"pastAuctions":{"isLoading":false},"popularItems":{"data":[],"isLoading":false},"auctionHouseNotableLots":{"data":[],"isLoading":false},"auctionHouseArtists":{"data":[],"isLoading":false},"errors":{"sessionCallFailed":false,"followUnfollowCallFailed":false,"pastAuctionsError":false,"popularItemsError":false},"cfIpCountry":null,"message":{"isLoading":false,"isError":false},"categories":{"data":null,"isLoading":false,"isError":false},"aggregateRating":{"ratingValue":0,"reviewCount":0},"isUserVip":false},"artistDirectoryPage":{},"artistDetail":{"filters":{"date":"All dates","priceRange":{"min":"","max":""}},"lotsDisplayMode":"list","page":1,"housesSellingWorkByArtist":[],"errors":{"artistBioInfoCallFailed":false,"artistNotableSoldLotsCallFailed":false,"isFollowArtistCallFailed":false,"isSessionCallFailed":false}},"invReactCommon":{"isProd":true,"isMobile":false,"isVIP":false,"windowWidth":1326,"counts":{"ARTIST_ALERTS":0,"REGISTERED_AUCTIONS":0,"ACTIVE_BIDS":0,"CATEGORY_ALERTS":0,"KEYWORD_ARTIST_ALERTS":0,"KEYWORD_ALERTS":0,"UNREAD_MESSAGES_COUNT":0,"FOLLOWING_SELLERS_COUNT":0,"WATCHED_LOTS":0,"WON_LOTS":0},"userCountryCode":"","currencyConversionRates":{},"hostname":"","sessionInfo":{"memberId":0,"isLoggedIn":false,"firstName":""},"reqHeaders":{"Accept":"application/json","Access-Control-Allow-Headers":"*","Content-Type":"application/json; charset=utf-8","member-id":0},"followedUnfollowedArtistsStatus":{},"userPopularArtistsData":{},"userSimilarArtists":[],"artistFollowers":{},"searchTypeAheadCookie":"old","categoryData":{"superCategories":[],"fineArt":[],"decorativeArt":[],"jewelry":[],"collectibles":[],"furniture":[],"asianArtAndAntiques":[]},"notifications":[],"notificationsCount":0,"errors":{"isFetchFollowThisArtistCallFailed":false,"isSetFollowThisArtistCallFailed":false,"isUserSimilarArtistsCallFailed":false,"isUserFollowedArtistsStatusCallFailed":false,"loginErrors":false,"passwordExpiredErrors":false,"signupErrors":false},"modals":{"emailOnly":{"isOpen":false,"type":"default","data":{}},"signup":{"isOpen":false},"login":{"isOpen":false}},"postLoginRedirectUrl":null},"rfa":{"page":{"data":[],"error":false},"user":{"data":[],"error":false},"isSmsBanned":false},"myActivity":{"watchedLotCount":0,"bidOnLotCount":0,"lotActivity":{}}}.artist && {"artist":{"isLoadingArtistBio":false,"artist":null,"artistType":null,"items":null,"isLoadingSearchResults":false,"searchType":null,"followed":false,"followType":null,"soldSection":[],"subType":null,"facetCounts":{}},"auctions":{"auctions":[],"facets":{},"isLoading":false,"pagination":{},"totalElements":0,"type":null},"categories":{"isFollowingSuccess":false,"isLoadingCategories":false,"isLoadingFollowCategory":false,"isUnfollowingSuccess":false,"sessionInfo":{},"subCategories":null,"type":null},"search":{"items":null,"isLoadingSearchResults":false,"searchType":null,"followed":false,"followedKeyword":false,"localCurrencyCode":"GBP"},"homepage":{"isLoadingUpcomingAuctions":false,"upcomingAuctions":null,"type":null},"catalog":{"catalogInfo":{},"isLoadingCatalog":false,"upcomingAuctions":null,"type":null,"isLoggedIn":false,"IsTabVisible":true,"visibleLots":[],"lotInfoProperties":[],"activeFilters":{}},"pdp":{"isProd":false,"artistInfo":{"fullName":""},"breadCrumbs":null,"catalogTermsData":null,"bidderStatus":null,"algoliaParams":{},"isFollowingSeller":false,"sellerFollowCount":0,"lotLiveInfo":{},"contactInfo":{"countries":[],"smsPhone":{"smsOptIn":false,"phone":"","countryCode":""},"formErrors":{}},"subscriptionInfo":{},"asyncStatus":{},"selectedBidIncrement":-1,"selectedBidAmount":-1,"approvalInfo":{},"ccInfo":{"showCreditCardSection":false,"hasPaymentProcessing":false,"userCreditCards":[],"selectedCardDetails":{},"newlyAddedCardDetails":{},"isUseNewCard":false,"post3DSCardError":""},"bidInfo":{"errorMsg":"","dynamicPricing":{"bpPostMinMax":0,"bpPreMinMax":0,"bpSavings":0,"bpSavingsPercentage":0,"totalPostMinMax":0,"totalPreMinMax":0}},"isPromiseModalOpen":false,"isDynamicPricingModalOpen":false,"isLoading":false,"bidSubmitResponse":"none","areBillingShippingAddressSame":true,"isAlgoliaInitialized":false,"isUserVip":false,"conciergeStatus":false,"conciergeModalProps":{"showBackButton":false,"showPrevModal":false},"paymentAndTermsDetail":{"paymentMethodsText":"","acceptedCreditCards":[],"acceptedPaymentForms":"","shippingDetailsHTML":"","bidIncrements":[],"buyersPremiums":[],"conditionsOfSale":"","auctionTerms":[],"isDataAvailable":false},"dynamicTerms":[],"errors":{"lotCallFailed":false,"initialLotCallFailed":false,"bidderStatusCallFailed":false,"addToWatchListCallFailed":false,"removeToWatchListCallFailed":false,"watcherCountCallFailed":false,"sellerInfoCallFailed":false,"contactInfoCallFailed":false,"fetchCountryStatesCallFailed":false,"followUnFollowSellerCallFailed":false,"isFollowedSellerCallFailed":false,"requestForApprovalInitCallFailed":false,"updateBidTotalCallFailed":false,"notifyMecallFailed":false,"requestForApprovalCallFailed":false,"getArtistInfoCallFailed":false,"sellerCountCallFailed":false,"subscriptionInfoCallFailed":false}},"auctionHouse":{"isLoadingAuctionHouse":false,"auctionHouse":null,"auctionHouseStatus":null,"isSellerFollowed":null,"followCount":0,"upcomingAuctions":null,"auctionHouseContactInfo":null,"sessionInfo":{"oasHeaders":null,"memberId":0,"authToken":null,"isLoggedIn":false},"pastAuctions":{"isLoading":false},"popularItems":{"data":[],"isLoading":false},"auctionHouseNotableLots":{"data":[],"isLoading":false},"auctionHouseArtists":{"data":[],"isLoading":false},"errors":{"sessionCallFailed":false,"followUnfollowCallFailed":false,"pastAuctionsError":false,"popularItemsError":false},"cfIpCountry":null,"message":{"isLoading":false,"isError":false},"categories":{"data":null,"isLoading":false,"isError":false},"aggregateRating":{"ratingValue":0,"reviewCount":0},"isUserVip":false},"artistDirectoryPage":{},"artistDetail":{"filters":{"date":"All dates","priceRange":{"min":"","max":""}},"lotsDisplayMode":"list","page":1,"housesSellingWorkByArtist":[],"errors":{"artistBioInfoCallFailed":false,"artistNotableSoldLotsCallFailed":false,"isFollowArtistCallFailed":false,"isSessionCallFailed":false}},"invReactCommon":{"isProd":true,"isMobile":false,"isVIP":false,"windowWidth":1326,"counts":{"ARTIST_ALERTS":0,"REGISTERED_AUCTIONS":0,"ACTIVE_BIDS":0,"CATEGORY_ALERTS":0,"KEYWORD_ARTIST_ALERTS":0,"KEYWORD_ALERTS":0,"UNREAD_MESSAGES_COUNT":0,"FOLLOWING_SELLERS_COUNT":0,"WATCHED_LOTS":0,"WON_LOTS":0},"userCountryCode":"","currencyConversionRates":{},"hostname":"","sessionInfo":{"memberId":0,"isLoggedIn":false,"firstName":""},"reqHeaders":{"Accept":"application/json","Access-Control-Allow-Headers":"*","Content-Type":"application/json; charset=utf-8","member-id":0},"followedUnfollowedArtistsStatus":{},"userPopularArtistsData":{},"userSimilarArtists":[],"artistFollowers":{},"searchTypeAheadCookie":"old","categoryData":{"superCategories":[],"fineArt":[],"decorativeArt":[],"jewelry":[],"collectibles":[],"furniture":[],"asianArtAndAntiques":[]},"notifications":[],"notificationsCount":0,"errors":{"isFetchFollowThisArtistCallFailed":false,"isSetFollowThisArtistCallFailed":false,"isUserSimilarArtistsCallFailed":false,"isUserFollowedArtistsStatusCallFailed":false,"loginErrors":false,"passwordExpiredErrors":false,"signupErrors":false},"modals":{"emailOnly":{"isOpen":false,"type":"default","data":{}},"signup":{"isOpen":false},"login":{"isOpen":false}},"postLoginRedirectUrl":null},"rfa":{"page":{"data":[],"error":false},"user":{"data":[],"error":false},"isSmsBanned":false},"myActivity":{"watchedLotCount":0,"bidOnLotCount":0,"lotActivity":{}}}.artist.artist) {
+              const artistObj = {"artist":{"isLoadingArtistBio":false,"artist":null,"artistType":null,"items":null,"isLoadingSearchResults":false,"searchType":null,"followed":false,"followType":null,"soldSection":[],"subType":null,"facetCounts":{}},"auctions":{"auctions":[],"facets":{},"isLoading":false,"pagination":{},"totalElements":0,"type":null},"categories":{"isFollowingSuccess":false,"isLoadingCategories":false,"isLoadingFollowCategory":false,"isUnfollowingSuccess":false,"sessionInfo":{},"subCategories":null,"type":null},"search":{"items":null,"isLoadingSearchResults":false,"searchType":null,"followed":false,"followedKeyword":false,"localCurrencyCode":"GBP"},"homepage":{"isLoadingUpcomingAuctions":false,"upcomingAuctions":null,"type":null},"catalog":{"catalogInfo":{},"isLoadingCatalog":false,"upcomingAuctions":null,"type":null,"isLoggedIn":false,"IsTabVisible":true,"visibleLots":[],"lotInfoProperties":[],"activeFilters":{}},"pdp":{"isProd":false,"artistInfo":{"fullName":""},"breadCrumbs":null,"catalogTermsData":null,"bidderStatus":null,"algoliaParams":{},"isFollowingSeller":false,"sellerFollowCount":0,"lotLiveInfo":{},"contactInfo":{"countries":[],"smsPhone":{"smsOptIn":false,"phone":"","countryCode":""},"formErrors":{}},"subscriptionInfo":{},"asyncStatus":{},"selectedBidIncrement":-1,"selectedBidAmount":-1,"approvalInfo":{},"ccInfo":{"showCreditCardSection":false,"hasPaymentProcessing":false,"userCreditCards":[],"selectedCardDetails":{},"newlyAddedCardDetails":{},"isUseNewCard":false,"post3DSCardError":""},"bidInfo":{"errorMsg":"","dynamicPricing":{"bpPostMinMax":0,"bpPreMinMax":0,"bpSavings":0,"bpSavingsPercentage":0,"totalPostMinMax":0,"totalPreMinMax":0}},"isPromiseModalOpen":false,"isDynamicPricingModalOpen":false,"isLoading":false,"bidSubmitResponse":"none","areBillingShippingAddressSame":true,"isAlgoliaInitialized":false,"isUserVip":false,"conciergeStatus":false,"conciergeModalProps":{"showBackButton":false,"showPrevModal":false},"paymentAndTermsDetail":{"paymentMethodsText":"","acceptedCreditCards":[],"acceptedPaymentForms":"","shippingDetailsHTML":"","bidIncrements":[],"buyersPremiums":[],"conditionsOfSale":"","auctionTerms":[],"isDataAvailable":false},"dynamicTerms":[],"errors":{"lotCallFailed":false,"initialLotCallFailed":false,"bidderStatusCallFailed":false,"addToWatchListCallFailed":false,"removeToWatchListCallFailed":false,"watcherCountCallFailed":false,"sellerInfoCallFailed":false,"contactInfoCallFailed":false,"fetchCountryStatesCallFailed":false,"followUnFollowSellerCallFailed":false,"isFollowedSellerCallFailed":false,"requestForApprovalInitCallFailed":false,"updateBidTotalCallFailed":false,"notifyMecallFailed":false,"requestForApprovalCallFailed":false,"getArtistInfoCallFailed":false,"sellerCountCallFailed":false,"subscriptionInfoCallFailed":false}},"auctionHouse":{"isLoadingAuctionHouse":false,"auctionHouse":null,"auctionHouseStatus":null,"isSellerFollowed":null,"followCount":0,"upcomingAuctions":null,"auctionHouseContactInfo":null,"sessionInfo":{"oasHeaders":null,"memberId":0,"authToken":null,"isLoggedIn":false},"pastAuctions":{"isLoading":false},"popularItems":{"data":[],"isLoading":false},"auctionHouseNotableLots":{"data":[],"isLoading":false},"auctionHouseArtists":{"data":[],"isLoading":false},"errors":{"sessionCallFailed":false,"followUnfollowCallFailed":false,"pastAuctionsError":false,"popularItemsError":false},"cfIpCountry":null,"message":{"isLoading":false,"isError":false},"categories":{"data":null,"isLoading":false,"isError":false},"aggregateRating":{"ratingValue":0,"reviewCount":0},"isUserVip":false},"artistDirectoryPage":{},"artistDetail":{"filters":{"date":"All dates","priceRange":{"min":"","max":""}},"lotsDisplayMode":"list","page":1,"housesSellingWorkByArtist":[],"errors":{"artistBioInfoCallFailed":false,"artistNotableSoldLotsCallFailed":false,"isFollowArtistCallFailed":false,"isSessionCallFailed":false}},"invReactCommon":{"isProd":true,"isMobile":false,"isVIP":false,"windowWidth":1326,"counts":{"ARTIST_ALERTS":0,"REGISTERED_AUCTIONS":0,"ACTIVE_BIDS":0,"CATEGORY_ALERTS":0,"KEYWORD_ARTIST_ALERTS":0,"KEYWORD_ALERTS":0,"UNREAD_MESSAGES_COUNT":0,"FOLLOWING_SELLERS_COUNT":0,"WATCHED_LOTS":0,"WON_LOTS":0},"userCountryCode":"","currencyConversionRates":{},"hostname":"","sessionInfo":{"memberId":0,"isLoggedIn":false,"firstName":""},"reqHeaders":{"Accept":"application/json","Access-Control-Allow-Headers":"*","Content-Type":"application/json; charset=utf-8","member-id":0},"followedUnfollowedArtistsStatus":{},"userPopularArtistsData":{},"userSimilarArtists":[],"artistFollowers":{},"searchTypeAheadCookie":"old","categoryData":{"superCategories":[],"fineArt":[],"decorativeArt":[],"jewelry":[],"collectibles":[],"furniture":[],"asianArtAndAntiques":[]},"notifications":[],"notificationsCount":0,"errors":{"isFetchFollowThisArtistCallFailed":false,"isSetFollowThisArtistCallFailed":false,"isUserSimilarArtistsCallFailed":false,"isUserFollowedArtistsStatusCallFailed":false,"loginErrors":false,"passwordExpiredErrors":false,"signupErrors":false},"modals":{"emailOnly":{"isOpen":false,"type":"default","data":{}},"signup":{"isOpen":false},"login":{"isOpen":false}},"postLoginRedirectUrl":null},"rfa":{"page":{"data":[],"error":false},"user":{"data":[],"error":false},"isSmsBanned":false},"myActivity":{"watchedLotCount":0,"bidOnLotCount":0,"lotActivity":{}}}.artist.artist
+              dataLayer.push({artistRef: artistObj.artistRef, artistName: artistObj.displayName})
+            }
+
+            window.__PRELOADED_STATE__ = {"artist":{"isLoadingArtistBio":false,"artist":null,"artistType":null,"items":null,"isLoadingSearchResults":false,"searchType":null,"followed":false,"followType":null,"soldSection":[],"subType":null,"facetCounts":{}},"auctions":{"auctions":[],"facets":{},"isLoading":false,"pagination":{},"totalElements":0,"type":null},"categories":{"isFollowingSuccess":false,"isLoadingCategories":false,"isLoadingFollowCategory":false,"isUnfollowingSuccess":false,"sessionInfo":{},"subCategories":null,"type":null},"search":{"items":null,"isLoadingSearchResults":false,"searchType":null,"followed":false,"followedKeyword":false,"localCurrencyCode":"GBP"},"homepage":{"isLoadingUpcomingAuctions":false,"upcomingAuctions":null,"type":null},"catalog":{"catalogInfo":{},"isLoadingCatalog":false,"upcomingAuctions":null,"type":null,"isLoggedIn":false,"IsTabVisible":true,"visibleLots":[],"lotInfoProperties":[],"activeFilters":{}},"pdp":{"isProd":false,"artistInfo":{"fullName":""},"breadCrumbs":null,"catalogTermsData":null,"bidderStatus":null,"algoliaParams":{},"isFollowingSeller":false,"sellerFollowCount":0,"lotLiveInfo":{},"contactInfo":{"countries":[],"smsPhone":{"smsOptIn":false,"phone":"","countryCode":""},"formErrors":{}},"subscriptionInfo":{},"asyncStatus":{},"selectedBidIncrement":-1,"selectedBidAmount":-1,"approvalInfo":{},"ccInfo":{"showCreditCardSection":false,"hasPaymentProcessing":false,"userCreditCards":[],"selectedCardDetails":{},"newlyAddedCardDetails":{},"isUseNewCard":false,"post3DSCardError":""},"bidInfo":{"errorMsg":"","dynamicPricing":{"bpPostMinMax":0,"bpPreMinMax":0,"bpSavings":0,"bpSavingsPercentage":0,"totalPostMinMax":0,"totalPreMinMax":0}},"isPromiseModalOpen":false,"isDynamicPricingModalOpen":false,"isLoading":false,"bidSubmitResponse":"none","areBillingShippingAddressSame":true,"isAlgoliaInitialized":false,"isUserVip":false,"conciergeStatus":false,"conciergeModalProps":{"showBackButton":false,"showPrevModal":false},"paymentAndTermsDetail":{"paymentMethodsText":"","acceptedCreditCards":[],"acceptedPaymentForms":"","shippingDetailsHTML":"","bidIncrements":[],"buyersPremiums":[],"conditionsOfSale":"","auctionTerms":[],"isDataAvailable":false},"dynamicTerms":[],"errors":{"lotCallFailed":false,"initialLotCallFailed":false,"bidderStatusCallFailed":false,"addToWatchListCallFailed":false,"removeToWatchListCallFailed":false,"watcherCountCallFailed":false,"sellerInfoCallFailed":false,"contactInfoCallFailed":false,"fetchCountryStatesCallFailed":false,"followUnFollowSellerCallFailed":false,"isFollowedSellerCallFailed":false,"requestForApprovalInitCallFailed":false,"updateBidTotalCallFailed":false,"notifyMecallFailed":false,"requestForApprovalCallFailed":false,"getArtistInfoCallFailed":false,"sellerCountCallFailed":false,"subscriptionInfoCallFailed":false}},"auctionHouse":{"isLoadingAuctionHouse":false,"auctionHouse":null,"auctionHouseStatus":null,"isSellerFollowed":null,"followCount":0,"upcomingAuctions":null,"auctionHouseContactInfo":null,"sessionInfo":{"oasHeaders":null,"memberId":0,"authToken":null,"isLoggedIn":false},"pastAuctions":{"isLoading":false},"popularItems":{"data":[],"isLoading":false},"auctionHouseNotableLots":{"data":[],"isLoading":false},"auctionHouseArtists":{"data":[],"isLoading":false},"errors":{"sessionCallFailed":false,"followUnfollowCallFailed":false,"pastAuctionsError":false,"popularItemsError":false},"cfIpCountry":null,"message":{"isLoading":false,"isError":false},"categories":{"data":null,"isLoading":false,"isError":false},"aggregateRating":{"ratingValue":0,"reviewCount":0},"isUserVip":false},"artistDirectoryPage":{},"artistDetail":{"filters":{"date":"All dates","priceRange":{"min":"","max":""}},"lotsDisplayMode":"list","page":1,"housesSellingWorkByArtist":[],"errors":{"artistBioInfoCallFailed":false,"artistNotableSoldLotsCallFailed":false,"isFollowArtistCallFailed":false,"isSessionCallFailed":false}},"invReactCommon":{"isProd":true,"isMobile":false,"isVIP":false,"windowWidth":1326,"counts":{"ARTIST_ALERTS":0,"REGISTERED_AUCTIONS":0,"ACTIVE_BIDS":0,"CATEGORY_ALERTS":0,"KEYWORD_ARTIST_ALERTS":0,"KEYWORD_ALERTS":0,"UNREAD_MESSAGES_COUNT":0,"FOLLOWING_SELLERS_COUNT":0,"WATCHED_LOTS":0,"WON_LOTS":0},"userCountryCode":"","currencyConversionRates":{},"hostname":"","sessionInfo":{"memberId":0,"isLoggedIn":false,"firstName":""},"reqHeaders":{"Accept":"application/json","Access-Control-Allow-Headers":"*","Content-Type":"application/json; charset=utf-8","member-id":0},"followedUnfollowedArtistsStatus":{},"userPopularArtistsData":{},"userSimilarArtists":[],"artistFollowers":{},"searchTypeAheadCookie":"old","categoryData":{"superCategories":[],"fineArt":[],"decorativeArt":[],"jewelry":[],"collectibles":[],"furniture":[],"asianArtAndAntiques":[]},"notifications":[],"notificationsCount":0,"errors":{"isFetchFollowThisArtistCallFailed":false,"isSetFollowThisArtistCallFailed":false,"isUserSimilarArtistsCallFailed":false,"isUserFollowedArtistsStatusCallFailed":false,"loginErrors":false,"passwordExpiredErrors":false,"signupErrors":false},"modals":{"emailOnly":{"isOpen":false,"type":"default","data":{}},"signup":{"isOpen":false},"login":{"isOpen":false}},"postLoginRedirectUrl":null},"rfa":{"page":{"data":[],"error":false},"user":{"data":[],"error":false},"isSmsBanned":false},"myActivity":{"watchedLotCount":0,"bidOnLotCount":0,"lotActivity":{}}}
+            window.__APP_INITIAL_STATE__ = {"algoliaAPI":"c72467a0649841b28a88222132bef0ea","alogliaId":"0HJBNDV358","countryCode":"GB","isBot":false,"isLoggedIn":false}
+            window.__isShowPPRView__ = false
+          </script>
+
+          
+    <script src="/search/static/dist/bundle.2.0.14.js" type="text/javascript"></script>
+    <script src="/search/static/dist/common_app.2.0.14.js"></script>
+    <script src="/search/static/dist/vendor_react.2.0.14.js"></script>
+    <script src="/search/static/dist/moment.2.0.14.js"></script>
+    <script src="/search/static/dist/inv-common-components.2.0.14.js"></script>
+    
+          
+          <script defer type='text/javascript' src='https://c.la4-c1-ph2.salesforceliveagent.com/content/g/js/53.0/deployment.js'></script>
+          <script type='text/javascript'>
+          if (typeof liveagent !== 'undefined') {
+            liveagent.init('https://d.la4-c1-ph2.salesforceliveagent.com/chat', '5724T000000Cw2U', '00DA0000000Yd7m');
+          } else {
+            window.addEventListener('load', function() {
+              if (typeof liveagent !== 'undefined') {
+                liveagent.init('https://d.la4-c1-ph2.salesforceliveagent.com/chat', '5724T000000Cw2U', '00DA0000000Yd7m');
+              }
+            });
+          }
+          </script>
+          <script defer type="text/javascript" src="//cdn.evergage.com/beacon/invaluable/engage/scripts/evergage.min.js"></script>
+          
+          <!-- Salesforce Data Cloud beacon (c360a) -->
+          <script
+          defer
+          src="https://cdn.c360a.salesforce.com/beacon/c360a/fce06490-6e6f-49d5-a3aa-62ee9b208eff/scripts/c360a.min.js"
+          ></script>
+          
+          <!-- Loads Google Sign in -->
+          <script defer type="text/javascript" src="https://accounts.google.com/gsi/client"></script>
+        </body>
+      </html>
+  

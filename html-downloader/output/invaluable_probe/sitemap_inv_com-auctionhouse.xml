@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Access Denied</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f9fa;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.c{background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:520px;width:100%;padding:2.5rem;text-align:center}
+.i{width:64px;height:64px;margin:0 auto 1.5rem;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.i svg{width:32px;height:32px;stroke:#dc2626}
+h1{font-size:1.5rem;color:#1f2937;margin-bottom:.5rem}
+.s{color:#6b7280;font-size:.95rem;margin-bottom:2rem;line-height:1.5}
+.d{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;text-align:left}
+.r{padding:.75rem 0}
+.r+.r{border-top:1px solid #e5e7eb}
+.l{font-size:.75rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35rem}
+.w{display:flex;align-items:center;gap:.5rem}
+.v{font-family:SFMono-Regular,Consolas,monospace;font-size:.82rem;color:#111827;word-break:break-all;flex:1;min-width:0}
+.b{flex-shrink:0;background:#e5e7eb;border:none;border-radius:6px;padding:.4rem .5rem;cursor:pointer;display:flex;align-items:center;transition:background .15s}
+.b:hover{background:#d1d5db}
+.b svg{width:16px;height:16px;stroke:#374151}
+.b.ok{background:#d1fae5}
+.b.ok svg{stroke:#059669}
+.h{margin-top:1.5rem;font-size:.85rem;color:#9ca3af;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="c">
+  <div class="i"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg></div>
+  <h1>Access Denied</h1>
+  <p class="s">Your request has been blocked by our security policies.</p>
+  <div class="d">
+    <div class="r"><div class="l">Timestamp</div><div class="w"><span class="v" id="t"></span><button type="button" class="b" aria-label="Copy timestamp" onclick="f('t',this)"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Z"/></svg></button></div></div>
+  </div>
+  <p class="h">If you believe this is an error, contact support and include the timestamp above.</p>
+</div>
+<script>
+document.getElementById('t').textContent=new Date().toLocaleString('sv-SE',{timeZoneName:'short'});
+function f(i,b){if(!navigator.clipboard){return}navigator.clipboard.writeText(document.getElementById(i).textContent).then(function(){b.classList.add('ok');setTimeout(function(){b.classList.remove('ok')},1500)}).catch(function(){})}
+</script>
+</body>
+</html>

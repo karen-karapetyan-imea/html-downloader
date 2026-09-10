@@ -6,6 +6,7 @@ venv/
 .ruff_cache/
 data/
 state/*.json
+state/auctions/
 proxy.txt
 .env
 logs/

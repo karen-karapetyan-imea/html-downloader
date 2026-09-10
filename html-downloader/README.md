@@ -92,6 +92,69 @@ Single marketplace (e.g. for debugging):
 
 Logs: `logs/weekly-{marketplace}-YYYYMMDD-HHMMSS.log`. Sessions die on reboot; re-run `start_weekly_tmux.sh` to resume.
 
+## Auction crawls (monthly)
+
+Auction houses are separate from marketplace crawls (different CLI, data layout, and state).
+
+Job folders:
+
+```
+data/auctions/{auction_house}/{YYYY-MM}/
+  html/{sha1}.html
+  urls.txt
+  sitemap_all.txt
+  results.jsonl
+  diff.json
+  metadata.json
+  manifest.json
+```
+
+State: `state/auctions/{auction_house}.json` (never mixed with `state/{marketplace}_lastmod.json`).
+
+### Invaluable
+
+The HTML page `https://www.invaluable.com/sitemap` is a navigation hub only.
+See [docs/invaluable_discovery.md](docs/invaluable_discovery.md) for the full discovery report.
+
+Discovery walks the XML index `https://www.invaluable.com/sitemap_inv_com-index.xml` and collects:
+
+- **Lots (XML)**: `sitemap_inv_com-lot-YYYY-M-ptN.xml` (~50k `/auction-lot/{slug}-c-{id}` URLs each). The public index currently lists only the latest month’s parts (~250k lots). That alone is **not** the full historical corpus.
+- **Catalogs** (sale events): `sitemap_inv_com-catalog.xml` (`/catalog/{id}`, hundreds of pages).
+- **Algolia archive (primary historical lots, default on)**: browses `archive_prod` by year (full archive: all categories, sold + unsold). No proxies. Resume: `state/auctions/invaluable_algolia_browse_state.json` (+ `_lots.jsonl` sidecar). Use `--no-expand-algolia` to skip; `--algolia-force` to reset and re-walk.
+- **Hubs (XML, soft-fail)**: auction houses, artist profiles, and category tree (`--include-hubs`, default on).
+- **Upcoming list**: paginates `/auctions/` SSR pages for additional catalogs (`--expand-auctions-list`, default on).
+- **Artist sold expansion (optional, default off)**: `--expand-artist-sold` loads `sitemap_artist_sold_*.xml` and paginates sold pages (WAF-heavy). Resume: `state/auctions/invaluable_artist_sold_progress.json`.
+- **House-page expansion (optional)**: `--expand-houses` walks house pages for extra catalog/lot links.
+- **`past_search_sitemap.xml`**: listed in the index but currently returns HTTP 404; when/if it returns nested lot maps, discovery will follow them automatically.
+
+Discover requires `--proxy-file` (WAF-gated XML/HTML). Incomplete **lot/catalog** XML sitemap fetches fail the run so state is not overwritten with a partial corpus. Hub XML failures are warnings only. Algolia browse ignores proxies.
+
+```bash
+# Default corpus (XML + hubs + Algolia archive)
+python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt --incremental --update-state
+
+# Smoke: single Algolia year
+python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt --algolia-from-year 2024 --algolia-to-year 2024 --update-state
+
+# XML lots/catalogs/hubs only
+python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt --no-expand-algolia --no-expand-auctions-list --update-state
+
+# Opt-in artist-sold smoke
+python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt --expand-artist-sold --max-artist-sold 20
+
+python -m html_downloader auction download --auction-house invaluable --proxy-file proxy.txt --skip-existing
+```
+
+Monthly loop (calendar months from cycle start; optional `AUCTION_RUN_DAY=1`):
+
+```bash
+./scripts/run_monthly_auction.sh invaluable
+./scripts/start_monthly_auction_tmux.sh   # session: crawl-auction-invaluable
+./scripts/stop_monthly_auction_tmux.sh
+```
+
+Logs: `logs/monthly-auction-{house}-YYYYMMDD-HHMMSS.log`.
+
 ## Tests
 
 ```bash
