@@ -93,6 +93,62 @@ def _load_proxies_if_needed(
     return proxies
 
 
+def _stream_algolia_cache_into_job_files(
+    cache_path: Path,
+    *,
+    sitemap_all_path: Path,
+    urls_path: Path,
+    already_written_ids: set[str],
+    known_keys: set[tuple[str, str]],
+    incremental: bool,
+) -> tuple[int, int]:
+    """
+    Append Algolia lot URLs from JSONL into job files without loading the archive.
+
+    Returns (added_to_sitemap_all, added_to_urls).
+    """
+    from html_downloader.auctions.invaluable_algolia import iter_lot_cache_rows
+
+    if not cache_path.exists():
+        return 0, 0
+
+    seen_ids = set(already_written_ids)
+    added_all = 0
+    added_crawl = 0
+    scanned = 0
+
+    with (
+        sitemap_all_path.open("a", encoding="utf-8") as all_fh,
+        urls_path.open("a", encoding="utf-8") as crawl_fh,
+    ):
+        for entity_id, url, _lastmod in iter_lot_cache_rows(cache_path):
+            scanned += 1
+            if scanned % 1_000_000 == 0:
+                LOGGER.info(
+                    "Algolia cache stream progress scanned=%s added_all=%s added_crawl=%s",
+                    scanned,
+                    added_all,
+                    added_crawl,
+                )
+            if entity_id in seen_ids:
+                continue
+            seen_ids.add(entity_id)
+            all_fh.write(url + "\n")
+            added_all += 1
+            if incremental and ("lot", entity_id) in known_keys:
+                continue
+            crawl_fh.write(url + "\n")
+            added_crawl += 1
+
+    LOGGER.info(
+        "Algolia cache stream complete scanned=%s added_all=%s added_crawl=%s",
+        scanned,
+        added_all,
+        added_crawl,
+    )
+    return added_all, added_crawl
+
+
 def run_auction_discover(
     *,
     auction_house: str,
@@ -193,7 +249,7 @@ def run_auction_discover(
         include_updates=include_updates,
     )
     all_urls = sorted({entry.url for entry in entries})
-    crawl_urls = [entry.url for entry in diff.to_crawl] if incremental else all_urls
+    crawl_urls = [entry.url for entry in diff.to_crawl] if incremental else list(all_urls)
 
     LOGGER.info(
         "diff auction_urls=%s new=%s updated=%s unchanged=%s to_crawl=%s",
@@ -207,17 +263,41 @@ def run_auction_discover(
     job = auction_job_dir(data_root, spec.name, month)
     discovered_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
+    all_count = len(all_urls)
+    crawl_count = len(crawl_urls)
+
     if not dry_run:
         ensure_auction_job_dirs(job)
-        write_url_list(auction_sitemap_all_file(job), all_urls)
-        write_url_list(auction_urls_file(job), crawl_urls)
+        sitemap_all_path = auction_sitemap_all_file(job)
+        urls_path = auction_urls_file(job)
+        write_url_list(sitemap_all_path, all_urls)
+        write_url_list(urls_path, crawl_urls)
+
+        if expand_algolia and algolia_state is not None and spec.name == "invaluable":
+            from html_downloader.auctions.invaluable_algolia import lot_cache_path
+
+            cache_path = lot_cache_path(algolia_state)
+            already_ids = {
+                e.entity_id for e in entries if e.entity_type == "lot" and e.entity_id
+            }
+            added_all, added_crawl = _stream_algolia_cache_into_job_files(
+                cache_path,
+                sitemap_all_path=sitemap_all_path,
+                urls_path=urls_path,
+                already_written_ids=already_ids,
+                known_keys=known_keys,
+                incremental=incremental,
+            )
+            all_count += added_all
+            crawl_count += added_crawl
+
         auction_diff_file(job).write_text(
             json.dumps(diff.to_report(), ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
         metadata = {
-            "url_count": len(all_urls),
-            "crawl_count": len(crawl_urls),
+            "url_count": all_count,
+            "crawl_count": crawl_count,
             "auction_house": spec.name,
             "job_month": month,
             "discovered_at": discovered_at,
@@ -225,6 +305,7 @@ def run_auction_discover(
             "new_entities": diff.stats.new_entities,
             "updated_entities": diff.stats.updated_entities,
             "unchanged_entities": diff.stats.unchanged_entities,
+            "memory_entries": len(entries),
         }
         auction_metadata_file(job).write_text(
             json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
@@ -233,20 +314,21 @@ def run_auction_discover(
         if update_state:
             from html_downloader.auctions.invaluable import save_auction_lastmod_state
 
+            # In-memory entries only — do not build lastmod from full Algolia archive.
             save_auction_lastmod_state(
                 state_path,
                 build_lastmod_state_from_entries(entries),
             )
             LOGGER.info("updated auction lastmod state house=%s path=%s", spec.name, state_path)
 
-    if not crawl_urls:
+    if crawl_count == 0:
         LOGGER.info("nothing to crawl")
 
     return AuctionDiscoverResult(
         job=job,
         job_month=month,
-        all_count=len(all_urls),
-        crawl_count=len(crawl_urls),
+        all_count=all_count,
+        crawl_count=crawl_count,
     )
 
 

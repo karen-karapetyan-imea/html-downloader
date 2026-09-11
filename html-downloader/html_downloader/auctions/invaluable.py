@@ -522,7 +522,6 @@ def fetch_invaluable_sitemap_entries(
 
         if algolia_state_path is None:
             raise ValueError("expand_algolia requires algolia_state_path")
-        before = len(best)
         try:
             algolia_entries = expand_lots_from_algolia(
                 state_path=algolia_state_path,
@@ -534,10 +533,10 @@ def fetch_invaluable_sitemap_entries(
             )
             merge_entries(algolia_entries)
             LOGGER.info(
-                "algolia merge added=%s total_now=%s fetched=%s",
-                len(best) - before,
-                len(best),
+                "algolia merge new_in_memory=%s total_now=%s "
+                "(full archive streams from lot JSONL cache at job write)",
                 len(algolia_entries),
+                len(best),
             )
         except Exception as exc:
             LOGGER.warning("algolia expansion skipped error=%s", exc)

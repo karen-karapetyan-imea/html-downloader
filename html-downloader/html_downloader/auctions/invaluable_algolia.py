@@ -2,6 +2,9 @@
 
 PRIMARY source for historical lots (full archive: all categories, sold + unsold).
 Year-partitioned cursors bound blast radius; no Cloudflare / proxies required.
+
+The JSONL lot cache is the source of truth for historical URLs. Never load the
+full archive into a SitemapEntry dict — stream ids / rows instead.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ import random
 import re
 import threading
 import time
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,6 +39,8 @@ EARLIEST_YEAR = 1989
 MAX_CURSOR_RESTARTS = 3
 DEFAULT_ALGOLIA_DELAY = 0.4
 DEFAULT_ALGOLIA_WORKERS = 2
+# Cap in-memory "new this run" return list; full set lives on disk in JSONL.
+_MAX_RETURN_NEW = 50_000
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -273,11 +279,12 @@ def _process_year(
     state: AlgoliaBrowseState,
     browse: BrowseFn,
     on_entries: Callable[[list[SitemapEntry]], None] | None = None,
-) -> list[SitemapEntry]:
+) -> int:
+    """Browse one year partition. Returns hit-mapped count for this walk."""
     filters = year_filter(int(year))
     cursor = state.cursor(year) if state.status(year) == "in_progress" else None
     restarts = 0
-    collected: list[SitemapEntry] = []
+    mapped = 0
     state.mark_partition(year, "in_progress", cursor=cursor)
 
     try:
@@ -286,7 +293,7 @@ def _process_year(
             if data is None:
                 LOGGER.error("Algolia partition %s browse failed — marking failed", year)
                 state.mark_partition(year, "failed", cursor=cursor)
-                return collected
+                return mapped
 
             if data.get("_invalid_cursor"):
                 restarts += 1
@@ -296,20 +303,20 @@ def _process_year(
                         year,
                     )
                     state.mark_partition(year, "failed", cursor=None)
-                    return collected
+                    return mapped
                 LOGGER.warning(
                     "Algolia partition %s cursor expired — restarting from scratch",
                     year,
                 )
                 cursor = None
-                collected.clear()
+                mapped = 0
                 continue
 
             hits = data.get("hits") or []
             if not isinstance(hits, list):
                 hits = []
             page_entries = hits_to_sitemap_entries(hits)
-            collected.extend(page_entries)
+            mapped += len(page_entries)
             if on_entries and page_entries:
                 on_entries(page_entries)
             new_cursor = data.get("cursor")
@@ -327,42 +334,60 @@ def _process_year(
                 break
 
         state.mark_partition(year, "done", cursor=None)
-        LOGGER.info("Algolia partition %s complete entries=%s", year, len(collected))
+        LOGGER.info("Algolia partition %s complete entries=%s", year, mapped)
     except Exception as exc:
         LOGGER.error("Algolia partition %s crashed: %s", year, exc)
         state.mark_partition(year, "failed", cursor=cursor)
-    return collected
+    return mapped
 
 
-def _lot_cache_path(state_path: Path) -> Path:
-    """Sidecar JSONL of discovered lots so done years still emit on later runs."""
+def lot_cache_path(state_path: Path) -> Path:
+    """Sidecar JSONL of discovered lots (source of truth for historical URLs)."""
     return state_path.with_name(state_path.stem + "_lots.jsonl")
 
 
-def _load_lot_cache(path: Path) -> dict[str, SitemapEntry]:
-    best: dict[str, SitemapEntry] = {}
+def iter_lot_cache_rows(path: Path) -> Iterator[tuple[str, str, str | None]]:
+    """Yield (entity_id, url, lastmod) from the lot JSONL cache."""
     if not path.exists():
-        return best
+        return
     try:
         with open(path, encoding="utf-8") as fh:
             for line in fh:
                 text = line.strip()
                 if not text:
                     continue
-                row = json.loads(text)
+                try:
+                    row = json.loads(text)
+                except json.JSONDecodeError:
+                    continue
                 entity_id = str(row.get("entity_id") or "").strip().lower()
                 url = str(row.get("url") or "").strip()
                 if not entity_id or not url:
                     continue
-                best[entity_id] = SitemapEntry(
-                    url=url,
-                    lastmod=row.get("lastmod"),
-                    entity_type="lot",
-                    entity_id=entity_id,
-                )
-    except Exception as exc:
-        LOGGER.warning("could not load Algolia lot cache %s: %s", path, exc)
-    return best
+                lastmod_raw = row.get("lastmod")
+                lastmod = str(lastmod_raw) if lastmod_raw else None
+                yield entity_id, url, lastmod
+    except OSError as exc:
+        LOGGER.warning("could not read Algolia lot cache %s: %s", path, exc)
+
+
+def load_lot_cache_ids(path: Path) -> set[str]:
+    """Stream entity ids only (no SitemapEntry objects). Logs every 1M lines."""
+    seen: set[str] = set()
+    if not path.exists():
+        return seen
+    count = 0
+    for entity_id, _url, _lastmod in iter_lot_cache_rows(path):
+        seen.add(entity_id)
+        count += 1
+        if count % 1_000_000 == 0:
+            LOGGER.info(
+                "Algolia lot-cache id load progress lines=%s unique=%s",
+                count,
+                len(seen),
+            )
+    LOGGER.info("Algolia lot-cache id load complete lines=%s unique=%s", count, len(seen))
+    return seen
 
 
 def _append_lot_cache(path: Path, entries: list[SitemapEntry]) -> None:
@@ -396,18 +421,18 @@ def expand_lots_from_algolia(
     client: httpx.Client | None = None,
 ) -> list[SitemapEntry]:
     """
-    Browse archive_prod by year and return lot SitemapEntry values.
+    Browse archive_prod by year; persist lots to JSONL.
 
-    Completed year partitions are skipped on resume; lots are persisted to a
-    JSONL sidecar so later discover runs still emit the full historical set.
-    Deduplication against XML/other sources is the caller's responsibility.
+    Returns a capped list of **new** lot entries from this run (for small merges).
+    The full historical set lives on disk — callers must stream `lot_cache_path`
+    into job URL files instead of expecting a giant in-memory list.
     """
     if to_year is None:
         to_year = datetime.now(timezone.utc).year
     if from_year > to_year:
         raise ValueError(f"from_year {from_year} > to_year {to_year}")
 
-    cache_path = _lot_cache_path(state_path)
+    cache_path = lot_cache_path(state_path)
     state = AlgoliaBrowseState(state_path)
     if force:
         state.reset_all()
@@ -418,20 +443,23 @@ def expand_lots_from_algolia(
     years = [str(y) for y in range(from_year, to_year + 1)]
     todo = [y for y in years if state.status(y) != "done"]
 
-    cached = _load_lot_cache(cache_path)
+    seen_ids = load_lot_cache_ids(cache_path) if cache_path.exists() else set()
     LOGGER.info(
-        "Algolia browse years=%s-%s todo=%s cached_lots=%s workers=%s",
+        "Algolia browse years=%s-%s todo=%s cached_ids=%s workers=%s",
         from_year,
         to_year,
         len(todo),
-        len(cached),
+        len(seen_ids),
         workers,
     )
 
     if not todo:
-        LOGGER.info("Algolia: all year partitions done — emitting %s cached lots", len(cached))
+        LOGGER.info(
+            "Algolia: all year partitions done — cache has %s ids (stream from disk for URLs)",
+            len(seen_ids),
+        )
         state.flush()
-        return list(cached.values())
+        return []
 
     own_client: AlgoliaBrowseClient | None = None
     browse_fn = browse
@@ -440,22 +468,22 @@ def expand_lots_from_algolia(
         browse_fn = own_client.browse
 
     lock = threading.Lock()
+    new_this_run: list[SitemapEntry] = []
+    new_written = 0
 
     def _ingest(entries: list[SitemapEntry]) -> None:
+        nonlocal new_written
         with lock:
-            new_entries: list[SitemapEntry] = []
+            fresh: list[SitemapEntry] = []
             for entry in entries:
-                existing = cached.get(entry.entity_id)
-                if existing is None:
-                    cached[entry.entity_id] = entry
-                    new_entries.append(entry)
+                if entry.entity_id in seen_ids:
                     continue
-                if entry.lastmod and (
-                    existing.lastmod is None or entry.lastmod > existing.lastmod
-                ):
-                    cached[entry.entity_id] = entry
-                    new_entries.append(entry)
-            _append_lot_cache(cache_path, new_entries)
+                seen_ids.add(entry.entity_id)
+                fresh.append(entry)
+                new_written += 1
+                if len(new_this_run) < _MAX_RETURN_NEW:
+                    new_this_run.append(entry)
+            _append_lot_cache(cache_path, fresh)
 
     try:
         with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
@@ -481,11 +509,13 @@ def expand_lots_from_algolia(
             own_client.close()
 
     LOGGER.info(
-        "Algolia browse complete total_lots=%s years_todo=%s",
-        len(cached),
+        "Algolia browse complete cached_ids=%s new_written=%s new_returned=%s years_todo=%s",
+        len(seen_ids),
+        new_written,
+        len(new_this_run),
         len(todo),
     )
-    return list(cached.values())
+    return list(new_this_run)
 
 
 __all__ = [
@@ -501,6 +531,9 @@ __all__ = [
     "expand_lots_from_algolia",
     "hit_to_sitemap_entry",
     "hits_to_sitemap_entries",
+    "iter_lot_cache_rows",
+    "load_lot_cache_ids",
+    "lot_cache_path",
     "slugify",
     "year_filter",
 ]
