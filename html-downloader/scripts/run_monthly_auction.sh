@@ -4,9 +4,12 @@
 #
 # Usage:
 #   ./scripts/run_monthly_auction.sh invaluable
+#   ./scripts/run_monthly_auction.sh liveauctioneers
 #
 # Optional:
 #   AUCTION_RUN_DAY=1   # fixed day-of-month for next runs (1–31, clamped)
+#   MIN_URLS=100000     # liveauctioneers only
+#   MAX_SITEMAPS=2000   # liveauctioneers only
 #
 # Prefer starting via:
 #   ./scripts/start_monthly_auction_tmux.sh
@@ -19,9 +22,9 @@ PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 auction_house="${1:-}"
 case "${auction_house}" in
-  invaluable) ;;
+  invaluable|liveauctioneers) ;;
   *)
-    echo "usage: $0 invaluable" >&2
+    echo "usage: $0 invaluable|liveauctioneers" >&2
     exit 2
     ;;
 esac
@@ -42,16 +45,34 @@ fi
 mkdir -p "${PROJECT_ROOT}/logs"
 LOG_FILE="${PROJECT_ROOT}/logs/monthly-auction-${auction_house}-$(date -u +%Y%m%d-%H%M%S).log"
 
+run_discover() {
+  case "${auction_house}" in
+    invaluable)
+      "${PYTHON}" -m html_downloader auction discover \
+        --auction-house invaluable \
+        --proxy-file proxy.txt \
+        --concurrency 1 \
+        --expand-artist-sold \
+        --artist-sold-concurrency "${ARTIST_SOLD_CONCURRENCY:-4}" \
+        --incremental \
+        --update-state
+      ;;
+    liveauctioneers)
+      "${PYTHON}" -m html_downloader auction discover \
+        --auction-house liveauctioneers \
+        --proxy-file proxy.txt \
+        --concurrency 1 \
+        --min-urls "${MIN_URLS:-100000}" \
+        --max-sitemaps "${MAX_SITEMAPS:-2000}" \
+        --incremental \
+        --update-state
+      ;;
+  esac
+}
+
 run_cycle() {
   echo "--- ${auction_house}: auction discover $(date -u -Iseconds) ---"
-  "${PYTHON}" -m html_downloader auction discover \
-    --auction-house "${auction_house}" \
-    --proxy-file proxy.txt \
-    --concurrency 1 \
-    --expand-artist-sold \
-    --artist-sold-concurrency "${ARTIST_SOLD_CONCURRENCY:-4}" \
-    --incremental \
-    --update-state
+  run_discover
 
   echo "--- ${auction_house}: auction download $(date -u -Iseconds) ---"
   "${PYTHON}" -m html_downloader auction download \

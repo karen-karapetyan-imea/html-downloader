@@ -51,6 +51,11 @@ class CrawlerConfig:
 
     impersonate: str = "chrome"
 
+    # Optional per-request header overrides (e.g. SEO bot UA for Imperva sites).
+    extra_headers: dict[str, str] | None = None
+    # When True, treat small 200 bodies without window.__data as soft blocks.
+    require_window_data: bool = False
+
     skip_existing: bool = False
     results_append: bool = True
 

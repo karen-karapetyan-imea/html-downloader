@@ -149,11 +149,29 @@ Monthly loop (calendar months from cycle start; optional `AUCTION_RUN_DAY=1`):
 
 ```bash
 ./scripts/run_monthly_auction.sh invaluable
-./scripts/start_monthly_auction_tmux.sh   # session: crawl-auction-invaluable
+./scripts/run_monthly_auction.sh liveauctioneers
+./scripts/start_monthly_auction_tmux.sh   # sessions: crawl-auction-{invaluable,liveauctioneers}
 ./scripts/stop_monthly_auction_tmux.sh
 ```
 
 Logs: `logs/monthly-auction-{house}-YYYYMMDD-HHMMSS.log`.
+
+### LiveAuctioneers
+
+See [docs/liveauctioneers_discovery.md](docs/liveauctioneers_discovery.md).
+
+Discovery walks the gzipped index `https://www.liveauctioneers.com/price-result-sitemap-index.xml.gz` and expands child `price-result` / `sitemap-price-result-*.xml.gz` files into `/price-result/{slug}` URLs until **`--min-urls`** (default **100000**) or **`--max-sitemaps`** (default **2000**). Resume: `state/auctions/liveauctioneers_sitemap_progress.json`.
+
+Imperva blocks Chrome UAs; discover and download use SEO bot User-Agents. Proxies required.
+
+```bash
+python -m html_downloader auction discover \
+  --auction-house liveauctioneers --proxy-file proxy.txt \
+  --min-urls 100000 --incremental --update-state
+
+python -m html_downloader auction download \
+  --auction-house liveauctioneers --proxy-file proxy.txt --skip-existing
+```
 
 ## Tests
 

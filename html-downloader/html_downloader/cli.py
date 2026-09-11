@@ -209,6 +209,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="Limit house pages crawled when --expand-houses (smoke/debug)",
     )
     auction_discover.add_argument(
+        "--max-sitemaps",
+        type=int,
+        default=None,
+        help=(
+            "LiveAuctioneers: max pending child sitemaps to attempt per run "
+            "(default: 2000)"
+        ),
+    )
+    auction_discover.add_argument(
+        "--min-urls",
+        type=int,
+        default=None,
+        help=(
+            "LiveAuctioneers: keep expanding child sitemaps until this many "
+            "unique /price-result/ URLs are collected (default: 100000)"
+        ),
+    )
+    auction_discover.add_argument(
         "--dry-run",
         action="store_true",
         help="Fetch + log only; do not write job files",
@@ -347,6 +365,8 @@ def _cmd_auction_discover(args: argparse.Namespace) -> int:
             expand_houses=args.expand_houses,
             house_expand_concurrency=args.house_expand_concurrency,
             max_houses=args.max_houses,
+            max_sitemaps=args.max_sitemaps,
+            min_urls=args.min_urls,
         )
     except (ValueError, RuntimeError) as exc:
         LOGGER.error("%s", exc)

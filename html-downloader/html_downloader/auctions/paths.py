@@ -8,7 +8,7 @@ from pathlib import Path
 
 from html_downloader.paths import DEFAULT_DATA_ROOT, DEFAULT_STATE_ROOT, PROJECT_ROOT
 
-AUCTION_HOUSES: tuple[str, ...] = ("invaluable",)
+AUCTION_HOUSES: tuple[str, ...] = ("invaluable", "liveauctioneers")
 
 _MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 
@@ -95,6 +95,11 @@ def auction_algolia_browse_state_file(state_root: Path, auction_house: str) -> P
     return auction_state_root(state_root) / f"{auction_house}_algolia_browse_state.json"
 
 
+def auction_sitemap_progress_file(state_root: Path, auction_house: str) -> Path:
+    """Child-sitemap resume checkpoint for houses with large gzipped indexes."""
+    return auction_state_root(state_root) / f"{auction_house}_sitemap_progress.json"
+
+
 def known_auction_result_paths(data_root: Path, auction_house: str) -> list[Path]:
     """Prior auction crawl logs for incremental discovery."""
     house_dir = auction_data_root(data_root) / auction_house
@@ -123,6 +128,7 @@ __all__ = [
     "auction_metadata_file",
     "auction_results_file",
     "auction_sitemap_all_file",
+    "auction_sitemap_progress_file",
     "auction_state_root",
     "auction_urls_file",
     "ensure_auction_job_dirs",

@@ -20,6 +20,7 @@ from html_downloader.auctions.paths import (
     auction_metadata_file,
     auction_results_file,
     auction_sitemap_all_file,
+    auction_sitemap_progress_file,
     auction_urls_file,
     ensure_auction_job_dirs,
     known_auction_result_paths,
@@ -64,6 +65,12 @@ def _known_keys_for_house(data_root: Path, auction_house: str) -> set[tuple[str,
         from html_downloader.auctions.invaluable import known_invaluable_keys_from_paths
 
         return known_invaluable_keys_from_paths(paths)
+    if auction_house == "liveauctioneers":
+        from html_downloader.auctions.liveauctioneers import (
+            known_liveauctioneers_keys_from_paths,
+        )
+
+        return known_liveauctioneers_keys_from_paths(paths)
     keys: set[tuple[str, str]] = set()
     for path in paths:
         # Generic fallback: parse as invaluable-style if possible
@@ -175,6 +182,8 @@ def run_auction_discover(
     expand_houses: bool = False,
     house_expand_concurrency: int = 2,
     max_houses: int | None = None,
+    max_sitemaps: int | None = None,
+    min_urls: int | None = None,
 ) -> AuctionDiscoverResult:
     spec = get_auction(auction_house)
     month = parse_job_month(job_month)
@@ -182,9 +191,18 @@ def run_auction_discover(
     proxy = proxies[0] if proxies else None
     workers = concurrency if concurrency is not None else spec.default_concurrency
 
+    from html_downloader.auctions.liveauctioneers import (
+        DEFAULT_MAX_SITEMAPS,
+        DEFAULT_MIN_URLS,
+    )
+
+    sitemap_limit = max_sitemaps if max_sitemaps is not None else DEFAULT_MAX_SITEMAPS
+    url_target = min_urls if min_urls is not None else DEFAULT_MIN_URLS
+
     LOGGER.info(
         "auction discover house=%s month=%s concurrency=%s expand_algolia=%s "
-        "expand_artist_sold=%s include_hubs=%s expand_auctions_list=%s expand_houses=%s",
+        "expand_artist_sold=%s include_hubs=%s expand_auctions_list=%s expand_houses=%s "
+        "max_sitemaps=%s min_urls=%s",
         spec.name,
         month,
         workers,
@@ -193,6 +211,8 @@ def run_auction_discover(
         include_hubs,
         expand_auctions_list,
         expand_houses,
+        sitemap_limit if spec.name == "liveauctioneers" else None,
+        url_target if spec.name == "liveauctioneers" else None,
     )
 
     progress_path = (
@@ -208,6 +228,11 @@ def run_auction_discover(
     algolia_state = (
         auction_algolia_browse_state_file(state_root, spec.name)
         if expand_algolia and spec.name == "invaluable"
+        else None
+    )
+    sitemap_progress = (
+        auction_sitemap_progress_file(state_root, spec.name)
+        if spec.name == "liveauctioneers"
         else None
     )
 
@@ -234,6 +259,9 @@ def run_auction_discover(
         house_expand_concurrency=house_expand_concurrency,
         max_houses=max_houses,
         house_expand_progress_path=house_progress,
+        max_sitemaps=sitemap_limit,
+        min_urls=url_target,
+        sitemap_progress_path=sitemap_progress,
     )
     LOGGER.info("fetched auction entries=%s", len(entries))
 
@@ -312,7 +340,14 @@ def run_auction_discover(
             encoding="utf-8",
         )
         if update_state:
-            from html_downloader.auctions.invaluable import save_auction_lastmod_state
+            if spec.name == "invaluable":
+                from html_downloader.auctions.invaluable import save_auction_lastmod_state
+            elif spec.name == "liveauctioneers":
+                from html_downloader.auctions.liveauctioneers import (
+                    save_auction_lastmod_state,
+                )
+            else:
+                from html_downloader.auctions.invaluable import save_auction_lastmod_state
 
             # In-memory entries only — do not build lastmod from full Algolia archive.
             save_auction_lastmod_state(
@@ -365,6 +400,20 @@ def run_auction_download(
         skip_existing=skip_existing,
         results_append=results_append,
     )
+
+    if spec.name == "liveauctioneers":
+        from html_downloader.auctions.liveauctioneers import (
+            IMPERVA_BLOCK_KEYWORDS,
+            liveauctioneers_download_headers,
+        )
+
+        # Imperva serves SSR to SEO bots; Chrome impersonate yields challenge stubs.
+        config.impersonate = "none"
+        config.extra_headers = liveauctioneers_download_headers()
+        config.require_window_data = True
+        config.block_keywords = tuple(
+            dict.fromkeys((*config.block_keywords, *IMPERVA_BLOCK_KEYWORDS))
+        )
 
     # Reuse marketplace Manifest shape; marketplace field stores auction house name.
     manifest = new_manifest(

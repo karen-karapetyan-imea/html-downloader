@@ -75,6 +75,13 @@ _ARTIST_SEED_SUFFIXES = (
 )
 
 _INVALUABLE_HOSTS = frozenset({"www.invaluable.com", "invaluable.com"})
+_LIVEAUCTIONEERS_HOSTS = frozenset({"www.liveauctioneers.com", "liveauctioneers.com"})
+
+# SEO sold-lot page: /price-result/{slug}/
+LIVEAUCTIONEERS_PRICE_RESULT_RE = re.compile(
+    r"^https://www\.liveauctioneers\.com/price-result/([^/\"'<>\s]+)/?$",
+    re.IGNORECASE,
+)
 
 
 def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | None:
@@ -85,8 +92,8 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     - Require http(s)
     - Drop fragments
     - Strip common tracking / Algolia query params
-    - Lowercase scheme/host; force www.invaluable.com
-    - Catalog / lot / house / artist / category ids lowercased
+    - Lowercase scheme/host; force www.invaluable.com / www.liveauctioneers.com
+    - Catalog / lot / house / artist / category / price-result ids lowercased
     - Strip trailing slash (except bare `/`)
     """
     text = (url or "").strip()
@@ -107,6 +114,9 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
 
     if host == "invaluable.com":
         host = "www.invaluable.com"
+        netloc = host
+    elif host == "liveauctioneers.com":
+        host = "www.liveauctioneers.com"
         netloc = host
     else:
         netloc = host
@@ -138,6 +148,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         path,
         re.IGNORECASE,
     )
+    price_result_match = re.match(
+        r"^(/price-result/)([^/\"'<>\s]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
 
     if catalog_match and host in _INVALUABLE_HOSTS:
         path = f"/catalog/{catalog_match.group(2).lower()}"
@@ -165,6 +180,8 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         kind = category_match.group(2).lower()
         cat_id = category_match.group(3).lower()
         path = f"/{slug}/{kind}-{cat_id}"
+    elif price_result_match and host in _LIVEAUCTIONEERS_HOSTS:
+        path = f"/price-result/{price_result_match.group(2).lower()}"
     else:
         path = path.rstrip("/") or "/"
 
@@ -179,11 +196,19 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     query = urlencode(filtered_query, doseq=True)
 
     # Entity crawl targets drop query entirely
-    candidate = urlunsplit(("https", "www.invaluable.com", path, "", ""))
-    if invaluable_entity_from_url_path(candidate) is not None:
-        query = ""
+    if host in _INVALUABLE_HOSTS:
+        candidate = urlunsplit(("https", "www.invaluable.com", path, "", ""))
+        if invaluable_entity_from_url_path(candidate) is not None:
+            query = ""
+        out_netloc = "www.invaluable.com"
+    elif host in _LIVEAUCTIONEERS_HOSTS:
+        candidate = urlunsplit(("https", "www.liveauctioneers.com", path, "", ""))
+        if liveauctioneers_entity_from_url_path(candidate) is not None:
+            query = ""
+        out_netloc = "www.liveauctioneers.com"
+    else:
+        out_netloc = netloc
 
-    out_netloc = "www.invaluable.com" if host in _INVALUABLE_HOSTS else netloc
     return urlunsplit(("https", out_netloc, path, query, ""))
 
 
@@ -288,3 +313,32 @@ def prefer_entity_url(existing: str, candidate: str) -> str:
 def is_invaluable_auction_url(url: str) -> bool:
     """Alias for is_auction_url scoped to Invaluable entity pages."""
     return is_auction_url(url)
+
+
+def liveauctioneers_entity_from_url_path(url: str) -> tuple[str, str] | None:
+    """Classify a normalized LiveAuctioneers absolute URL without re-entering normalize."""
+    match = LIVEAUCTIONEERS_PRICE_RESULT_RE.match(url)
+    if match:
+        return "price_result", match.group(1).lower()
+    return None
+
+
+def liveauctioneers_entity_from_url(url: str) -> tuple[str, str] | None:
+    """
+    Return (entity_type, entity_id) for LiveAuctioneers crawl targets.
+
+    Accepted:
+      /price-result/{slug}  → ("price_result", slug)
+    """
+    normalized = normalize_auction_url(url)
+    if not normalized:
+        return None
+    host = (urlsplit(normalized).hostname or "").lower()
+    if host not in _LIVEAUCTIONEERS_HOSTS:
+        return None
+    return liveauctioneers_entity_from_url_path(normalized)
+
+
+def is_liveauctioneers_auction_url(url: str) -> bool:
+    """True for LiveAuctioneers price-result crawl targets."""
+    return liveauctioneers_entity_from_url(url) is not None

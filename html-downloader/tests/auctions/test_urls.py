@@ -122,3 +122,27 @@ def test_duplicate_normalization() -> None:
         "https://www.invaluable.com/auction-lot/foo-bar-134-c-f38e67d2a8#frag"
     )
     assert lot_a == lot_b == "https://www.invaluable.com/auction-lot/foo-bar-134-c-f38e67d2a8"
+
+
+def test_liveauctioneers_price_result_normalize_and_entity() -> None:
+    from html_downloader.auctions.urls import (
+        is_liveauctioneers_auction_url,
+        liveauctioneers_entity_from_url,
+    )
+
+    assert (
+        normalize_auction_url(
+            "https://liveauctioneers.com/price-result/Oil-Painting-123/?utm_source=x"
+        )
+        == "https://www.liveauctioneers.com/price-result/oil-painting-123"
+    )
+    assert liveauctioneers_entity_from_url(
+        "https://www.liveauctioneers.com/price-result/Oil-Painting-123/"
+    ) == ("price_result", "oil-painting-123")
+    assert is_liveauctioneers_auction_url(
+        "https://www.liveauctioneers.com/price-result/foo-bar"
+    )
+    assert not is_liveauctioneers_auction_url(
+        "https://www.liveauctioneers.com/item/123_foo"
+    )
+    assert not is_auction_url("https://www.liveauctioneers.com/price-result/foo")

@@ -7,6 +7,11 @@ from typing import Any
 
 from html_downloader.auctions.base import AuctionSpec
 from html_downloader.auctions.invaluable import DEFAULT_INVALUABLE_INDEX
+from html_downloader.auctions.liveauctioneers import (
+    DEFAULT_LIVEAUCTIONEERS_INDEX,
+    DEFAULT_MAX_SITEMAPS,
+    DEFAULT_MIN_URLS,
+)
 from html_downloader.auctions.paths import AUCTION_HOUSES
 from html_downloader.discover.sitemap import SitemapEntry
 
@@ -18,9 +23,13 @@ AUCTIONS: dict[str, AuctionSpec] = {
         default_concurrency=1,
         uses_stealth_proxy=True,
     ),
-    # future:
-    # "sothebys": AuctionSpec(...),
-    # "christies": AuctionSpec(...),
+    "liveauctioneers": AuctionSpec(
+        name="liveauctioneers",
+        default_indexes=(DEFAULT_LIVEAUCTIONEERS_INDEX,),
+        # Sequential only — Imperva rate-limits parallel sitemap fetches.
+        default_concurrency=1,
+        uses_stealth_proxy=True,
+    ),
 }
 
 
@@ -54,6 +63,9 @@ def fetch_auction_entries(
     house_expand_concurrency: int = 2,
     max_houses: int | None = None,
     house_expand_progress_path: Path | None = None,
+    max_sitemaps: int = DEFAULT_MAX_SITEMAPS,
+    min_urls: int = DEFAULT_MIN_URLS,
+    sitemap_progress_path: Path | None = None,
 ) -> list[SitemapEntry]:
     """Dispatch discovery for the given auction house."""
     if spec.name == "invaluable":
@@ -85,4 +97,23 @@ def fetch_auction_entries(
             kwargs["proxy"] = proxy
             kwargs["proxies"] = [proxy]
         return fetch_invaluable_sitemap_entries(spec.default_indexes[0], **kwargs)
+
+    if spec.name == "liveauctioneers":
+        from html_downloader.auctions.liveauctioneers import (
+            fetch_liveauctioneers_sitemap_entries,
+        )
+
+        kwargs = {
+            "concurrency": concurrency,
+            "max_sitemaps": max_sitemaps,
+            "min_urls": min_urls,
+            "sitemap_progress_path": sitemap_progress_path,
+        }
+        if proxies:
+            kwargs["proxies"] = proxies
+        elif proxy is not None:
+            kwargs["proxy"] = proxy
+            kwargs["proxies"] = [proxy]
+        return fetch_liveauctioneers_sitemap_entries(spec.default_indexes[0], **kwargs)
+
     raise ValueError(f"no discovery implementation for auction house {spec.name!r}")

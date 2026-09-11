@@ -59,6 +59,23 @@ def test_cli_auction_discover_and_download_flags() -> None:
     assert discover_args.algolia_from_year == 2020
     assert discover_args.algolia_workers == 3
 
+    la_args = parser.parse_args(
+        [
+            "auction",
+            "discover",
+            "--auction-house",
+            "liveauctioneers",
+            "--max-sitemaps",
+            "25",
+            "--min-urls",
+            "50000",
+            "--incremental",
+        ]
+    )
+    assert la_args.auction_house == "liveauctioneers"
+    assert la_args.max_sitemaps == 25
+    assert la_args.min_urls == 50000
+
     # Defaults: Algolia on, artist-sold off
     defaults = parser.parse_args(
         ["auction", "discover", "--auction-house", "invaluable"]
@@ -68,6 +85,8 @@ def test_cli_auction_discover_and_download_flags() -> None:
     assert defaults.algolia_workers == 2
     assert defaults.algolia_delay == 0.4
     assert defaults.algolia_force is False
+    assert defaults.max_sitemaps is None
+    assert defaults.min_urls is None
 
     download_args = parser.parse_args(
         [
@@ -149,6 +168,93 @@ def test_auction_discover_writes_monthly_job(tmp_path: Path) -> None:
     assert (state_root / "auctions" / "invaluable.json").is_file()
     # Marketplace-style state file must not be created
     assert not (state_root / "invaluable_lastmod.json").exists()
+
+
+def test_liveauctioneers_discover_writes_monthly_job(tmp_path: Path) -> None:
+    entries = [
+        _entry(
+            "https://www.liveauctioneers.com/price-result/oil-painting-123",
+            "price_result",
+            "oil-painting-123",
+            "2026-09-01",
+        ),
+        _entry(
+            "https://www.liveauctioneers.com/price-result/bronze-sculpture-abc",
+            "price_result",
+            "bronze-sculpture-abc",
+            "2026-09-02",
+        ),
+    ]
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+    proxy_file = tmp_path / "proxy.txt"
+    proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
+
+    with patch(
+        "html_downloader.auctions.service.fetch_auction_entries",
+        return_value=entries,
+    ):
+        result = run_auction_discover(
+            auction_house="liveauctioneers",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=False,
+            include_updates=True,
+            update_state=True,
+            proxy_file=str(proxy_file),
+            concurrency=1,
+            dry_run=False,
+            max_sitemaps=10,
+        )
+
+    job = result.job
+    assert job == data_root / "auctions" / "liveauctioneers" / "2026-09"
+    urls = (job / "urls.txt").read_text(encoding="utf-8").strip().splitlines()
+    assert len(urls) == 2
+    meta = json.loads((job / "metadata.json").read_text(encoding="utf-8"))
+    assert meta["auction_house"] == "liveauctioneers"
+    assert (state_root / "auctions" / "liveauctioneers.json").is_file()
+
+
+def test_liveauctioneers_download_configures_bot_ua(tmp_path: Path) -> None:
+    from html_downloader.auctions.service import run_auction_download
+
+    data_root = tmp_path / "data"
+    job = data_root / "auctions" / "liveauctioneers" / "2026-09"
+    job.mkdir(parents=True)
+    (job / "urls.txt").write_text(
+        "https://www.liveauctioneers.com/price-result/oil-painting-123\n",
+        encoding="utf-8",
+    )
+    proxy_file = tmp_path / "proxy.txt"
+    proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
+
+    captured: dict = {}
+
+    def fake_crawl(urls: list[str], config: object) -> None:
+        captured["config"] = config
+        captured["urls"] = urls
+
+    with patch("html_downloader.auctions.service.run_crawl", side_effect=fake_crawl):
+        result = run_auction_download(
+            auction_house="liveauctioneers",
+            data_root=data_root,
+            job_month="2026-09",
+            proxy_file=str(proxy_file),
+            urls_override=None,
+            max_workers=2,
+            requests_per_second=1.0,
+            skip_existing=True,
+            results_append=True,
+        )
+
+    assert result.status == "completed"
+    cfg = captured["config"]
+    assert cfg.impersonate == "none"
+    assert cfg.require_window_data is True
+    assert "Googlebot" in cfg.extra_headers["User-Agent"]
+    assert "incapsula" in cfg.block_keywords
 
 
 def test_main_help_exit_code() -> None:

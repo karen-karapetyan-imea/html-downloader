@@ -1,5 +1,5 @@
 """
-curl_cffi fetcher: Chrome TLS fingerprint, per-request proxy, write HTML to disk.
+curl_cffi fetcher: Chrome TLS fingerprint (optional), per-request proxy, write HTML.
 One Session per worker; pass proxy_dict per request for rotation.
 """
 
@@ -14,9 +14,13 @@ from html_downloader.config import CrawlerConfig
 from html_downloader.download.block_detector import BlockInfo, is_block
 from html_downloader.download.headers import get_headers
 
+_NO_IMPERSONATE = frozenset({"", "none", "off", "false"})
+
 
 def create_session(impersonate: str = "chrome") -> Session:
-    """Create a curl_cffi Session with browser impersonation."""
+    """Create a curl_cffi Session; skip browser impersonation when impersonate is none."""
+    if (impersonate or "").strip().lower() in _NO_IMPERSONATE:
+        return Session()
     return Session(impersonate=impersonate)
 
 
@@ -36,7 +40,7 @@ def fetch(
         kwargs: dict[str, Any] = {
             "url": url,
             "timeout": config.timeout,
-            "headers": get_headers(),
+            "headers": get_headers(config.extra_headers),
         }
         if proxy_dict:
             kwargs["proxies"] = proxy_dict
@@ -47,8 +51,29 @@ def fetch(
         body = resp.content
 
         if status_code == 200 and body:
-            with open(path, "wb") as handle:
-                handle.write(body)
+            block = is_block(
+                status_code,
+                resp.headers,
+                body,
+                block_status_codes=config.block_status_codes,
+                scan_bytes=config.block_body_scan_bytes,
+                keywords=config.block_keywords,
+            )
+            if (
+                not block.is_block
+                and config.require_window_data
+                and b"window.__data" not in body
+                and len(body) < 8000
+            ):
+                block = BlockInfo(True, "missing_window_data")
+
+            if not block.is_block:
+                with open(path, "wb") as handle:
+                    handle.write(body)
+
+            if block.is_block:
+                return status_code, "blocked", block, duration_ms
+            return status_code, "", block, duration_ms
 
         block = is_block(
             status_code,
@@ -58,7 +83,6 @@ def fetch(
             scan_bytes=config.block_body_scan_bytes,
             keywords=config.block_keywords,
         )
-
         if status_code != 200:
             return status_code, "non-200", block, duration_ms
         return status_code, "", block, duration_ms
