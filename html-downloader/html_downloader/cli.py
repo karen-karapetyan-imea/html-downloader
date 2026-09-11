@@ -227,6 +227,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     auction_discover.add_argument(
+        "--max-sales",
+        type=int,
+        default=None,
+        help=(
+            "Artcurial: max pending finished sales to expand into lot URLs "
+            "per run (default: all)"
+        ),
+    )
+    auction_discover.add_argument(
         "--dry-run",
         action="store_true",
         help="Fetch + log only; do not write job files",
@@ -367,6 +376,7 @@ def _cmd_auction_discover(args: argparse.Namespace) -> int:
             max_houses=args.max_houses,
             max_sitemaps=args.max_sitemaps,
             min_urls=args.min_urls,
+            max_sales=args.max_sales,
         )
     except (ValueError, RuntimeError) as exc:
         LOGGER.error("%s", exc)

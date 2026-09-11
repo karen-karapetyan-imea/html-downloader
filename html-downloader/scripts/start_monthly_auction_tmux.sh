@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Start monthly auction crawl tmux sessions.
 #
-# Sessions: crawl-auction-invaluable, crawl-auction-liveauctioneers
+# Sessions: crawl-auction-invaluable, crawl-auction-liveauctioneers, crawl-auction-artcurial
 # Attach:   tmux attach -t crawl-auction-liveauctioneers
 # List:     tmux ls
 # Stop one: tmux kill-session -t crawl-auction-liveauctioneers
@@ -12,7 +12,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PYTHON="${PROJECT_ROOT}/.venv/bin/python"
-AUCTION_HOUSES=(invaluable liveauctioneers)
+AUCTION_HOUSES=(invaluable liveauctioneers artcurial)
 
 if ! command -v tmux >/dev/null 2>&1; then
   echo "error: tmux is not installed" >&2

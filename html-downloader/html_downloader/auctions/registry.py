@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from html_downloader.auctions.artcurial import DEFAULT_ARTCURIAL_INDEX
 from html_downloader.auctions.base import AuctionSpec
 from html_downloader.auctions.invaluable import DEFAULT_INVALUABLE_INDEX
 from html_downloader.auctions.liveauctioneers import (
@@ -29,6 +30,13 @@ AUCTIONS: dict[str, AuctionSpec] = {
         # Sequential only — Imperva rate-limits parallel sitemap fetches.
         default_concurrency=1,
         uses_stealth_proxy=True,
+    ),
+    "artcurial": AuctionSpec(
+        name="artcurial",
+        default_indexes=(DEFAULT_ARTCURIAL_INDEX,),
+        # Public /ace JSON API — mild parallelism is fine.
+        default_concurrency=4,
+        uses_stealth_proxy=False,
     ),
 }
 
@@ -66,6 +74,8 @@ def fetch_auction_entries(
     max_sitemaps: int = DEFAULT_MAX_SITEMAPS,
     min_urls: int = DEFAULT_MIN_URLS,
     sitemap_progress_path: Path | None = None,
+    max_sales: int | None = None,
+    sales_progress_path: Path | None = None,
 ) -> list[SitemapEntry]:
     """Dispatch discovery for the given auction house."""
     if spec.name == "invaluable":
@@ -115,5 +125,20 @@ def fetch_auction_entries(
             kwargs["proxy"] = proxy
             kwargs["proxies"] = [proxy]
         return fetch_liveauctioneers_sitemap_entries(spec.default_indexes[0], **kwargs)
+
+    if spec.name == "artcurial":
+        from html_downloader.auctions.artcurial import fetch_artcurial_entries
+
+        kwargs = {
+            "concurrency": concurrency,
+            "max_sales": max_sales,
+            "sales_progress_path": sales_progress_path,
+        }
+        if proxies:
+            kwargs["proxies"] = proxies
+        elif proxy is not None:
+            kwargs["proxy"] = proxy
+            kwargs["proxies"] = [proxy]
+        return fetch_artcurial_entries(spec.default_indexes[0], **kwargs)
 
     raise ValueError(f"no discovery implementation for auction house {spec.name!r}")

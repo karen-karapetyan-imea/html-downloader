@@ -146,3 +146,27 @@ def test_liveauctioneers_price_result_normalize_and_entity() -> None:
         "https://www.liveauctioneers.com/item/123_foo"
     )
     assert not is_auction_url("https://www.liveauctioneers.com/price-result/foo")
+
+
+def test_artcurial_lot_normalize_and_entity() -> None:
+    from html_downloader.auctions.urls import (
+        artcurial_entity_from_url,
+        is_artcurial_auction_url,
+    )
+
+    assert (
+        normalize_auction_url(
+            "https://artcurial.com/fr/sales/6641/lots/1-A/?utm_source=x"
+        )
+        == "https://www.artcurial.com/en/sales/6641/lots/1-a"
+    )
+    assert artcurial_entity_from_url(
+        "https://www.artcurial.com/en/sales/6641/lots/2-b/"
+    ) == ("lot", "6641:2-b")
+    assert is_artcurial_auction_url(
+        "https://www.artcurial.com/en/sales/6641/lots/1-a"
+    )
+    assert not is_artcurial_auction_url(
+        "https://www.artcurial.com/en/sales/6641"
+    )
+    assert not is_auction_url("https://www.artcurial.com/en/sales/6641/lots/1-a")

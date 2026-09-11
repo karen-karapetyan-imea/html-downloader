@@ -76,10 +76,18 @@ _ARTIST_SEED_SUFFIXES = (
 
 _INVALUABLE_HOSTS = frozenset({"www.invaluable.com", "invaluable.com"})
 _LIVEAUCTIONEERS_HOSTS = frozenset({"www.liveauctioneers.com", "liveauctioneers.com"})
+_ARTCURIAL_HOSTS = frozenset({"www.artcurial.com", "artcurial.com"})
 
 # SEO sold-lot page: /price-result/{slug}/
 LIVEAUCTIONEERS_PRICE_RESULT_RE = re.compile(
     r"^https://www\.liveauctioneers\.com/price-result/([^/\"'<>\s]+)/?$",
+    re.IGNORECASE,
+)
+
+# Lot page: /en|fr/sales/{ref}/lots/{index}-{sub}
+ARTCURIAL_LOT_RE = re.compile(
+    r"^https://www\.artcurial\.com/(?:en|fr)/sales/([A-Za-z0-9_-]+)/lots/"
+    r"(\d+)-([A-Za-z0-9]+)/?$",
     re.IGNORECASE,
 )
 
@@ -92,8 +100,10 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     - Require http(s)
     - Drop fragments
     - Strip common tracking / Algolia query params
-    - Lowercase scheme/host; force www.invaluable.com / www.liveauctioneers.com
+    - Lowercase scheme/host; force www.invaluable.com / www.liveauctioneers.com /
+      www.artcurial.com
     - Catalog / lot / house / artist / category / price-result ids lowercased
+    - Artcurial lot paths force /en/ locale
     - Strip trailing slash (except bare `/`)
     """
     text = (url or "").strip()
@@ -117,6 +127,9 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         netloc = host
     elif host == "liveauctioneers.com":
         host = "www.liveauctioneers.com"
+        netloc = host
+    elif host == "artcurial.com":
+        host = "www.artcurial.com"
         netloc = host
     else:
         netloc = host
@@ -153,6 +166,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         path,
         re.IGNORECASE,
     )
+    artcurial_lot_match = re.match(
+        r"^/(en|fr)/sales/([A-Za-z0-9_-]+)/lots/(\d+)-([A-Za-z0-9]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
 
     if catalog_match and host in _INVALUABLE_HOSTS:
         path = f"/catalog/{catalog_match.group(2).lower()}"
@@ -182,6 +200,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         path = f"/{slug}/{kind}-{cat_id}"
     elif price_result_match and host in _LIVEAUCTIONEERS_HOSTS:
         path = f"/price-result/{price_result_match.group(2).lower()}"
+    elif artcurial_lot_match and host in _ARTCURIAL_HOSTS:
+        sale_ref = artcurial_lot_match.group(2)
+        index = artcurial_lot_match.group(3)
+        sub = artcurial_lot_match.group(4).lower()
+        path = f"/en/sales/{sale_ref}/lots/{index}-{sub}"
     else:
         path = path.rstrip("/") or "/"
 
@@ -206,6 +229,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         if liveauctioneers_entity_from_url_path(candidate) is not None:
             query = ""
         out_netloc = "www.liveauctioneers.com"
+    elif host in _ARTCURIAL_HOSTS:
+        candidate = urlunsplit(("https", "www.artcurial.com", path, "", ""))
+        if artcurial_entity_from_url_path(candidate) is not None:
+            query = ""
+        out_netloc = "www.artcurial.com"
     else:
         out_netloc = netloc
 
@@ -342,3 +370,36 @@ def liveauctioneers_entity_from_url(url: str) -> tuple[str, str] | None:
 def is_liveauctioneers_auction_url(url: str) -> bool:
     """True for LiveAuctioneers price-result crawl targets."""
     return liveauctioneers_entity_from_url(url) is not None
+
+
+def artcurial_entity_from_url_path(url: str) -> tuple[str, str] | None:
+    """Classify a normalized Artcurial absolute URL without re-entering normalize."""
+    match = ARTCURIAL_LOT_RE.match(url)
+    if match:
+        ref = match.group(1)
+        index = match.group(2)
+        sub = match.group(3).lower()
+        return "lot", f"{ref}:{index}-{sub}"
+    return None
+
+
+def artcurial_entity_from_url(url: str) -> tuple[str, str] | None:
+    """
+    Return (entity_type, entity_id) for Artcurial crawl targets.
+
+    Accepted:
+      /en/sales/{ref}/lots/{index}-{sub}  → ("lot", "{ref}:{index}-{sub}")
+      /fr/sales/...                       → same after normalize to /en/
+    """
+    normalized = normalize_auction_url(url)
+    if not normalized:
+        return None
+    host = (urlsplit(normalized).hostname or "").lower()
+    if host not in _ARTCURIAL_HOSTS:
+        return None
+    return artcurial_entity_from_url_path(normalized)
+
+
+def is_artcurial_auction_url(url: str) -> bool:
+    """True for Artcurial lot crawl targets."""
+    return artcurial_entity_from_url(url) is not None

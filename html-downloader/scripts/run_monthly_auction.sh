@@ -5,11 +5,13 @@
 # Usage:
 #   ./scripts/run_monthly_auction.sh invaluable
 #   ./scripts/run_monthly_auction.sh liveauctioneers
+#   ./scripts/run_monthly_auction.sh artcurial
 #
 # Optional:
 #   AUCTION_RUN_DAY=1   # fixed day-of-month for next runs (1–31, clamped)
 #   MIN_URLS=100000     # liveauctioneers only
 #   MAX_SITEMAPS=2000   # liveauctioneers only
+#   MAX_SALES=          # artcurial only (default: all pending sales)
 #
 # Prefer starting via:
 #   ./scripts/start_monthly_auction_tmux.sh
@@ -22,9 +24,9 @@ PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 auction_house="${1:-}"
 case "${auction_house}" in
-  invaluable|liveauctioneers) ;;
+  invaluable|liveauctioneers|artcurial) ;;
   *)
-    echo "usage: $0 invaluable|liveauctioneers" >&2
+    echo "usage: $0 invaluable|liveauctioneers|artcurial" >&2
     exit 2
     ;;
 esac
@@ -66,6 +68,18 @@ run_discover() {
         --max-sitemaps "${MAX_SITEMAPS:-2000}" \
         --incremental \
         --update-state
+      ;;
+    artcurial)
+      discover_args=(
+        --auction-house artcurial
+        --concurrency "${ARTCURIAL_CONCURRENCY:-4}"
+        --incremental
+        --update-state
+      )
+      if [[ -n "${MAX_SALES:-}" ]]; then
+        discover_args+=(--max-sales "${MAX_SALES}")
+      fi
+      "${PYTHON}" -m html_downloader auction discover "${discover_args[@]}"
       ;;
   esac
 }

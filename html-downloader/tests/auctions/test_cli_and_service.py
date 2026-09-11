@@ -76,6 +76,21 @@ def test_cli_auction_discover_and_download_flags() -> None:
     assert la_args.max_sitemaps == 25
     assert la_args.min_urls == 50000
 
+    ac_args = parser.parse_args(
+        [
+            "auction",
+            "discover",
+            "--auction-house",
+            "artcurial",
+            "--max-sales",
+            "5",
+            "--incremental",
+            "--update-state",
+        ]
+    )
+    assert ac_args.auction_house == "artcurial"
+    assert ac_args.max_sales == 5
+
     # Defaults: Algolia on, artist-sold off
     defaults = parser.parse_args(
         ["auction", "discover", "--auction-house", "invaluable"]
@@ -87,6 +102,7 @@ def test_cli_auction_discover_and_download_flags() -> None:
     assert defaults.algolia_force is False
     assert defaults.max_sitemaps is None
     assert defaults.min_urls is None
+    assert defaults.max_sales is None
 
     download_args = parser.parse_args(
         [
@@ -215,6 +231,51 @@ def test_liveauctioneers_discover_writes_monthly_job(tmp_path: Path) -> None:
     meta = json.loads((job / "metadata.json").read_text(encoding="utf-8"))
     assert meta["auction_house"] == "liveauctioneers"
     assert (state_root / "auctions" / "liveauctioneers.json").is_file()
+
+
+def test_artcurial_discover_writes_monthly_job(tmp_path: Path) -> None:
+    entries = [
+        _entry(
+            "https://www.artcurial.com/en/sales/6641/lots/1-a",
+            "lot",
+            "6641:1-a",
+            "2026-09-08",
+        ),
+        _entry(
+            "https://www.artcurial.com/en/sales/6641/lots/2-b",
+            "lot",
+            "6641:2-b",
+            "2026-09-08",
+        ),
+    ]
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+
+    with patch(
+        "html_downloader.auctions.service.fetch_auction_entries",
+        return_value=entries,
+    ):
+        result = run_auction_discover(
+            auction_house="artcurial",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=False,
+            include_updates=True,
+            update_state=True,
+            proxy_file=None,
+            concurrency=4,
+            dry_run=False,
+            max_sales=5,
+        )
+
+    job = result.job
+    assert job == data_root / "auctions" / "artcurial" / "2026-09"
+    urls = (job / "urls.txt").read_text(encoding="utf-8").strip().splitlines()
+    assert len(urls) == 2
+    meta = json.loads((job / "metadata.json").read_text(encoding="utf-8"))
+    assert meta["auction_house"] == "artcurial"
+    assert (state_root / "auctions" / "artcurial.json").is_file()
 
 
 def test_liveauctioneers_download_configures_bot_ua(tmp_path: Path) -> None:

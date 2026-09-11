@@ -19,6 +19,7 @@ from html_downloader.auctions.paths import (
     auction_manifest_file,
     auction_metadata_file,
     auction_results_file,
+    auction_sales_progress_file,
     auction_sitemap_all_file,
     auction_sitemap_progress_file,
     auction_urls_file,
@@ -71,6 +72,10 @@ def _known_keys_for_house(data_root: Path, auction_house: str) -> set[tuple[str,
         )
 
         return known_liveauctioneers_keys_from_paths(paths)
+    if auction_house == "artcurial":
+        from html_downloader.auctions.artcurial import known_artcurial_keys_from_paths
+
+        return known_artcurial_keys_from_paths(paths)
     keys: set[tuple[str, str]] = set()
     for path in paths:
         # Generic fallback: parse as invaluable-style if possible
@@ -184,6 +189,7 @@ def run_auction_discover(
     max_houses: int | None = None,
     max_sitemaps: int | None = None,
     min_urls: int | None = None,
+    max_sales: int | None = None,
 ) -> AuctionDiscoverResult:
     spec = get_auction(auction_house)
     month = parse_job_month(job_month)
@@ -202,7 +208,7 @@ def run_auction_discover(
     LOGGER.info(
         "auction discover house=%s month=%s concurrency=%s expand_algolia=%s "
         "expand_artist_sold=%s include_hubs=%s expand_auctions_list=%s expand_houses=%s "
-        "max_sitemaps=%s min_urls=%s",
+        "max_sitemaps=%s min_urls=%s max_sales=%s",
         spec.name,
         month,
         workers,
@@ -213,6 +219,7 @@ def run_auction_discover(
         expand_houses,
         sitemap_limit if spec.name == "liveauctioneers" else None,
         url_target if spec.name == "liveauctioneers" else None,
+        max_sales if spec.name == "artcurial" else None,
     )
 
     progress_path = (
@@ -233,6 +240,11 @@ def run_auction_discover(
     sitemap_progress = (
         auction_sitemap_progress_file(state_root, spec.name)
         if spec.name == "liveauctioneers"
+        else None
+    )
+    sales_progress = (
+        auction_sales_progress_file(state_root, spec.name)
+        if spec.name == "artcurial"
         else None
     )
 
@@ -262,6 +274,8 @@ def run_auction_discover(
         max_sitemaps=sitemap_limit,
         min_urls=url_target,
         sitemap_progress_path=sitemap_progress,
+        max_sales=max_sales,
+        sales_progress_path=sales_progress,
     )
     LOGGER.info("fetched auction entries=%s", len(entries))
 
@@ -346,6 +360,8 @@ def run_auction_discover(
                 from html_downloader.auctions.liveauctioneers import (
                     save_auction_lastmod_state,
                 )
+            elif spec.name == "artcurial":
+                from html_downloader.auctions.artcurial import save_auction_lastmod_state
             else:
                 from html_downloader.auctions.invaluable import save_auction_lastmod_state
 

@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-AUCTION_HOUSES=(invaluable liveauctioneers)
+AUCTION_HOUSES=(invaluable liveauctioneers artcurial)
 
 if ! command -v tmux >/dev/null 2>&1; then
   echo "error: tmux is not installed" >&2

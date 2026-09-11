@@ -150,7 +150,8 @@ Monthly loop (calendar months from cycle start; optional `AUCTION_RUN_DAY=1`):
 ```bash
 ./scripts/run_monthly_auction.sh invaluable
 ./scripts/run_monthly_auction.sh liveauctioneers
-./scripts/start_monthly_auction_tmux.sh   # sessions: crawl-auction-{invaluable,liveauctioneers}
+./scripts/run_monthly_auction.sh artcurial
+./scripts/start_monthly_auction_tmux.sh   # sessions: crawl-auction-{invaluable,liveauctioneers,artcurial}
 ./scripts/stop_monthly_auction_tmux.sh
 ```
 
@@ -171,6 +172,31 @@ python -m html_downloader auction discover \
 
 python -m html_downloader auction download \
   --auction-house liveauctioneers --proxy-file proxy.txt --skip-existing
+```
+
+### Artcurial
+
+See [docs/artcurial_discovery.md](docs/artcurial_discovery.md).
+
+XML sitemaps currently 500. Discovery paginates the public JSON API
+`/ace/sales/results` then `/ace/sales/{ref}/items` and emits
+`/en/sales/{ref}/lots/{index}-{sub}` lot URLs. Motorcars specialties
+(`CARS` / `VOIT` / `AUTOMOBILIA`) are skipped to honour robots.txt. No fine-art
+filter. Resume: `state/auctions/artcurial_sales_progress.json`. Proxies optional
+for discover; required for download. Default Chrome impersonate (do not use
+named SEO bots — robots Disallow:/ for those).
+
+```bash
+# Smoke
+python -m html_downloader auction discover \
+  --auction-house artcurial --max-sales 5 --update-state
+
+# Full archive
+python -m html_downloader auction discover \
+  --auction-house artcurial --incremental --update-state
+
+python -m html_downloader auction download \
+  --auction-house artcurial --proxy-file proxy.txt --skip-existing
 ```
 
 ## Tests
