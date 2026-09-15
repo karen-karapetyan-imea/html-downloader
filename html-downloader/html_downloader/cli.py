@@ -155,6 +155,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="Reset Algolia browse state and lot cache, then re-walk all years",
     )
     auction_discover.add_argument(
+        "--algolia-artworks-only",
+        action="store_true",
+        help=(
+            "Fine Art lots only via Algolia supercategoryName filter; "
+            "uses separate artworks browse state; skips XML lot/catalog hubs"
+        ),
+    )
+    auction_discover.add_argument(
+        "--algolia-supercategories",
+        action="append",
+        default=None,
+        metavar="NAME",
+        help=(
+            "Restrict Algolia browse to supercategoryName values "
+            "(repeatable; e.g. 'Fine Art'). Uses artworks state path when set."
+        ),
+    )
+    auction_discover.add_argument(
         "--expand-artist-sold",
         action=argparse.BooleanOptionalAction,
         default=False,
@@ -214,7 +232,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "LiveAuctioneers: max pending child sitemaps to attempt per run "
-            "(default: 2000)"
+            "(default: 5000)"
         ),
     )
     auction_discover.add_argument(
@@ -223,7 +241,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=(
             "LiveAuctioneers: keep expanding child sitemaps until this many "
-            "unique /price-result/ URLs are collected (default: 100000)"
+            "unique /price-result/ URLs are collected (default: 1000000)"
+        ),
+    )
+    auction_discover.add_argument(
+        "--sitemap-force",
+        action="store_true",
+        help=(
+            "LiveAuctioneers: reset sitemap progress and lot JSONL cache, "
+            "then re-walk pending children"
         ),
     )
     auction_discover.add_argument(
@@ -369,6 +395,8 @@ def _cmd_auction_discover(args: argparse.Namespace) -> int:
             algolia_workers=args.algolia_workers,
             algolia_delay=args.algolia_delay,
             algolia_force=args.algolia_force,
+            algolia_artworks_only=args.algolia_artworks_only,
+            algolia_supercategories=args.algolia_supercategories,
             include_hubs=args.include_hubs,
             expand_auctions_list=args.expand_auctions_list,
             expand_houses=args.expand_houses,
@@ -376,6 +404,7 @@ def _cmd_auction_discover(args: argparse.Namespace) -> int:
             max_houses=args.max_houses,
             max_sitemaps=args.max_sitemaps,
             min_urls=args.min_urls,
+            sitemap_force=args.sitemap_force,
             max_sales=args.max_sales,
         )
     except (ValueError, RuntimeError) as exc:

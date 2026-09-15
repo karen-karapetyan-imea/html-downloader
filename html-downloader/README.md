@@ -120,9 +120,9 @@ Discovery walks the XML index `https://www.invaluable.com/sitemap_inv_com-index.
 
 - **Lots (XML)**: `sitemap_inv_com-lot-YYYY-M-ptN.xml` (~50k `/auction-lot/{slug}-c-{id}` URLs each). The public index currently lists only the latest month’s parts (~250k lots). That alone is **not** the full historical corpus.
 - **Catalogs** (sale events): `sitemap_inv_com-catalog.xml` (`/catalog/{id}`, hundreds of pages).
-- **Algolia archive (primary historical lots, default on)**: browses `archive_prod` by year (full archive: all categories, sold + unsold). No proxies. Resume: `state/auctions/invaluable_algolia_browse_state.json` (+ `_lots.jsonl` sidecar). Use `--no-expand-algolia` to skip; `--algolia-force` to reset and re-walk.
-- **Hubs (XML, soft-fail)**: auction houses, artist profiles, and category tree (`--include-hubs`, default on).
-- **Upcoming list**: paginates `/auctions/` SSR pages for additional catalogs (`--expand-auctions-list`, default on).
+- **Algolia archive (primary historical lots, default on)**: browses `archive_prod` by year. Full archive = all supercategories. **Artworks-only:** `--algolia-artworks-only` filters `supercategoryName:"Fine Art"` into a **separate** state file (`invaluable_algolia_artworks_browse_state.json` + `_lots.jsonl`) so the full-archive cache is preserved. Use `--no-expand-algolia` to skip; `--algolia-force` to reset the **active** state/cache.
+- **Hubs (XML, soft-fail)**: auction houses, artist profiles, and category tree (`--include-hubs`, default on; forced off in artworks mode).
+- **Upcoming list**: paginates `/auctions/` SSR pages for additional catalogs (`--expand-auctions-list`, default on; forced off in artworks mode).
 - **Artist sold expansion (optional, default off)**: `--expand-artist-sold` loads `sitemap_artist_sold_*.xml` and paginates sold pages (WAF-heavy). Resume: `state/auctions/invaluable_artist_sold_progress.json`.
 - **House-page expansion (optional)**: `--expand-houses` walks house pages for extra catalog/lot links.
 - **`past_search_sitemap.xml`**: listed in the index but currently returns HTTP 404; when/if it returns nested lot maps, discovery will follow them automatically.
@@ -130,11 +130,16 @@ Discovery walks the XML index `https://www.invaluable.com/sitemap_inv_com-index.
 Discover requires `--proxy-file` (WAF-gated XML/HTML). Incomplete **lot/catalog** XML sitemap fetches fail the run so state is not overwritten with a partial corpus. Hub XML failures are warnings only. Algolia browse ignores proxies.
 
 ```bash
-# Default corpus (XML + hubs + Algolia archive)
+# Recommended monthly path: Fine Art lots only
+python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt \
+  --algolia-artworks-only --incremental --update-state
+
+# Full corpus (XML + hubs + all-category Algolia)
 python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt --incremental --update-state
 
-# Smoke: single Algolia year
-python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt --algolia-from-year 2024 --algolia-to-year 2024 --update-state
+# Smoke: single Algolia year, Fine Art
+python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt \
+  --algolia-artworks-only --algolia-from-year 2024 --algolia-to-year 2024 --update-state
 
 # XML lots/catalogs/hubs only
 python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt --no-expand-algolia --no-expand-auctions-list --update-state
@@ -142,10 +147,13 @@ python -m html_downloader auction discover --auction-house invaluable --proxy-fi
 # Opt-in artist-sold smoke
 python -m html_downloader auction discover --auction-house invaluable --proxy-file proxy.txt --expand-artist-sold --max-artist-sold 20
 
+# Chunked download (required for large Fine Art url lists)
+./scripts/download_url_chunks.sh invaluable
+
 python -m html_downloader auction download --auction-house invaluable --proxy-file proxy.txt --skip-existing
 ```
 
-Monthly loop (calendar months from cycle start; optional `AUCTION_RUN_DAY=1`):
+Monthly loop (calendar months from cycle start; optional `AUCTION_RUN_DAY=1`). Invaluable uses `--algolia-artworks-only` + chunked download:
 
 ```bash
 ./scripts/run_monthly_auction.sh invaluable
@@ -161,14 +169,16 @@ Logs: `logs/monthly-auction-{house}-YYYYMMDD-HHMMSS.log`.
 
 See [docs/liveauctioneers_discovery.md](docs/liveauctioneers_discovery.md).
 
-Discovery walks the gzipped index `https://www.liveauctioneers.com/price-result-sitemap-index.xml.gz` and expands child `price-result` / `sitemap-price-result-*.xml.gz` files into `/price-result/{slug}` URLs until **`--min-urls`** (default **100000**) or **`--max-sitemaps`** (default **2000**). Resume: `state/auctions/liveauctioneers_sitemap_progress.json`.
+Discovery walks the gzipped index `https://www.liveauctioneers.com/price-result-sitemap-index.xml.gz` and expands child `price-result` / `sitemap-price-result-*.xml.gz` files into `/price-result/{slug}` URLs until **`--min-urls`** (default **1000000**) or **`--max-sitemaps`** (default **5000**). Resume: `state/auctions/liveauctioneers_sitemap_progress.json`. Durable archive: `state/auctions/liveauctioneers_sitemap_progress_lots.jsonl` (streamed into the monthly job; discover returns only this-run new URLs). Prefer dense shards first. If the JSONL lags behind done progress, done children are re-queued for cache backfill. Reset with `--sitemap-force`.
 
-Imperva blocks Chrome UAs; discover and download use SEO bot User-Agents. Proxies required.
+Imperva blocks Chrome UAs; discover and download use SEO bot User-Agents. Proxies required. Monthly download uses chunked `download_url_chunks.sh`.
 
 ```bash
 python -m html_downloader auction discover \
   --auction-house liveauctioneers --proxy-file proxy.txt \
-  --min-urls 100000 --incremental --update-state
+  --min-urls 1000000 --incremental --update-state
+
+./scripts/download_url_chunks.sh liveauctioneers
 
 python -m html_downloader auction download \
   --auction-house liveauctioneers --proxy-file proxy.txt --skip-existing

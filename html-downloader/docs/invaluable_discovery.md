@@ -64,18 +64,21 @@ Canonical host: `https://www.invaluable.com` (prefer over `invaluable.co.uk` / r
 ## Algolia archive browse
 
 - **Index:** `archive_prod` (public search-only key embedded in site JS)
-- **Filters:** year only — `dateTimeUTCUnix >= start AND dateTimeUTCUnix < end` (no Fine Art / `priceResult` filters)
+- **Filters (default):** year only — `dateTimeUTCUnix >= start AND dateTimeUTCUnix < end`
+- **Artworks-only:** `--algolia-artworks-only` adds `supercategoryName:"Fine Art"` (~30M lots). Facet field verified on live index. Optional `--algolia-supercategories NAME` (repeatable) for custom lists.
 - **URL build:** `/auction-lot/{slug}-{lotNumber}-c-{lotRef}` from hit fields; dedupe by `lotRef`
-- **State:** `state/auctions/invaluable_algolia_browse_state.json` (per-year cursor)
-- **Lot cache:** `state/auctions/invaluable_algolia_browse_state_lots.jsonl` (so done years still emit on later runs)
-- **Flags:** `--algolia-from-year` (default 1989), `--algolia-to-year`, `--algolia-workers` (2), `--algolia-delay` (0.4), `--algolia-force`
+- **Full-archive state:** `state/auctions/invaluable_algolia_browse_state.json` (+ `_lots.jsonl`)
+- **Artworks state (separate):** `state/auctions/invaluable_algolia_artworks_browse_state.json` (+ `_lots.jsonl`) — does **not** wipe the full-archive cache
+- **Flags:** `--algolia-from-year` (default 1989), `--algolia-to-year`, `--algolia-workers` (2), `--algolia-delay` (0.4), `--algolia-force`, `--algolia-artworks-only`
+
+When artworks/supercategory filter is active, discovery skips uncategorizable lot/catalog XML and hub expansions so `urls.txt` stays Fine Art lots only.
 
 Algolia browse does not use proxies. Proxies remain required for XML / hub HTML fetches.
 
 ## Coverage risks
 
 - Lot XML is current-month only; historical coverage comes from Algolia (default) or optional artist-sold.
-- Full `archive_prod` is multi-million URLs — expect large `urls.txt` / memory for the in-memory merge set.
+- Full `archive_prod` is multi-million URLs — use `--algolia-artworks-only` for Fine Art, and chunked download (`scripts/download_url_chunks.sh`) to avoid OOM.
 - WAF/403 can still block **HTML download** even when discovery succeeds.
 - Catalog “Price Results” tabs often lack lot hrefs in SSR HTML.
 - Deleted auctions may 404 on download (expected).
@@ -84,28 +87,43 @@ Algolia browse does not use proxies. Proxies remain required for XML / hub HTML 
 ## CLI (summary)
 
 ```bash
-# Default: XML lots/catalogs + hubs + Algolia archive (artist-sold off)
+# Recommended: Fine Art lots only (separate artworks Algolia state)
+python -m html_downloader auction discover \
+  --auction-house invaluable --proxy-file proxy.txt \
+  --algolia-artworks-only --incremental --update-state
+
+# Full archive (all supercategories) — large
 python -m html_downloader auction discover \
   --auction-house invaluable --proxy-file proxy.txt \
   --incremental --update-state
 
-# Smoke: one Algolia year only
+# Smoke: one Algolia year, Fine Art only
 python -m html_downloader auction discover \
   --auction-house invaluable --proxy-file proxy.txt \
+  --algolia-artworks-only \
   --algolia-from-year 2024 --algolia-to-year 2024 \
-  --no-expand-auctions-list --update-state
+  --update-state
 
 # XML + hubs only (no Algolia, no artist-sold)
 python -m html_downloader auction discover \
   --auction-house invaluable --proxy-file proxy.txt \
   --no-expand-algolia --update-state
 
-# Opt-in artist-sold (slow / WAF-heavy)
-python -m html_downloader auction discover \
-  --auction-house invaluable --proxy-file proxy.txt \
-  --expand-artist-sold --max-artist-sold 20
+# Chunked download (avoids loading entire urls.txt into RAM)
+./scripts/download_url_chunks.sh invaluable
 
-# Download HTML for the monthly job urls.txt
+# Download HTML for the monthly job urls.txt (small jobs only)
 python -m html_downloader auction download \
   --auction-house invaluable --proxy-file proxy.txt --skip-existing
+```
+
+### scraper-01 restart (artworks monthly)
+
+```bash
+cd ~/html-downloader/html-downloader
+tmux kill-session -t crawl-auction-invaluable 2>/dev/null
+# Keep full archive cache; do NOT delete invaluable_algolia_browse_state*
+tmux new-session -d -s crawl-auction-invaluable \
+  "cd ~/html-downloader/html-downloader && ./scripts/run_monthly_auction.sh invaluable"
+tmux attach -t crawl-auction-invaluable
 ```

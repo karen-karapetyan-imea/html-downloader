@@ -15,7 +15,7 @@ import random
 import re
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,6 +41,8 @@ DEFAULT_ALGOLIA_DELAY = 0.4
 DEFAULT_ALGOLIA_WORKERS = 2
 # Cap in-memory "new this run" return list; full set lives on disk in JSONL.
 _MAX_RETURN_NEW = 50_000
+# archive_prod facet: supercategoryName (verified live).
+ARTWORKS_SUPERCATEGORIES: tuple[str, ...] = ("Fine Art", "Furniture", "Decorative Art", "Asian Art & Antiques", "Collectibles")
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -60,11 +62,45 @@ def build_lot_url(lot_title: str, lot_number: str, lot_ref: str) -> str:
     return f"{BASE_URL}/auction-lot/{slugify(lot_title)}-{lot_number}-c-{lot_ref.lower()}"
 
 
+def _escape_algolia_filter_value(value: str) -> str:
+    """Escape double quotes inside an Algolia filter string literal."""
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def supercategory_filter(supercategories: Sequence[str]) -> str:
+    """Build supercategoryName facet clause (OR across names)."""
+    names = [name.strip() for name in supercategories if name and name.strip()]
+    if not names:
+        raise ValueError("supercategories must contain at least one non-empty name")
+    clauses = [
+        f'supercategoryName:"{_escape_algolia_filter_value(name)}"' for name in names
+    ]
+    if len(clauses) == 1:
+        return clauses[0]
+    return "(" + " OR ".join(clauses) + ")"
+
+
 def year_filter(year: int) -> str:
     """Algolia filter for one UTC calendar year (no category / price constraints)."""
     start = int(datetime(year, 1, 1, tzinfo=timezone.utc).timestamp())
     end = int(datetime(year + 1, 1, 1, tzinfo=timezone.utc).timestamp())
     return f"dateTimeUTCUnix>={start} AND dateTimeUTCUnix<{end}"
+
+
+def browse_filters(
+    year: int,
+    supercategories: Sequence[str] | None = None,
+) -> str:
+    """
+    Algolia browse filters for one year, optionally restricted to supercategories.
+
+    Example artworks-only:
+      dateTimeUTCUnix>=… AND dateTimeUTCUnix<… AND supercategoryName:"Fine Art"
+    """
+    base = year_filter(year)
+    if not supercategories:
+        return base
+    return f"{base} AND {supercategory_filter(supercategories)}"
 
 
 def hit_to_sitemap_entry(hit: dict[str, Any]) -> SitemapEntry | None:
@@ -279,9 +315,10 @@ def _process_year(
     state: AlgoliaBrowseState,
     browse: BrowseFn,
     on_entries: Callable[[list[SitemapEntry]], None] | None = None,
+    supercategories: Sequence[str] | None = None,
 ) -> int:
     """Browse one year partition. Returns hit-mapped count for this walk."""
-    filters = year_filter(int(year))
+    filters = browse_filters(int(year), supercategories)
     cursor = state.cursor(year) if state.status(year) == "in_progress" else None
     restarts = 0
     mapped = 0
@@ -419,6 +456,7 @@ def expand_lots_from_algolia(
     force: bool = False,
     browse: BrowseFn | None = None,
     client: httpx.Client | None = None,
+    supercategories: Sequence[str] | None = None,
 ) -> list[SitemapEntry]:
     """
     Browse archive_prod by year; persist lots to JSONL.
@@ -426,11 +464,16 @@ def expand_lots_from_algolia(
     Returns a capped list of **new** lot entries from this run (for small merges).
     The full historical set lives on disk — callers must stream `lot_cache_path`
     into job URL files instead of expecting a giant in-memory list.
+
+    When ``supercategories`` is set (e.g. Fine Art), browse filters include
+    ``supercategoryName`` and callers should use a separate state/cache path.
     """
     if to_year is None:
         to_year = datetime.now(timezone.utc).year
     if from_year > to_year:
         raise ValueError(f"from_year {from_year} > to_year {to_year}")
+
+    cats = tuple(supercategories) if supercategories else None
 
     cache_path = lot_cache_path(state_path)
     state = AlgoliaBrowseState(state_path)
@@ -445,12 +488,13 @@ def expand_lots_from_algolia(
 
     seen_ids = load_lot_cache_ids(cache_path) if cache_path.exists() else set()
     LOGGER.info(
-        "Algolia browse years=%s-%s todo=%s cached_ids=%s workers=%s",
+        "Algolia browse years=%s-%s todo=%s cached_ids=%s workers=%s supercategories=%s",
         from_year,
         to_year,
         len(todo),
         len(seen_ids),
         workers,
+        list(cats) if cats else None,
     )
 
     if not todo:
@@ -494,6 +538,7 @@ def expand_lots_from_algolia(
                     state=state,
                     browse=browse_fn,
                     on_entries=_ingest,
+                    supercategories=cats,
                 ): year
                 for year in todo
             }
@@ -522,11 +567,13 @@ __all__ = [
     "ALGOLIA_APP_ID",
     "ALGOLIA_BROWSE_URL",
     "ALGOLIA_INDEX",
+    "ARTWORKS_SUPERCATEGORIES",
     "AlgoliaBrowseClient",
     "AlgoliaBrowseState",
     "DEFAULT_ALGOLIA_DELAY",
     "DEFAULT_ALGOLIA_WORKERS",
     "EARLIEST_YEAR",
+    "browse_filters",
     "build_lot_url",
     "expand_lots_from_algolia",
     "hit_to_sitemap_entry",
@@ -535,5 +582,6 @@ __all__ = [
     "load_lot_cache_ids",
     "lot_cache_path",
     "slugify",
+    "supercategory_filter",
     "year_filter",
 ]

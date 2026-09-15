@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -65,6 +66,7 @@ def fetch_auction_entries(
     algolia_workers: int = 2,
     algolia_delay: float = 0.4,
     algolia_force: bool = False,
+    algolia_supercategories: Sequence[str] | None = None,
     include_hubs: bool = True,
     expand_auctions_list: bool = True,
     expand_houses: bool = False,
@@ -74,6 +76,7 @@ def fetch_auction_entries(
     max_sitemaps: int = DEFAULT_MAX_SITEMAPS,
     min_urls: int = DEFAULT_MIN_URLS,
     sitemap_progress_path: Path | None = None,
+    sitemap_force: bool = False,
     max_sales: int | None = None,
     sales_progress_path: Path | None = None,
 ) -> list[SitemapEntry]:
@@ -94,6 +97,7 @@ def fetch_auction_entries(
             "algolia_workers": algolia_workers,
             "algolia_delay": algolia_delay,
             "algolia_force": algolia_force,
+            "algolia_supercategories": algolia_supercategories,
             "include_hubs": include_hubs,
             "expand_auctions_list": expand_auctions_list,
             "expand_houses": expand_houses,
@@ -118,6 +122,7 @@ def fetch_auction_entries(
             "max_sitemaps": max_sitemaps,
             "min_urls": min_urls,
             "sitemap_progress_path": sitemap_progress_path,
+            "sitemap_force": sitemap_force,
         }
         if proxies:
             kwargs["proxies"] = proxies

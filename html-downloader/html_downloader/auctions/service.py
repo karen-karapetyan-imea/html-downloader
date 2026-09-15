@@ -7,8 +7,10 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from html_downloader.auctions.paths import (
+    auction_algolia_artworks_browse_state_file,
     auction_algolia_browse_state_file,
     auction_artist_sold_progress_file,
     auction_diff_file,
@@ -105,7 +107,7 @@ def _load_proxies_if_needed(
     return proxies
 
 
-def _stream_algolia_cache_into_job_files(
+def _stream_lot_cache_into_job_files(
     cache_path: Path,
     *,
     sitemap_all_path: Path,
@@ -113,14 +115,15 @@ def _stream_algolia_cache_into_job_files(
     already_written_ids: set[str],
     known_keys: set[tuple[str, str]],
     incremental: bool,
+    entity_type: str,
+    iter_rows: Any,
+    label: str,
 ) -> tuple[int, int]:
     """
-    Append Algolia lot URLs from JSONL into job files without loading the archive.
+    Append lot/price-result URLs from JSONL into job files without loading the archive.
 
     Returns (added_to_sitemap_all, added_to_urls).
     """
-    from html_downloader.auctions.invaluable_algolia import iter_lot_cache_rows
-
     if not cache_path.exists():
         return 0, 0
 
@@ -133,11 +136,12 @@ def _stream_algolia_cache_into_job_files(
         sitemap_all_path.open("a", encoding="utf-8") as all_fh,
         urls_path.open("a", encoding="utf-8") as crawl_fh,
     ):
-        for entity_id, url, _lastmod in iter_lot_cache_rows(cache_path):
+        for entity_id, url, _lastmod in iter_rows(cache_path):
             scanned += 1
             if scanned % 1_000_000 == 0:
                 LOGGER.info(
-                    "Algolia cache stream progress scanned=%s added_all=%s added_crawl=%s",
+                    "%s cache stream progress scanned=%s added_all=%s added_crawl=%s",
+                    label,
                     scanned,
                     added_all,
                     added_crawl,
@@ -147,18 +151,44 @@ def _stream_algolia_cache_into_job_files(
             seen_ids.add(entity_id)
             all_fh.write(url + "\n")
             added_all += 1
-            if incremental and ("lot", entity_id) in known_keys:
+            if incremental and (entity_type, entity_id) in known_keys:
                 continue
             crawl_fh.write(url + "\n")
             added_crawl += 1
 
     LOGGER.info(
-        "Algolia cache stream complete scanned=%s added_all=%s added_crawl=%s",
+        "%s cache stream complete scanned=%s added_all=%s added_crawl=%s",
+        label,
         scanned,
         added_all,
         added_crawl,
     )
     return added_all, added_crawl
+
+
+def _stream_algolia_cache_into_job_files(
+    cache_path: Path,
+    *,
+    sitemap_all_path: Path,
+    urls_path: Path,
+    already_written_ids: set[str],
+    known_keys: set[tuple[str, str]],
+    incremental: bool,
+) -> tuple[int, int]:
+    """Append Algolia lot URLs from JSONL into job files (entity_type=lot)."""
+    from html_downloader.auctions.invaluable_algolia import iter_lot_cache_rows
+
+    return _stream_lot_cache_into_job_files(
+        cache_path,
+        sitemap_all_path=sitemap_all_path,
+        urls_path=urls_path,
+        already_written_ids=already_written_ids,
+        known_keys=known_keys,
+        incremental=incremental,
+        entity_type="lot",
+        iter_rows=iter_lot_cache_rows,
+        label="Algolia",
+    )
 
 
 def run_auction_discover(
@@ -182,6 +212,8 @@ def run_auction_discover(
     algolia_workers: int = 2,
     algolia_delay: float = 0.4,
     algolia_force: bool = False,
+    algolia_artworks_only: bool = False,
+    algolia_supercategories: list[str] | None = None,
     include_hubs: bool = True,
     expand_auctions_list: bool = True,
     expand_houses: bool = False,
@@ -189,6 +221,7 @@ def run_auction_discover(
     max_houses: int | None = None,
     max_sitemaps: int | None = None,
     min_urls: int | None = None,
+    sitemap_force: bool = False,
     max_sales: int | None = None,
 ) -> AuctionDiscoverResult:
     spec = get_auction(auction_house)
@@ -197,6 +230,7 @@ def run_auction_discover(
     proxy = proxies[0] if proxies else None
     workers = concurrency if concurrency is not None else spec.default_concurrency
 
+    from html_downloader.auctions.invaluable_algolia import ARTWORKS_SUPERCATEGORIES
     from html_downloader.auctions.liveauctioneers import (
         DEFAULT_MAX_SITEMAPS,
         DEFAULT_MIN_URLS,
@@ -205,10 +239,26 @@ def run_auction_discover(
     sitemap_limit = max_sitemaps if max_sitemaps is not None else DEFAULT_MAX_SITEMAPS
     url_target = min_urls if min_urls is not None else DEFAULT_MIN_URLS
 
+    cats: list[str] = []
+    if algolia_supercategories:
+        cats.extend(name.strip() for name in algolia_supercategories if name and name.strip())
+    if algolia_artworks_only:
+        for name in ARTWORKS_SUPERCATEGORIES:
+            if name not in cats:
+                cats.append(name)
+    filtered_algolia = bool(cats) and spec.name == "invaluable"
+    if filtered_algolia:
+        expand_algolia = True
+        include_hubs = False
+        expand_artist_sold = False
+        expand_auctions_list = False
+        expand_houses = False
+
     LOGGER.info(
         "auction discover house=%s month=%s concurrency=%s expand_algolia=%s "
         "expand_artist_sold=%s include_hubs=%s expand_auctions_list=%s expand_houses=%s "
-        "max_sitemaps=%s min_urls=%s max_sales=%s",
+        "max_sitemaps=%s min_urls=%s sitemap_force=%s max_sales=%s "
+        "algolia_supercategories=%s",
         spec.name,
         month,
         workers,
@@ -219,7 +269,9 @@ def run_auction_discover(
         expand_houses,
         sitemap_limit if spec.name == "liveauctioneers" else None,
         url_target if spec.name == "liveauctioneers" else None,
+        sitemap_force if spec.name == "liveauctioneers" else None,
         max_sales if spec.name == "artcurial" else None,
+        cats or None,
     )
 
     progress_path = (
@@ -232,11 +284,15 @@ def run_auction_discover(
         if expand_houses and spec.name == "invaluable"
         else None
     )
-    algolia_state = (
-        auction_algolia_browse_state_file(state_root, spec.name)
-        if expand_algolia and spec.name == "invaluable"
-        else None
-    )
+    if expand_algolia and spec.name == "invaluable":
+        if filtered_algolia:
+            algolia_state = auction_algolia_artworks_browse_state_file(
+                state_root, spec.name
+            )
+        else:
+            algolia_state = auction_algolia_browse_state_file(state_root, spec.name)
+    else:
+        algolia_state = None
     sitemap_progress = (
         auction_sitemap_progress_file(state_root, spec.name)
         if spec.name == "liveauctioneers"
@@ -265,6 +321,7 @@ def run_auction_discover(
         algolia_workers=algolia_workers,
         algolia_delay=algolia_delay,
         algolia_force=algolia_force,
+        algolia_supercategories=cats or None,
         include_hubs=include_hubs,
         expand_auctions_list=expand_auctions_list,
         expand_houses=expand_houses,
@@ -274,6 +331,7 @@ def run_auction_discover(
         max_sitemaps=sitemap_limit,
         min_urls=url_target,
         sitemap_progress_path=sitemap_progress,
+        sitemap_force=sitemap_force,
         max_sales=max_sales,
         sales_progress_path=sales_progress,
     )
@@ -333,6 +391,32 @@ def run_auction_discover(
             all_count += added_all
             crawl_count += added_crawl
 
+        if spec.name == "liveauctioneers" and sitemap_progress is not None:
+            from html_downloader.auctions.liveauctioneers import (
+                iter_lot_cache_rows,
+                lot_cache_path,
+            )
+
+            cache_path = lot_cache_path(sitemap_progress)
+            already_ids = {
+                e.entity_id
+                for e in entries
+                if e.entity_type == "price_result" and e.entity_id
+            }
+            added_all, added_crawl = _stream_lot_cache_into_job_files(
+                cache_path,
+                sitemap_all_path=sitemap_all_path,
+                urls_path=urls_path,
+                already_written_ids=already_ids,
+                known_keys=known_keys,
+                incremental=incremental,
+                entity_type="price_result",
+                iter_rows=iter_lot_cache_rows,
+                label="liveauctioneers",
+            )
+            all_count += added_all
+            crawl_count += added_crawl
+
         auction_diff_file(job).write_text(
             json.dumps(diff.to_report(), ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
@@ -347,6 +431,7 @@ def run_auction_discover(
             "new_entities": diff.stats.new_entities,
             "updated_entities": diff.stats.updated_entities,
             "unchanged_entities": diff.stats.unchanged_entities,
+            "algolia_supercategories": cats or None,
             "memory_entries": len(entries),
         }
         auction_metadata_file(job).write_text(

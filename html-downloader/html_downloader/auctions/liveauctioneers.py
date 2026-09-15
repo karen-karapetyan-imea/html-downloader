@@ -1,7 +1,9 @@
 """LiveAuctioneers discovery: gzipped price-result sitemap index → /price-result/ URLs.
 
 PRIMARY: https://www.liveauctioneers.com/price-result-sitemap-index.xml.gz
-Each child lists SEO sold-lot pages. Bounded by --max-sitemaps with resume progress.
+Each child lists SEO sold-lot pages. Bounded by --max-sitemaps / --min-urls per run
+with resume progress. Durable JSONL lot cache is the source of truth for the full
+archive (streamed into monthly job files by the auction service).
 
 Imperva blocks Chrome UAs; discovery uses SEO bot User-Agents (Googlebot/bingbot).
 No lot parsing here — download saves HTML only.
@@ -13,11 +15,13 @@ import json
 import logging
 import os
 import random
+import re
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 
 import httpx
@@ -41,10 +45,10 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_LIVEAUCTIONEERS_INDEX = (
     "https://www.liveauctioneers.com/price-result-sitemap-index.xml.gz"
 )
-# Child sitemaps vary wildly (1–50k+ URLs). Cap fetches per run; stop early once
-# ``min_urls`` unique price-result URLs are collected.
-DEFAULT_MAX_SITEMAPS = 2000
-DEFAULT_MIN_URLS = 100_000
+# Child sitemaps vary wildly (1–50k+ URLs). Per-run batch aims for Invaluable-scale
+# archive growth; stop early once ``min_urls`` new price-result URLs are collected.
+DEFAULT_MAX_SITEMAPS = 5_000
+DEFAULT_MIN_URLS = 1_000_000
 DEFAULT_LIVEAUCTIONEERS_MAX_RETRIES = 6
 DEFAULT_LIVEAUCTIONEERS_FETCH_TIMEOUT = 90.0
 DEFAULT_LIVEAUCTIONEERS_INTER_FILE_SLEEP = 1.5
@@ -289,13 +293,106 @@ def save_sitemap_progress(path: Path, sitemaps: dict[str, dict[str, Any]]) -> No
     os.replace(tmp, path)
 
 
+def lot_cache_path(progress_path: Path) -> Path:
+    """Sidecar JSONL of discovered price-result URLs (source of truth for archive)."""
+    return progress_path.with_name(progress_path.stem + "_lots.jsonl")
+
+
+def iter_lot_cache_rows(path: Path) -> Iterator[tuple[str, str, str | None]]:
+    """Yield (entity_id, url, lastmod) from the lot JSONL cache."""
+    if not path.exists():
+        return
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                text = line.strip()
+                if not text:
+                    continue
+                try:
+                    row = json.loads(text)
+                except json.JSONDecodeError:
+                    continue
+                entity_id = str(row.get("entity_id") or "").strip().lower()
+                url = str(row.get("url") or "").strip()
+                if not entity_id or not url:
+                    continue
+                lastmod_raw = row.get("lastmod")
+                lastmod = str(lastmod_raw) if lastmod_raw else None
+                yield entity_id, url, lastmod
+    except OSError as exc:
+        LOGGER.warning("could not read LiveAuctioneers lot cache %s: %s", path, exc)
+
+
+def load_lot_cache_ids(path: Path) -> set[str]:
+    """Stream entity ids only (no SitemapEntry objects). Logs every 1M lines."""
+    seen: set[str] = set()
+    if not path.exists():
+        return seen
+    count = 0
+    for entity_id, _url, _lastmod in iter_lot_cache_rows(path):
+        seen.add(entity_id)
+        count += 1
+        if count % 1_000_000 == 0:
+            LOGGER.info(
+                "liveauctioneers lot-cache id load progress lines=%s unique=%s",
+                count,
+                len(seen),
+            )
+    LOGGER.info(
+        "liveauctioneers lot-cache id load complete lines=%s unique=%s",
+        count,
+        len(seen),
+    )
+    return seen
+
+
+def append_lot_cache(path: Path, entries: Sequence[SitemapEntry]) -> None:
+    """Append price-result rows to the durable JSONL cache."""
+    if not entries:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a", encoding="utf-8") as fh:
+        for entry in entries:
+            fh.write(
+                json.dumps(
+                    {
+                        "entity_id": entry.entity_id,
+                        "url": entry.url,
+                        "lastmod": entry.lastmod,
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
+
+
+def clear_sitemap_cache(*, progress_path: Path) -> None:
+    """Remove progress + lot JSONL so the next run rebuilds from scratch."""
+    cache_path = lot_cache_path(progress_path)
+    for path in (progress_path, cache_path):
+        if path.exists():
+            path.unlink()
+            LOGGER.info("liveauctioneers sitemap force: cleared %s", path)
+
+
+# Dense bucket shards often look like ...-a-0.xml.gz / ...--p-0.xml.gz.
+_DENSE_SHARD_RE = re.compile(r"-\d+(?:\.xml(?:\.gz)?)?$", re.IGNORECASE)
+
+
+def _child_sitemap_density_key(url: str) -> tuple[int, int, str]:
+    """Sort key: denser basename patterns first, then longer names, then URL."""
+    basename = Path(urlparse(url).path).name.lower()
+    dense = 0 if _DENSE_SHARD_RE.search(basename) else 1
+    return (dense, -len(basename), basename)
+
+
 def select_child_sitemaps(
     children: Sequence[str],
     progress: dict[str, dict[str, Any]],
     *,
     max_sitemaps: int,
 ) -> list[str]:
-    """Prefer unknown/pending/failed children; skip ones already marked done."""
+    """Prefer unknown/pending/failed children; denser shards first; skip done."""
     pending: list[str] = []
     for url in children:
         if not is_liveauctioneers_price_result_sitemap(url):
@@ -305,9 +402,49 @@ def select_child_sitemaps(
         if status == "done":
             continue
         pending.append(url)
+    pending.sort(key=_child_sitemap_density_key)
     if max_sitemaps <= 0:
         return []
     return pending[:max_sitemaps]
+
+
+def reclaim_done_children_for_cache_backfill(
+    progress: dict[str, dict[str, Any]],
+    *,
+    cached_ids: int,
+) -> int:
+    """
+    Re-queue ``done`` children when the durable JSONL is far behind progress.
+
+    Happens after upgrading to the lot-cache design: older runs marked children
+    done without appending rows, so the archive would stay tiny forever.
+    """
+    done_lots = sum(
+        int(entry.get("lots_found") or 0)
+        for entry in progress.values()
+        if entry.get("status") == "done"
+    )
+    if done_lots <= 0:
+        return 0
+    # Cache already covers most of what progress claims — nothing to reclaim.
+    if cached_ids >= max(1, done_lots // 2):
+        return 0
+    reclaimed = 0
+    for entry in progress.values():
+        if entry.get("status") != "done":
+            continue
+        entry["status"] = "pending"
+        entry["backfill"] = True
+        reclaimed += 1
+    if reclaimed:
+        LOGGER.warning(
+            "liveauctioneers cache backfill: re-queued done children=%s "
+            "cached_ids=%s done_lots_sum=%s",
+            reclaimed,
+            cached_ids,
+            done_lots,
+        )
+    return reclaimed
 
 
 def fetch_liveauctioneers_sitemap_entries(
@@ -321,13 +458,15 @@ def fetch_liveauctioneers_sitemap_entries(
     max_sitemaps: int = DEFAULT_MAX_SITEMAPS,
     min_urls: int = DEFAULT_MIN_URLS,
     sitemap_progress_path: Path | None = None,
+    sitemap_force: bool = False,
 ) -> list[SitemapEntry]:
     """
     Discover LiveAuctioneers /price-result/ URLs from the gzipped sitemap index.
 
-    Expands pending child sitemaps until ``min_urls`` unique entries are collected
-    or ``max_sitemaps`` children have been attempted. Progress is stored at
-    ``sitemap_progress_path`` so later runs skip completed children.
+    Expands pending child sitemaps until ``min_urls`` **new** unique entries are
+    collected this run, or ``max_sitemaps`` children have been attempted. Progress
+    and a durable JSONL lot cache live beside ``sitemap_progress_path``. Returns
+    only this-run new entries — callers must stream the JSONL for the full archive.
     """
     _ = concurrency  # sequential only; parallel triggers Imperva storms
     proxy_list: list[dict[str, str]] = list(proxies or [])
@@ -337,12 +476,21 @@ def fetch_liveauctioneers_sitemap_entries(
     if fetch_bytes is None:
         fetch_bytes = _make_rotating_fetcher(proxy_list)
 
+    cache_path: Path | None = None
+    if sitemap_progress_path is not None:
+        if sitemap_force:
+            clear_sitemap_cache(progress_path=sitemap_progress_path)
+        cache_path = lot_cache_path(sitemap_progress_path)
+
     LOGGER.info(
-        "liveauctioneers discover seed=%s proxies=%s max_sitemaps=%s min_urls=%s",
+        "liveauctioneers discover seed=%s proxies=%s max_sitemaps=%s min_urls=%s "
+        "force=%s cache=%s",
         sitemap_url,
         len(proxy_list),
         max_sitemaps,
         min_urls,
+        sitemap_force,
+        cache_path,
     )
 
     seed_body = _fetch_with_retries(
@@ -351,6 +499,16 @@ def fetch_liveauctioneers_sitemap_entries(
     if not is_sitemap_index(seed_body):
         # Rare: seed itself is a urlset
         entries = parse_liveauctioneers_entries(seed_body)
+        if cache_path is not None:
+            seen_ids = load_lot_cache_ids(cache_path)
+            fresh = [e for e in entries if e.entity_id and e.entity_id not in seen_ids]
+            append_lot_cache(cache_path, fresh)
+            LOGGER.info(
+                "liveauctioneers leaf sitemap entities=%s new=%s",
+                len(entries),
+                len(fresh),
+            )
+            return fresh
         LOGGER.info("liveauctioneers leaf sitemap entities=%s", len(entries))
         return entries
 
@@ -360,12 +518,15 @@ def fetch_liveauctioneers_sitemap_entries(
         if is_liveauctioneers_price_result_sitemap(loc)
     ]
     progress = load_sitemap_progress(sitemap_progress_path)
+    seen_ids = load_lot_cache_ids(cache_path) if cache_path is not None else set()
+    reclaim_done_children_for_cache_backfill(progress, cached_ids=len(seen_ids))
     selected = select_child_sitemaps(children, progress, max_sitemaps=max_sitemaps)
     LOGGER.info(
-        "liveauctioneers index children=%s known=%s selected=%s",
+        "liveauctioneers index children=%s known=%s selected=%s cached_ids=%s",
         len(children),
         len(progress),
         len(selected),
+        len(seen_ids),
     )
 
     best: dict[tuple[str, str], SitemapEntry] = {}
@@ -394,18 +555,30 @@ def fetch_liveauctioneers_sitemap_entries(
                 child_url, fetch_bytes=fetch_bytes, max_retries=max_retries
             )
             entries = parse_liveauctioneers_entries(body)
+            fresh: list[SitemapEntry] = []
             for entry in entries:
+                if not entry.entity_id:
+                    continue
+                if entry.entity_id in seen_ids:
+                    continue
+                seen_ids.add(entry.entity_id)
                 _merge_entry(best, entry)
+                fresh.append(entry)
+            if cache_path is not None:
+                append_lot_cache(cache_path, fresh)
             progress[child_url] = {
                 "type": "sitemap",
                 "status": "done",
                 "lots_found": len(entries),
             }
             LOGGER.info(
-                "liveauctioneers child parsed url=%s entities=%s running_total=%s",
+                "liveauctioneers child parsed url=%s entities=%s new=%s "
+                "running_new=%s cached_ids=%s",
                 child_url,
                 len(entries),
+                len(fresh),
                 len(best),
+                len(seen_ids),
             )
         except Exception as exc:
             LOGGER.warning("liveauctioneers child failed url=%s error=%s", child_url, exc)
@@ -420,21 +593,29 @@ def fetch_liveauctioneers_sitemap_entries(
     if sitemap_progress_path is not None:
         save_sitemap_progress(sitemap_progress_path, progress)
 
-    if failed and not best:
+    if failed and not best and not seen_ids:
         raise RuntimeError(
             f"all {len(failed)} LiveAuctioneers child sitemap(s) failed; no entries parsed"
         )
-    if failed:
+    if failed and not best:
+        # Retries may yield no *new* rows while the durable cache already has data.
         LOGGER.warning(
-            "liveauctioneers partial success failed=%s parsed=%s",
+            "liveauctioneers no new entries this run failed=%s cached_ids=%s",
+            len(failed),
+            len(seen_ids),
+        )
+    elif failed:
+        LOGGER.warning(
+            "liveauctioneers partial success failed=%s new=%s",
             len(failed),
             len(best),
         )
 
     LOGGER.info(
-        "liveauctioneers discovery complete total=%s price_results=%s",
+        "liveauctioneers discovery complete new=%s price_results=%s cached_ids=%s",
         len(best),
         sum(1 for k in best if k[0] == "price_result"),
+        len(seen_ids),
     )
     return list(best.values())
 

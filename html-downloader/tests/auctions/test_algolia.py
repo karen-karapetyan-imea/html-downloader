@@ -9,7 +9,9 @@ from unittest.mock import patch
 
 from html_downloader.auctions.invaluable import _merge_entry
 from html_downloader.auctions.invaluable_algolia import (
+    ARTWORKS_SUPERCATEGORIES,
     AlgoliaBrowseState,
+    browse_filters,
     build_lot_url,
     expand_lots_from_algolia,
     hit_to_sitemap_entry,
@@ -18,6 +20,7 @@ from html_downloader.auctions.invaluable_algolia import (
     load_lot_cache_ids,
     lot_cache_path,
     slugify,
+    supercategory_filter,
     year_filter,
 )
 from html_downloader.auctions.service import run_auction_discover
@@ -37,6 +40,18 @@ def test_year_filter_bounds() -> None:
     assert year_filter(2024) == (
         "dateTimeUTCUnix>=1704067200 AND dateTimeUTCUnix<1735689600"
     )
+
+
+def test_browse_filters_artworks_only() -> None:
+    assert browse_filters(2024) == year_filter(2024)
+    assert browse_filters(2024, ARTWORKS_SUPERCATEGORIES) == (
+        'dateTimeUTCUnix>=1704067200 AND dateTimeUTCUnix<1735689600 '
+        'AND supercategoryName:"Fine Art"'
+    )
+    multi = browse_filters(2024, ("Fine Art", "Decorative Art"))
+    assert multi.startswith("dateTimeUTCUnix>=1704067200")
+    assert 'OR supercategoryName:"Decorative Art"' in multi
+    assert supercategory_filter(("Fine Art",)) == 'supercategoryName:"Fine Art"'
 
 
 def test_hit_to_sitemap_entry_ok() -> None:
@@ -222,6 +237,39 @@ def test_expand_lots_invalid_cursor_restart(tmp_path: Path) -> None:
     assert len(entries) == 1
     assert entries[0].entity_id == "cccccccccc"
     assert AlgoliaBrowseState(state_path).status("2023") == "done"
+
+
+def test_expand_lots_passes_supercategory_filter(tmp_path: Path) -> None:
+    state_path = tmp_path / "artworks_browse_state.json"
+    seen_filters: list[str] = []
+
+    def browse(filters: str, cursor: str | None) -> dict[str, Any] | None:
+        seen_filters.append(filters)
+        return {
+            "hits": [
+                {
+                    "lotRef": "aaaaaaaaaa",
+                    "lotTitle": "Canvas",
+                    "lotNumber": 1,
+                    "dateTimeLocal": "2024-03-01",
+                    "supercategoryName": "Fine Art",
+                }
+            ],
+        }
+
+    entries = expand_lots_from_algolia(
+        state_path=state_path,
+        from_year=2024,
+        to_year=2024,
+        workers=1,
+        delay=0.0,
+        browse=browse,
+        supercategories=ARTWORKS_SUPERCATEGORIES,
+    )
+    assert len(entries) == 1
+    assert seen_filters
+    assert all('supercategoryName:"Fine Art"' in f for f in seen_filters)
+    assert lot_cache_path(state_path).name == "artworks_browse_state_lots.jsonl"
 
 
 def test_algolia_force_clears_cache(tmp_path: Path) -> None:

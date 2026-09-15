@@ -70,6 +70,15 @@ def is_invaluable_target_sitemap(url: str) -> bool:
     return any(token in lower for token in _INCLUDE_SITEMAP_TOKENS)
 
 
+def is_invaluable_lot_sitemap(url: str) -> bool:
+    """True for current-month lot part sitemaps (uncategorized mix)."""
+    return "sitemap_inv_com-lot-" in url.lower()
+
+
+def is_invaluable_catalog_sitemap(url: str) -> bool:
+    return "sitemap_inv_com-catalog" in url.lower()
+
+
 def is_invaluable_hub_sitemap(url: str) -> bool:
     """True for house / artist / category child sitemaps (soft-fail)."""
     lower = url.lower()
@@ -296,6 +305,7 @@ def fetch_invaluable_sitemap_entries(
     algolia_workers: int = 2,
     algolia_delay: float = 0.4,
     algolia_force: bool = False,
+    algolia_supercategories: Sequence[str] | None = None,
     include_hubs: bool = True,
     expand_auctions_list: bool = True,
     expand_houses: bool = False,
@@ -310,11 +320,38 @@ def fetch_invaluable_sitemap_entries(
     Lot/catalog XML children are fetched **sequentially** and fail-closed.
     Hub sitemaps (houses/artists/categories) soft-fail. Algolia archive browse
     is the primary historical-lot source; artist-sold HTML expansion is optional.
+
+    When ``algolia_supercategories`` is set (e.g. Fine Art artworks-only), XML
+    lot/catalog targets and hub expansions are skipped so job URLs stay filtered.
     """
     _ = concurrency  # kept for AuctionSpec API parity; XML children always sequential
     proxy_list = list(proxies or [])
     if proxy is not None and proxy not in proxy_list:
         proxy_list.insert(0, proxy)
+
+    cats = tuple(c.strip() for c in (algolia_supercategories or ()) if c and c.strip())
+    filtered_mode = bool(cats)
+    if filtered_mode:
+        if not expand_algolia:
+            raise ValueError(
+                "algolia_supercategories requires expand_algolia=True "
+                "(filtered discovery has no uncategorizable XML lot fallback)"
+            )
+        if (
+            include_hubs
+            or expand_artist_sold
+            or expand_auctions_list
+            or expand_houses
+        ):
+            LOGGER.info(
+                "Algolia supercategory filter active (%s): forcing hubs/"
+                "artist-sold/auctions-list/houses off; skipping XML lot/catalog targets",
+                list(cats),
+            )
+        include_hubs = False
+        expand_artist_sold = False
+        expand_auctions_list = False
+        expand_houses = False
 
     if fetch_bytes is None:
         fetch_bytes = _make_rotating_fetcher(proxy_list)
@@ -322,7 +359,7 @@ def fetch_invaluable_sitemap_entries(
     LOGGER.info(
         "invaluable discover seed=%s proxies=%s mode=sequential "
         "expand_algolia=%s expand_artist_sold=%s include_hubs=%s "
-        "expand_auctions_list=%s expand_houses=%s",
+        "expand_auctions_list=%s expand_houses=%s supercategories=%s",
         sitemap_url,
         len(proxy_list),
         expand_algolia,
@@ -330,6 +367,7 @@ def fetch_invaluable_sitemap_entries(
         include_hubs,
         expand_auctions_list,
         expand_houses,
+        list(cats) if cats else None,
     )
 
     seed_body = _fetch_with_retries(
@@ -353,6 +391,9 @@ def fetch_invaluable_sitemap_entries(
             hub_maps.append(child)
             continue
         if not is_invaluable_target_sitemap(child):
+            continue
+        if filtered_mode:
+            # Lot/catalog XML has no supercategory — skip to avoid polluting artworks jobs.
             continue
         if "past_search" in child.lower():
             nested.append(child)
@@ -530,6 +571,7 @@ def fetch_invaluable_sitemap_entries(
                 workers=algolia_workers if algolia_workers > 0 else DEFAULT_ALGOLIA_WORKERS,
                 delay=algolia_delay if algolia_delay > 0 else DEFAULT_ALGOLIA_DELAY,
                 force=algolia_force,
+                supercategories=cats or None,
             )
             merge_entries(algolia_entries)
             LOGGER.info(

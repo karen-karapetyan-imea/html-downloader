@@ -4,6 +4,8 @@ from datetime import date, datetime
 from pathlib import Path
 
 from html_downloader.auctions.paths import (
+    auction_algolia_artworks_browse_state_file,
+    auction_algolia_browse_state_file,
     auction_job_dir,
     auction_lastmod_state_file,
     job_month,
@@ -47,6 +49,17 @@ def test_state_isolation_from_marketplace() -> None:
     assert auction_path == state_root / "auctions" / "invaluable.json"
     assert market_path == state_root / "invaluable_lastmod.json"
     assert auction_path != market_path
+
+
+def test_algolia_artworks_state_path_isolated_from_full_archive() -> None:
+    state_root = Path("/tmp/state")
+    full = auction_algolia_browse_state_file(state_root, "invaluable")
+    art = auction_algolia_artworks_browse_state_file(state_root, "invaluable")
+    assert full == state_root / "auctions" / "invaluable_algolia_browse_state.json"
+    assert art == (
+        state_root / "auctions" / "invaluable_algolia_artworks_browse_state.json"
+    )
+    assert full != art
 
 
 def test_add_calendar_months_transitions() -> None:

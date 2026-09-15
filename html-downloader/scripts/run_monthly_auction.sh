@@ -9,9 +9,11 @@
 #
 # Optional:
 #   AUCTION_RUN_DAY=1   # fixed day-of-month for next runs (1–31, clamped)
-#   MIN_URLS=100000     # liveauctioneers only
-#   MAX_SITEMAPS=2000   # liveauctioneers only
+#   MIN_URLS=1000000    # liveauctioneers only (default 1M)
+#   MAX_SITEMAPS=5000   # liveauctioneers only
 #   MAX_SALES=          # artcurial only (default: all pending sales)
+#   CHUNK_LINES=1000000 # invaluable / liveauctioneers chunked download
+#   WORKERS=8           # invaluable / liveauctioneers chunked download workers
 #
 # Prefer starting via:
 #   ./scripts/start_monthly_auction_tmux.sh
@@ -50,12 +52,12 @@ LOG_FILE="${PROJECT_ROOT}/logs/monthly-auction-${auction_house}-$(date -u +%Y%m%
 run_discover() {
   case "${auction_house}" in
     invaluable)
+      # Fine Art lots only — separate Algolia artworks state (does not wipe full archive cache).
       "${PYTHON}" -m html_downloader auction discover \
         --auction-house invaluable \
         --proxy-file proxy.txt \
         --concurrency 1 \
-        --expand-artist-sold \
-        --artist-sold-concurrency "${ARTIST_SOLD_CONCURRENCY:-4}" \
+        --algolia-artworks-only \
         --incremental \
         --update-state
       ;;
@@ -64,8 +66,8 @@ run_discover() {
         --auction-house liveauctioneers \
         --proxy-file proxy.txt \
         --concurrency 1 \
-        --min-urls "${MIN_URLS:-100000}" \
-        --max-sitemaps "${MAX_SITEMAPS:-2000}" \
+        --min-urls "${MIN_URLS:-1000000}" \
+        --max-sitemaps "${MAX_SITEMAPS:-5000}" \
         --incremental \
         --update-state
       ;;
@@ -84,15 +86,27 @@ run_discover() {
   esac
 }
 
+run_download() {
+  case "${auction_house}" in
+    invaluable|liveauctioneers)
+      # Large url lists — chunk to avoid OOM loading full urls.txt.
+      /bin/bash --noprofile --norc "${SCRIPT_DIR}/download_url_chunks.sh" "${auction_house}"
+      ;;
+    *)
+      "${PYTHON}" -m html_downloader auction download \
+        --auction-house "${auction_house}" \
+        --proxy-file proxy.txt \
+        --skip-existing
+      ;;
+  esac
+}
+
 run_cycle() {
   echo "--- ${auction_house}: auction discover $(date -u -Iseconds) ---"
   run_discover
 
   echo "--- ${auction_house}: auction download $(date -u -Iseconds) ---"
-  "${PYTHON}" -m html_downloader auction download \
-    --auction-house "${auction_house}" \
-    --proxy-file proxy.txt \
-    --skip-existing
+  run_download
 }
 
 # Prints: "<seconds> <next_iso>"

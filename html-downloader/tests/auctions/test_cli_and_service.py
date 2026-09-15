@@ -58,6 +58,22 @@ def test_cli_auction_discover_and_download_flags() -> None:
     assert discover_args.max_houses == 5
     assert discover_args.algolia_from_year == 2020
     assert discover_args.algolia_workers == 3
+    assert discover_args.algolia_artworks_only is False
+    assert discover_args.algolia_supercategories is None
+
+    artworks_args = parser.parse_args(
+        [
+            "auction",
+            "discover",
+            "--auction-house",
+            "invaluable",
+            "--algolia-artworks-only",
+            "--algolia-supercategories",
+            "Decorative Art",
+        ]
+    )
+    assert artworks_args.algolia_artworks_only is True
+    assert artworks_args.algolia_supercategories == ["Decorative Art"]
 
     la_args = parser.parse_args(
         [
@@ -69,12 +85,14 @@ def test_cli_auction_discover_and_download_flags() -> None:
             "25",
             "--min-urls",
             "50000",
+            "--sitemap-force",
             "--incremental",
         ]
     )
     assert la_args.auction_house == "liveauctioneers"
     assert la_args.max_sitemaps == 25
     assert la_args.min_urls == 50000
+    assert la_args.sitemap_force is True
 
     ac_args = parser.parse_args(
         [
@@ -102,6 +120,7 @@ def test_cli_auction_discover_and_download_flags() -> None:
     assert defaults.algolia_force is False
     assert defaults.max_sitemaps is None
     assert defaults.min_urls is None
+    assert defaults.sitemap_force is False
     assert defaults.max_sales is None
 
     download_args = parser.parse_args(
@@ -206,6 +225,31 @@ def test_liveauctioneers_discover_writes_monthly_job(tmp_path: Path) -> None:
     proxy_file = tmp_path / "proxy.txt"
     proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
 
+    # Pre-seed durable cache with an older lot so the job streams cache ∪ batch.
+    from html_downloader.auctions.liveauctioneers import append_lot_cache, lot_cache_path
+    from html_downloader.auctions.paths import auction_sitemap_progress_file
+
+    progress_path = auction_sitemap_progress_file(state_root, "liveauctioneers")
+    progress_path.parent.mkdir(parents=True, exist_ok=True)
+    append_lot_cache(
+        lot_cache_path(progress_path),
+        [
+            _entry(
+                "https://www.liveauctioneers.com/price-result/cached-lot-999",
+                "price_result",
+                "cached-lot-999",
+                "2026-08-01",
+            ),
+            # Duplicate of this-run entry — must not double-count in stream.
+            _entry(
+                "https://www.liveauctioneers.com/price-result/oil-painting-123",
+                "price_result",
+                "oil-painting-123",
+                "2026-09-01",
+            ),
+        ],
+    )
+
     with patch(
         "html_downloader.auctions.service.fetch_auction_entries",
         return_value=entries,
@@ -227,9 +271,15 @@ def test_liveauctioneers_discover_writes_monthly_job(tmp_path: Path) -> None:
     job = result.job
     assert job == data_root / "auctions" / "liveauctioneers" / "2026-09"
     urls = (job / "urls.txt").read_text(encoding="utf-8").strip().splitlines()
-    assert len(urls) == 2
+    assert set(urls) == {
+        "https://www.liveauctioneers.com/price-result/oil-painting-123",
+        "https://www.liveauctioneers.com/price-result/bronze-sculpture-abc",
+        "https://www.liveauctioneers.com/price-result/cached-lot-999",
+    }
+    assert result.all_count == 3
     meta = json.loads((job / "metadata.json").read_text(encoding="utf-8"))
     assert meta["auction_house"] == "liveauctioneers"
+    assert meta["url_count"] == 3
     assert (state_root / "auctions" / "liveauctioneers.json").is_file()
 
 

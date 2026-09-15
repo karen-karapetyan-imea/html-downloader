@@ -95,6 +95,16 @@ def auction_algolia_browse_state_file(state_root: Path, auction_house: str) -> P
     return auction_state_root(state_root) / f"{auction_house}_algolia_browse_state.json"
 
 
+def auction_algolia_artworks_browse_state_file(
+    state_root: Path, auction_house: str
+) -> Path:
+    """Algolia browse state for Fine Art (artworks-only) filtered archive."""
+    return (
+        auction_state_root(state_root)
+        / f"{auction_house}_algolia_artworks_browse_state.json"
+    )
+
+
 def auction_sitemap_progress_file(state_root: Path, auction_house: str) -> Path:
     """Child-sitemap resume checkpoint for houses with large gzipped indexes."""
     return auction_state_root(state_root) / f"{auction_house}_sitemap_progress.json"
@@ -121,6 +131,7 @@ def ensure_auction_job_dirs(job: Path) -> Path:
 __all__ = [
     "AUCTION_HOUSES",
     "PROJECT_ROOT",
+    "auction_algolia_artworks_browse_state_file",
     "auction_algolia_browse_state_file",
     "auction_artist_sold_progress_file",
     "auction_data_root",
