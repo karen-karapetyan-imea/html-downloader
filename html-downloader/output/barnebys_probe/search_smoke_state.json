@@ -1,0 +1,287 @@
+{
+  "partitions": {
+    "live:painting": {
+      "status": "done",
+      "lots_found": 92,
+      "pages_fetched": 2,
+      "updated_at": "2026-09-16T09:23:10Z"
+    },
+    "realized:contemporary-art": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:23:11Z"
+    },
+    "realized:contemporary-art:c=AT": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:42Z"
+    },
+    "realized:contemporary-art:c=AU": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:39Z"
+    },
+    "realized:contemporary-art:c=BE": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:43Z"
+    },
+    "realized:contemporary-art:c=CA": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:40Z"
+    },
+    "realized:contemporary-art:c=CH": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:41Z"
+    },
+    "realized:contemporary-art:c=CN": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:51Z"
+    },
+    "realized:contemporary-art:c=CZ": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:02Z"
+    },
+    "realized:contemporary-art:c=DE": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:15Z"
+    },
+    "realized:contemporary-art:c=DK": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:35Z"
+    },
+    "realized:contemporary-art:c=ES": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:43Z"
+    },
+    "realized:contemporary-art:c=FI": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:38Z"
+    },
+    "realized:contemporary-art:c=FR": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:23:16Z"
+    },
+    "realized:contemporary-art:c=FR:px=0-100": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:19Z"
+    },
+    "realized:contemporary-art:c=FR:px=100-500": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:20Z"
+    },
+    "realized:contemporary-art:c=FR:px=1000-5000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:30Z"
+    },
+    "realized:contemporary-art:c=FR:px=100000-": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:33Z"
+    },
+    "realized:contemporary-art:c=FR:px=20000-100000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:32Z"
+    },
+    "realized:contemporary-art:c=FR:px=500-1000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:21Z"
+    },
+    "realized:contemporary-art:c=FR:px=5000-20000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:31Z"
+    },
+    "realized:contemporary-art:c=GB": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:23:13Z"
+    },
+    "realized:contemporary-art:c=GB:px=0-100": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:11Z"
+    },
+    "realized:contemporary-art:c=GB:px=100-500": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:12Z"
+    },
+    "realized:contemporary-art:c=GB:px=1000-5000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:14Z"
+    },
+    "realized:contemporary-art:c=GB:px=100000-": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:18Z"
+    },
+    "realized:contemporary-art:c=GB:px=20000-100000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:17Z"
+    },
+    "realized:contemporary-art:c=GB:px=500-1000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:13Z"
+    },
+    "realized:contemporary-art:c=GB:px=5000-20000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:16Z"
+    },
+    "realized:contemporary-art:c=HK": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:49Z"
+    },
+    "realized:contemporary-art:c=IE": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:51Z"
+    },
+    "realized:contemporary-art:c=IT": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:33Z"
+    },
+    "realized:contemporary-art:c=JP": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:45Z"
+    },
+    "realized:contemporary-art:c=NL": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:34Z"
+    },
+    "realized:contemporary-art:c=NO": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:37Z"
+    },
+    "realized:contemporary-art:c=NZ": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:03Z"
+    },
+    "realized:contemporary-art:c=PL": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:01Z"
+    },
+    "realized:contemporary-art:c=PT": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:00Z"
+    },
+    "realized:contemporary-art:c=SE": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:23:14Z"
+    },
+    "realized:contemporary-art:c=US": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:23:12Z"
+    },
+    "realized:contemporary-art:c=US:px=0-100": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:04Z"
+    },
+    "realized:contemporary-art:c=US:px=100-500": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:05Z"
+    },
+    "realized:contemporary-art:c=US:px=1000-5000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:07Z"
+    },
+    "realized:contemporary-art:c=US:px=100000-": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:10Z"
+    },
+    "realized:contemporary-art:c=US:px=20000-100000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:09Z"
+    },
+    "realized:contemporary-art:c=US:px=500-1000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 0,
+      "updated_at": "2026-09-16T09:24:06Z"
+    },
+    "realized:contemporary-art:c=US:px=5000-20000": {
+      "status": "done",
+      "lots_found": 0,
+      "pages_fetched": 1,
+      "updated_at": "2026-09-16T09:24:08Z"
+    }
+  },
+  "last_fetch_at": "2026-09-16T09:24:33Z"
+}

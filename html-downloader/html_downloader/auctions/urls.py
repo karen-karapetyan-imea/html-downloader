@@ -77,6 +77,7 @@ _ARTIST_SEED_SUFFIXES = (
 _INVALUABLE_HOSTS = frozenset({"www.invaluable.com", "invaluable.com"})
 _LIVEAUCTIONEERS_HOSTS = frozenset({"www.liveauctioneers.com", "liveauctioneers.com"})
 _ARTCURIAL_HOSTS = frozenset({"www.artcurial.com", "artcurial.com"})
+_BARNEBYS_HOSTS = frozenset({"www.barnebys.com", "barnebys.com"})
 
 # SEO sold-lot page: /price-result/{slug}/
 LIVEAUCTIONEERS_PRICE_RESULT_RE = re.compile(
@@ -91,6 +92,32 @@ ARTCURIAL_LOT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Live lot: /auctions/lot/{id}/{slug}
+BARNEBYS_LIVE_LOT_ID_SLUG_RE = re.compile(
+    r"^https://www\.barnebys\.com/auctions/lot/(\d+)/([A-Za-z0-9\-]+)/?$",
+    re.IGNORECASE,
+)
+
+# Live lot (sitemap form): /auctions/lot/{slug}-{token}-{id}
+BARNEBYS_LIVE_LOT_SLUG_RE = re.compile(
+    r"^https://www\.barnebys\.com/auctions/lot/"
+    r"(.+)-([A-Za-z0-9]{5,12})-(\d+)/?$",
+    re.IGNORECASE,
+)
+
+# Sold / realized: /realized-prices/lot/{id}/{slug}
+BARNEBYS_RESULT_LOT_ID_SLUG_RE = re.compile(
+    r"^https://www\.barnebys\.com/realized-prices/lot/(\d+)/([A-Za-z0-9\-]+)/?$",
+    re.IGNORECASE,
+)
+
+# Sold / realized slug form: /realized-prices/lot/{slug}-{token}-{id}
+BARNEBYS_RESULT_LOT_SLUG_RE = re.compile(
+    r"^https://www\.barnebys\.com/realized-prices/lot/"
+    r"(.+)-([A-Za-z0-9]{5,12})-(\d+)/?$",
+    re.IGNORECASE,
+)
+
 
 def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | None:
     """
@@ -101,9 +128,10 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     - Drop fragments
     - Strip common tracking / Algolia query params
     - Lowercase scheme/host; force www.invaluable.com / www.liveauctioneers.com /
-      www.artcurial.com
+      www.artcurial.com / www.barnebys.com
     - Catalog / lot / house / artist / category / price-result ids lowercased
     - Artcurial lot paths force /en/ locale
+    - Barnebys lot slug paths lowercased (token/id preserved as in sitemap)
     - Strip trailing slash (except bare `/`)
     """
     text = (url or "").strip()
@@ -130,6 +158,9 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         netloc = host
     elif host == "artcurial.com":
         host = "www.artcurial.com"
+        netloc = host
+    elif host == "barnebys.com":
+        host = "www.barnebys.com"
         netloc = host
     else:
         netloc = host
@@ -171,6 +202,26 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         path,
         re.IGNORECASE,
     )
+    barnebys_live_id = re.match(
+        r"^(/auctions/lot/)(\d+)/([A-Za-z0-9\-]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
+    barnebys_live_slug = re.match(
+        r"^(/auctions/lot/)(.+)-([A-Za-z0-9]{5,12})-(\d+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
+    barnebys_result_id = re.match(
+        r"^(/realized-prices/lot/)(\d+)/([A-Za-z0-9\-]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
+    barnebys_result_slug = re.match(
+        r"^(/realized-prices/lot/)(.+)-([A-Za-z0-9]{5,12})-(\d+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
 
     if catalog_match and host in _INVALUABLE_HOSTS:
         path = f"/catalog/{catalog_match.group(2).lower()}"
@@ -205,6 +256,23 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         index = artcurial_lot_match.group(3)
         sub = artcurial_lot_match.group(4).lower()
         path = f"/en/sales/{sale_ref}/lots/{index}-{sub}"
+    elif barnebys_live_id and host in _BARNEBYS_HOSTS:
+        path = f"/auctions/lot/{barnebys_live_id.group(2)}/{barnebys_live_id.group(3).lower()}"
+    elif barnebys_live_slug and host in _BARNEBYS_HOSTS:
+        slug = barnebys_live_slug.group(2).lower()
+        token = barnebys_live_slug.group(3)
+        lot_id = barnebys_live_slug.group(4)
+        path = f"/auctions/lot/{slug}-{token}-{lot_id}"
+    elif barnebys_result_id and host in _BARNEBYS_HOSTS:
+        path = (
+            f"/realized-prices/lot/{barnebys_result_id.group(2)}/"
+            f"{barnebys_result_id.group(3).lower()}"
+        )
+    elif barnebys_result_slug and host in _BARNEBYS_HOSTS:
+        slug = barnebys_result_slug.group(2).lower()
+        token = barnebys_result_slug.group(3)
+        lot_id = barnebys_result_slug.group(4)
+        path = f"/realized-prices/lot/{slug}-{token}-{lot_id}"
     else:
         path = path.rstrip("/") or "/"
 
@@ -234,6 +302,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         if artcurial_entity_from_url_path(candidate) is not None:
             query = ""
         out_netloc = "www.artcurial.com"
+    elif host in _BARNEBYS_HOSTS:
+        candidate = urlunsplit(("https", "www.barnebys.com", path, "", ""))
+        if barnebys_entity_from_url_path(candidate) is not None:
+            query = ""
+        out_netloc = "www.barnebys.com"
     else:
         out_netloc = netloc
 
@@ -403,3 +476,66 @@ def artcurial_entity_from_url(url: str) -> tuple[str, str] | None:
 def is_artcurial_auction_url(url: str) -> bool:
     """True for Artcurial lot crawl targets."""
     return artcurial_entity_from_url(url) is not None
+
+
+def barnebys_entity_from_url_path(url: str) -> tuple[str, str] | None:
+    """Classify a normalized Barnebys absolute URL without re-entering normalize."""
+    live_id = BARNEBYS_LIVE_LOT_ID_SLUG_RE.match(url)
+    if live_id:
+        return "lot", live_id.group(1)
+
+    live_slug = BARNEBYS_LIVE_LOT_SLUG_RE.match(url)
+    if live_slug:
+        return "lot", live_slug.group(3)
+
+    result_id = BARNEBYS_RESULT_LOT_ID_SLUG_RE.match(url)
+    if result_id:
+        return "result_lot", result_id.group(1)
+
+    result_slug = BARNEBYS_RESULT_LOT_SLUG_RE.match(url)
+    if result_slug:
+        return "result_lot", result_slug.group(3)
+
+    return None
+
+
+def barnebys_entity_from_url(url: str) -> tuple[str, str] | None:
+    """
+    Return (entity_type, entity_id) for Barnebys crawl targets.
+
+    Accepted:
+      /auctions/lot/{id}/{slug}              → ("lot", id)
+      /auctions/lot/{slug}-{token}-{id}      → ("lot", id)
+      /realized-prices/lot/{id}/{slug}       → ("result_lot", id)
+      /realized-prices/lot/{slug}-{token}-{id} → ("result_lot", id)
+
+    Rejected: /redirect, /re/*, listing hubs, magazine, etc.
+    """
+    normalized = normalize_auction_url(url)
+    if not normalized:
+        return None
+    host = (urlsplit(normalized).hostname or "").lower()
+    if host not in _BARNEBYS_HOSTS:
+        return None
+    return barnebys_entity_from_url_path(normalized)
+
+
+def is_barnebys_auction_url(url: str) -> bool:
+    """True for Barnebys live-lot or realized-price crawl targets."""
+    return barnebys_entity_from_url(url) is not None
+
+
+def barnebys_realized_twin_url(live_url: str) -> str | None:
+    """Map a live /auctions/lot/ URL to the /realized-prices/lot/ twin (same suffix)."""
+    normalized = normalize_auction_url(live_url)
+    if not normalized:
+        return None
+    key = barnebys_entity_from_url_path(normalized)
+    if key is None or key[0] != "lot":
+        return None
+    path = urlsplit(normalized).path or ""
+    prefix = "/auctions/lot/"
+    if not path.lower().startswith(prefix):
+        return None
+    suffix = path[len(prefix) :]
+    return f"https://www.barnebys.com/realized-prices/lot/{suffix}"

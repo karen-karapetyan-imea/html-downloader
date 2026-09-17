@@ -1,0 +1,169 @@
+{
+  "backend": "curl_cffi",
+  "proxy_used": true,
+  "pages": {
+    "robots": {
+      "url": "https://www.barnebys.com/robots.txt",
+      "status": 200,
+      "size": 6765,
+      "waf": false
+    },
+    "homepage": {
+      "url": "https://www.barnebys.com/",
+      "status": 200,
+      "size": 475103,
+      "waf": false
+    },
+    "auctions_all": {
+      "url": "https://www.barnebys.com/auctions/all",
+      "status": 200,
+      "size": 725595,
+      "waf": false
+    },
+    "live_lot": {
+      "url": "https://www.barnebys.com/auctions/lot/443468158/lockers",
+      "status": 200,
+      "size": 338109,
+      "waf": false
+    },
+    "result_lot": {
+      "url": "https://www.barnebys.com/realized-prices/lot/443468158/lockers",
+      "status": 200,
+      "size": 334666,
+      "waf": false
+    },
+    "live_lot_alt": {
+      "url": "https://www.barnebys.com/auctions/lot/andy-warhol-1928-1987-marilyn-monroe-achenbach-edition-tTbkdDK-622510218",
+      "status": 200,
+      "size": 377155,
+      "waf": false
+    },
+    "sitemap": {
+      "url": "https://www.barnebys.com/sitemap.xml",
+      "status": 200,
+      "size": 1100,
+      "waf": false
+    }
+  },
+  "algolia": {
+    "candidates": {
+      "app_ids": [],
+      "api_keys": [],
+      "index_names": [],
+      "algoliasearch_pairs": []
+    },
+    "tests": []
+  },
+  "url_samples": {
+    "auctions_lot_id_slug": [
+      [
+        "443468158",
+        "lockers"
+      ]
+    ],
+    "auctions_lot_slug_form": [
+      "a-victorian-open-knot-bracelet-in-14k-x63FVGy-632480460",
+      "lefty-grove-and-2-others-autographed-equitable-assurance-premiums-sigs-SQmzFdM-631913419",
+      "mauser-luger-swiss-american-eagle-9mm-pistol-8D5yGS9-632317945",
+      "an-early-20thc-pewter-rams-horn-table-snuff-mull-34-5cm-w-i5t8wLe-632110192",
+      "steinway-model-o-grand-piano-1916-eqvPAa4-632317947",
+      "fred-darge-cowboy-on-horseback-painting-SBpwXUD-632317952",
+      "mid-1980s-velorex-sidecar-for-bmw-motorcycle-LzLbvgE-632078693",
+      "1983-80-cubic-inch-shovelhead-harley-davidson-flh-electra-glide-classic-eZPNxQi-632078715",
+      "1932-cadillac-355-b-imperial-limousine-er2UnSw-632078728",
+      "1914-waterman-4-hp-porto-ourboard-motor-x9zZyEQ-632578791",
+      "schwinn-cotton-picker-5-speed-sting-ray-bicycle-serial-no-hj002768-RihViwc-632579067",
+      "schwinn-grey-ghost-sting-ray-bicycle-serial-no-bg004968-WUbLjCP-632579069",
+      "alma-rumball-god-of-all-the-gods-giclee-Psxe8f9-632129250",
+      "hank-willis-thomas-all-lies-matter-screenprint-wxvh4u4-632129130",
+      "james-rizzi-we-all-have-something-to-offer-print-Cqmq7e6-632129218",
+      "the-all-in-one-game-TrDMpwj-632579203",
+      "an-all-original-cast-iron-strongbox-of-french-manufacture-JzSmuBq-632578980",
+      "collection-of-5-hi-vi-all-purpose-motor-oil-one-u-s-quart-cans-XzF73QA-632083822",
+      "1997-all-time-all-madden-team-multi-signed-football-nm-oMXSNUr-631912536",
+      "1972-bucky-dent-national-association-all-star-xCymbYU-631913377",
+      "1958-mlb-all-star-game-press-pin-ex-Ne5RS4o-631913553",
+      "deposit-required-on-all-orders-stamped-brass-sign-w-original-metal-chain-ntQU95z-632077025",
+      "lot-of-20-mostly-world-series-and-all-star-game-EFL7WyW-631913633",
+      "1968-nba-all-stars-framed-photo-with-7-autographs-rphKm9i-631914313",
+      "1992-national-league-all-star-team-presentional-piece-9aKap4j-631912897",
+      "mel-stottlemyre-signed-2004-all-star-game-professional-qMfPmy4-631915901",
+      "carl-yastrzemski-autographed-1970-all-star-game-pennant-GpYMEBd-631915038",
+      "1980-bucky-dent-autographed-all-star-game-professional-x9N7Rpe-631912510",
+      "1955-mlb-all-star-game-press-pin-ex-jZgBaPg-631913552",
+      "1953-all-star-game-program-at-crosley-field-ex-ed7jqR3-631915255"
+    ],
+    "realized_lot_id_slug": [
+      [
+        "443468158",
+        "lockers"
+      ]
+    ]
+  },
+  "next_routes": {},
+  "script_urls": [
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/c7879cf7-0d16fce1674078f9.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/3462-36c0bfde43edaadb.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/main-app-39435c4f4fcf71e0.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/9568-0bfadca4fcb105aa.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/4327-bdb1cec939cdadb3.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/3684-745ff823acae6c25.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/9290-73bb5dd0ad6cae9d.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/8149-e6d15b75d5b2cfd7.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/5923-d87c31b6537a8f54.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/4628-50db7ef15102fb8f.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/4421-f0f2e24f0579fe34.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/1123-6d9c49ee724a258f.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/1566-2fa1c4cf10f980f2.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/app/layout-5d25649a60e1c1af.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/1910-cfac7ed0eec4f0c5.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/app/page-170c43f747ad356e.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/polyfills-42372ed130431b0a.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/webpack-9d019788ded97bb5.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/3394-f0acac413a3fb702.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/4248-c216278326e05573.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/app/auctions/%5B...slug%5D/loading-0cc494658ec257ec.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/4394-934ba480ce9986bf.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/4679-be788a0757e03ef7.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/app/auctions/page-ad873c3190731158.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/app/realized-prices/%5B...slug%5D/loading-8c0973594e750ea3.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/app/realized-prices/page-a74ad3c2e723ec58.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/6041-8ba074c857c84111.js",
+    "https://static.barnebys.com/v3/261e565/_next/static/chunks/app/auctions/lot/%5Bname%5D/page-2c72e69cbd637b6e.js"
+  ],
+  "discovery": {
+    "primary": "sitemap",
+    "index": "https://www.barnebys.com/sitemap.xml",
+    "lot_sitemaps": [
+      "https://www.barnebys.com/sitemap/lots-0.xml.gz",
+      "https://www.barnebys.com/sitemap/lots-1.xml.gz",
+      "https://www.barnebys.com/sitemap/lots-2.xml.gz",
+      "https://www.barnebys.com/sitemap/lots-3.xml.gz",
+      "https://www.barnebys.com/sitemap/lots-4.xml.gz",
+      "https://www.barnebys.com/sitemap/lots-5.xml.gz",
+      "https://www.barnebys.com/sitemap/lots-6.xml.gz",
+      "https://www.barnebys.com/sitemap/lots-7.xml.gz"
+    ],
+    "patterns": {
+      "total": 386039,
+      "auctions_lot_id_slug": 0,
+      "auctions_lot_slug_token_id": 386039,
+      "realized_prices": 0,
+      "other": 0,
+      "other_samples": []
+    },
+    "child_counts": {
+      "lots-0": 50000,
+      "lots-1": 50000,
+      "lots-2": 50000,
+      "lots-3": 50000,
+      "lots-4": 50000,
+      "lots-5": 50000,
+      "lots-6": 50000,
+      "lots-7": 36039,
+      "keywords": 3587,
+      "pages": 12158
+    },
+    "algolia": "credentials not found in public JS; site references algoliaRefinements client-side only"
+  }
+}

@@ -231,8 +231,8 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help=(
-            "LiveAuctioneers: max pending child sitemaps to attempt per run "
-            "(default: 5000)"
+            "LiveAuctioneers / Barnebys: max pending child sitemaps per run "
+            "(defaults: liveauctioneers 5000, barnebys 100)"
         ),
     )
     auction_discover.add_argument(
@@ -240,16 +240,16 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help=(
-            "LiveAuctioneers: keep expanding child sitemaps until this many "
-            "unique /price-result/ URLs are collected (default: 1000000)"
+            "LiveAuctioneers / Barnebys: stop after this many new URLs per run "
+            "(defaults: liveauctioneers 1000000, barnebys 0 = all pending shards)"
         ),
     )
     auction_discover.add_argument(
         "--sitemap-force",
         action="store_true",
         help=(
-            "LiveAuctioneers: reset sitemap progress and lot JSONL cache, "
-            "then re-walk pending children"
+            "LiveAuctioneers / Barnebys: reset sitemap progress and lot JSONL "
+            "cache, then re-walk pending children"
         ),
     )
     auction_discover.add_argument(

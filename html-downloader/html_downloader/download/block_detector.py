@@ -31,6 +31,9 @@ def is_block(
         "rate limit",
         "ddos",
         "akamai",
+        "azwaf",
+        "azure waf",
+        "afd_azwaf",
     ),
 ) -> BlockInfo:
     """

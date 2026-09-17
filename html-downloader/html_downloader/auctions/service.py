@@ -78,6 +78,10 @@ def _known_keys_for_house(data_root: Path, auction_house: str) -> set[tuple[str,
         from html_downloader.auctions.artcurial import known_artcurial_keys_from_paths
 
         return known_artcurial_keys_from_paths(paths)
+    if auction_house == "barnebys":
+        from html_downloader.auctions.barnebys import known_barnebys_keys_from_paths
+
+        return known_barnebys_keys_from_paths(paths)
     keys: set[tuple[str, str]] = set()
     for path in paths:
         # Generic fallback: parse as invaluable-style if possible
@@ -88,6 +92,59 @@ def _known_keys_for_house(data_root: Path, auction_house: str) -> set[tuple[str,
             if key is not None:
                 keys.add(key)
     return keys
+
+
+def _stream_barnebys_cache_into_job_files(
+    cache_path: Path,
+    *,
+    sitemap_all_path: Path,
+    urls_path: Path,
+    already_written_keys: set[tuple[str, str]],
+    known_keys: set[tuple[str, str]],
+    incremental: bool,
+) -> tuple[int, int]:
+    """Append Barnebys lot/result_lot URLs from typed JSONL into job files."""
+    from html_downloader.auctions.barnebys_algolia import iter_lot_cache_rows
+
+    if not cache_path.exists():
+        return 0, 0
+
+    seen = already_written_keys
+    added_all = 0
+    added_crawl = 0
+    scanned = 0
+
+    with (
+        sitemap_all_path.open("a", encoding="utf-8") as all_fh,
+        urls_path.open("a", encoding="utf-8") as crawl_fh,
+    ):
+        for entity_type, entity_id, url, _lastmod in iter_lot_cache_rows(cache_path):
+            scanned += 1
+            if scanned % 1_000_000 == 0:
+                LOGGER.info(
+                    "barnebys cache stream progress scanned=%s added_all=%s added_crawl=%s",
+                    scanned,
+                    added_all,
+                    added_crawl,
+                )
+            key = (entity_type, entity_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            all_fh.write(url + "\n")
+            added_all += 1
+            if incremental and key in known_keys:
+                continue
+            crawl_fh.write(url + "\n")
+            added_crawl += 1
+
+    LOGGER.info(
+        "barnebys cache stream complete scanned=%s added_all=%s added_crawl=%s",
+        scanned,
+        added_all,
+        added_crawl,
+    )
+    return added_all, added_crawl
 
 
 def _load_proxies_if_needed(
@@ -232,12 +289,24 @@ def run_auction_discover(
 
     from html_downloader.auctions.invaluable_algolia import ARTWORKS_SUPERCATEGORIES
     from html_downloader.auctions.liveauctioneers import (
-        DEFAULT_MAX_SITEMAPS,
-        DEFAULT_MIN_URLS,
+        DEFAULT_MAX_SITEMAPS as LA_DEFAULT_MAX_SITEMAPS,
+        DEFAULT_MIN_URLS as LA_DEFAULT_MIN_URLS,
+    )
+    from html_downloader.auctions.barnebys import (
+        DEFAULT_MAX_SITEMAPS as BM_DEFAULT_MAX_SITEMAPS,
+        DEFAULT_MIN_URLS as BM_DEFAULT_MIN_URLS,
     )
 
-    sitemap_limit = max_sitemaps if max_sitemaps is not None else DEFAULT_MAX_SITEMAPS
-    url_target = min_urls if min_urls is not None else DEFAULT_MIN_URLS
+    if spec.name == "barnebys":
+        sitemap_limit = (
+            max_sitemaps if max_sitemaps is not None else BM_DEFAULT_MAX_SITEMAPS
+        )
+        url_target = min_urls if min_urls is not None else BM_DEFAULT_MIN_URLS
+    else:
+        sitemap_limit = (
+            max_sitemaps if max_sitemaps is not None else LA_DEFAULT_MAX_SITEMAPS
+        )
+        url_target = min_urls if min_urls is not None else LA_DEFAULT_MIN_URLS
 
     cats: list[str] = []
     if algolia_supercategories:
@@ -267,9 +336,9 @@ def run_auction_discover(
         include_hubs,
         expand_auctions_list,
         expand_houses,
-        sitemap_limit if spec.name == "liveauctioneers" else None,
-        url_target if spec.name == "liveauctioneers" else None,
-        sitemap_force if spec.name == "liveauctioneers" else None,
+        sitemap_limit if spec.name in {"liveauctioneers", "barnebys"} else None,
+        url_target if spec.name in {"liveauctioneers", "barnebys"} else None,
+        sitemap_force if spec.name in {"liveauctioneers", "barnebys"} else None,
         max_sales if spec.name == "artcurial" else None,
         cats or None,
     )
@@ -291,11 +360,19 @@ def run_auction_discover(
             )
         else:
             algolia_state = auction_algolia_browse_state_file(state_root, spec.name)
+    elif expand_algolia and spec.name == "barnebys":
+        # Art-focused search/pricebank browse by default (same flag as Invaluable).
+        if cats or algolia_artworks_only:
+            algolia_state = auction_algolia_artworks_browse_state_file(
+                state_root, spec.name
+            )
+        else:
+            algolia_state = auction_algolia_browse_state_file(state_root, spec.name)
     else:
         algolia_state = None
     sitemap_progress = (
         auction_sitemap_progress_file(state_root, spec.name)
-        if spec.name == "liveauctioneers"
+        if spec.name in {"liveauctioneers", "barnebys"}
         else None
     )
     sales_progress = (
@@ -391,6 +468,29 @@ def run_auction_discover(
             all_count += added_all
             crawl_count += added_crawl
 
+        already_keys: set[tuple[str, str]] = {
+            (e.entity_type, e.entity_id)
+            for e in entries
+            if e.entity_type in {"lot", "result_lot"} and e.entity_id
+        }
+
+        if expand_algolia and algolia_state is not None and spec.name == "barnebys":
+            from html_downloader.auctions.barnebys_algolia import (
+                lot_cache_path as bm_search_cache,
+            )
+
+            search_cache = bm_search_cache(algolia_state)
+            added_all, added_crawl = _stream_barnebys_cache_into_job_files(
+                search_cache,
+                sitemap_all_path=sitemap_all_path,
+                urls_path=urls_path,
+                already_written_keys=already_keys,
+                known_keys=known_keys,
+                incremental=incremental,
+            )
+            all_count += added_all
+            crawl_count += added_crawl
+
         if spec.name == "liveauctioneers" and sitemap_progress is not None:
             from html_downloader.auctions.liveauctioneers import (
                 iter_lot_cache_rows,
@@ -413,6 +513,21 @@ def run_auction_discover(
                 entity_type="price_result",
                 iter_rows=iter_lot_cache_rows,
                 label="liveauctioneers",
+            )
+            all_count += added_all
+            crawl_count += added_crawl
+
+        if spec.name == "barnebys" and sitemap_progress is not None:
+            from html_downloader.auctions.barnebys import lot_cache_path
+
+            cache_path = lot_cache_path(sitemap_progress)
+            added_all, added_crawl = _stream_barnebys_cache_into_job_files(
+                cache_path,
+                sitemap_all_path=sitemap_all_path,
+                urls_path=urls_path,
+                already_written_keys=already_keys,
+                known_keys=known_keys,
+                incremental=incremental,
             )
             all_count += added_all
             crawl_count += added_crawl
@@ -447,6 +562,8 @@ def run_auction_discover(
                 )
             elif spec.name == "artcurial":
                 from html_downloader.auctions.artcurial import save_auction_lastmod_state
+            elif spec.name == "barnebys":
+                from html_downloader.auctions.barnebys import save_auction_lastmod_state
             else:
                 from html_downloader.auctions.invaluable import save_auction_lastmod_state
 

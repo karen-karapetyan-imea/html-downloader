@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 from html_downloader.auctions.artcurial import DEFAULT_ARTCURIAL_INDEX
 from html_downloader.auctions.base import AuctionSpec
+from html_downloader.auctions.barnebys import DEFAULT_BARNEBYS_INDEX
 from html_downloader.auctions.invaluable import DEFAULT_INVALUABLE_INDEX
 from html_downloader.auctions.liveauctioneers import (
     DEFAULT_LIVEAUCTIONEERS_INDEX,
@@ -16,6 +18,8 @@ from html_downloader.auctions.liveauctioneers import (
 )
 from html_downloader.auctions.paths import AUCTION_HOUSES
 from html_downloader.discover.sitemap import SitemapEntry
+
+LOGGER = logging.getLogger(__name__)
 
 AUCTIONS: dict[str, AuctionSpec] = {
     "invaluable": AuctionSpec(
@@ -38,6 +42,13 @@ AUCTIONS: dict[str, AuctionSpec] = {
         # Public /ace JSON API — mild parallelism is fine.
         default_concurrency=4,
         uses_stealth_proxy=False,
+    ),
+    "barnebys": AuctionSpec(
+        name="barnebys",
+        default_indexes=(DEFAULT_BARNEBYS_INDEX,),
+        # Sequential only — Azure WAF + large gzipped lot sitemaps.
+        default_concurrency=1,
+        uses_stealth_proxy=True,
     ),
 }
 
@@ -145,5 +156,56 @@ def fetch_auction_entries(
             kwargs["proxy"] = proxy
             kwargs["proxies"] = [proxy]
         return fetch_artcurial_entries(spec.default_indexes[0], **kwargs)
+
+    if spec.name == "barnebys":
+        from html_downloader.auctions.barnebys import fetch_barnebys_sitemap_entries
+        from html_downloader.auctions.barnebys_algolia import expand_lots_from_algolia
+
+        kwargs = {
+            "concurrency": concurrency,
+            "max_sitemaps": max_sitemaps,
+            "min_urls": min_urls,
+            "sitemap_progress_path": sitemap_progress_path,
+            "sitemap_force": sitemap_force,
+            "include_realized": True,
+        }
+        if proxies:
+            kwargs["proxies"] = proxies
+        elif proxy is not None:
+            kwargs["proxy"] = proxy
+            kwargs["proxies"] = [proxy]
+        entries = fetch_barnebys_sitemap_entries(spec.default_indexes[0], **kwargs)
+
+        if expand_algolia:
+            if algolia_state_path is None:
+                raise ValueError("expand_algolia requires algolia_state_path for barnebys")
+            try:
+                search_entries = expand_lots_from_algolia(
+                    state_path=algolia_state_path,
+                    from_year=(
+                        algolia_from_year
+                        if algolia_from_year is not None
+                        else 2000
+                    ),
+                    to_year=algolia_to_year,
+                    workers=algolia_workers if algolia_workers > 0 else 1,
+                    delay=algolia_delay if algolia_delay > 0 else 0.5,
+                    force=algolia_force or sitemap_force,
+                    supercategories=algolia_supercategories,
+                    proxies=kwargs.get("proxies"),
+                    art_only=True,
+                )
+                # Prefer search hits in the in-memory merge list; full archive
+                # is streamed from JSONL in service.py.
+                if search_entries:
+                    by_key = {e.entity_key: e for e in entries if e.entity_id}
+                    for entry in search_entries:
+                        if entry.entity_id and entry.entity_key not in by_key:
+                            by_key[entry.entity_key] = entry
+                    entries = list(by_key.values())
+            except Exception as exc:
+                LOGGER.warning("barnebys search expansion skipped error=%s", exc)
+
+        return entries
 
     raise ValueError(f"no discovery implementation for auction house {spec.name!r}")

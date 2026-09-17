@@ -22,9 +22,9 @@ chunk_lines="${CHUNK_LINES:-1000000}"
 workers="${WORKERS:-8}"
 
 case "${auction_house}" in
-  invaluable|liveauctioneers|artcurial) ;;
+  invaluable|liveauctioneers|artcurial|barnebys) ;;
   *)
-    echo "usage: $0 invaluable|liveauctioneers|artcurial [YYYY-MM]" >&2
+    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys [YYYY-MM]" >&2
     exit 2
     ;;
 esac

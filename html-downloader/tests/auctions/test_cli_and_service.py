@@ -109,6 +109,25 @@ def test_cli_auction_discover_and_download_flags() -> None:
     assert ac_args.auction_house == "artcurial"
     assert ac_args.max_sales == 5
 
+    bm_args = parser.parse_args(
+        [
+            "auction",
+            "discover",
+            "--auction-house",
+            "barnebys",
+            "--max-sitemaps",
+            "8",
+            "--min-urls",
+            "100000",
+            "--sitemap-force",
+            "--incremental",
+        ]
+    )
+    assert bm_args.auction_house == "barnebys"
+    assert bm_args.max_sitemaps == 8
+    assert bm_args.min_urls == 100000
+    assert bm_args.sitemap_force is True
+
     # Defaults: Algolia on, artist-sold off
     defaults = parser.parse_args(
         ["auction", "discover", "--auction-house", "invaluable"]
@@ -281,6 +300,79 @@ def test_liveauctioneers_discover_writes_monthly_job(tmp_path: Path) -> None:
     assert meta["auction_house"] == "liveauctioneers"
     assert meta["url_count"] == 3
     assert (state_root / "auctions" / "liveauctioneers.json").is_file()
+
+
+def test_barnebys_discover_writes_monthly_job(tmp_path: Path) -> None:
+    entries = [
+        _entry(
+            "https://www.barnebys.com/auctions/lot/foo-AbC12De-1001",
+            "lot",
+            "1001",
+            None,
+        ),
+        _entry(
+            "https://www.barnebys.com/realized-prices/lot/foo-AbC12De-1001",
+            "result_lot",
+            "1001",
+            None,
+        ),
+    ]
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+    proxy_file = tmp_path / "proxy.txt"
+    proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
+
+    from html_downloader.auctions.barnebys_algolia import append_lot_cache, lot_cache_path
+    from html_downloader.auctions.paths import auction_sitemap_progress_file
+
+    progress_path = auction_sitemap_progress_file(state_root, "barnebys")
+    progress_path.parent.mkdir(parents=True, exist_ok=True)
+    append_lot_cache(
+        lot_cache_path(progress_path),
+        [
+            _entry(
+                "https://www.barnebys.com/auctions/lot/cached-XyZ99Ab-2002",
+                "lot",
+                "2002",
+                None,
+            ),
+            _entry(
+                "https://www.barnebys.com/auctions/lot/foo-AbC12De-1001",
+                "lot",
+                "1001",
+                None,
+            ),
+        ],
+    )
+
+    with patch(
+        "html_downloader.auctions.service.fetch_auction_entries",
+        return_value=entries,
+    ):
+        result = run_auction_discover(
+            auction_house="barnebys",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=False,
+            include_updates=True,
+            update_state=True,
+            proxy_file=str(proxy_file),
+            concurrency=1,
+            dry_run=False,
+            max_sitemaps=8,
+        )
+
+    job = result.job
+    assert job == data_root / "auctions" / "barnebys" / "2026-09"
+    urls = set((job / "urls.txt").read_text(encoding="utf-8").strip().splitlines())
+    assert "https://www.barnebys.com/auctions/lot/foo-AbC12De-1001" in urls
+    assert "https://www.barnebys.com/realized-prices/lot/foo-AbC12De-1001" in urls
+    assert "https://www.barnebys.com/auctions/lot/cached-XyZ99Ab-2002" in urls
+    assert result.all_count == 3
+    meta = json.loads((job / "metadata.json").read_text(encoding="utf-8"))
+    assert meta["auction_house"] == "barnebys"
+    assert (state_root / "auctions" / "barnebys.json").is_file()
 
 
 def test_artcurial_discover_writes_monthly_job(tmp_path: Path) -> None:

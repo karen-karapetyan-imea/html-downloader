@@ -8,7 +8,12 @@ from pathlib import Path
 
 from html_downloader.paths import DEFAULT_DATA_ROOT, DEFAULT_STATE_ROOT, PROJECT_ROOT
 
-AUCTION_HOUSES: tuple[str, ...] = ("invaluable", "liveauctioneers", "artcurial")
+AUCTION_HOUSES: tuple[str, ...] = (
+    "invaluable",
+    "liveauctioneers",
+    "artcurial",
+    "barnebys",
+)
 
 _MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
 

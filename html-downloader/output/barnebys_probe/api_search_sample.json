@@ -1,0 +1,2413 @@
+{
+  "hits": [
+    {
+      "id": "632129420",
+      "auctionHouse": {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "signed-landscape-oil-painting-AjwyNnv-632129420",
+      "affiliate": true,
+      "externalUrl": "https://www.liveauctioneers.com/item/239442980",
+      "imageUrl": "https://bbys.imgix.net/3529/d90bbe1755d660d3e964d6296948927ff2c1d76cbcaa2a14348a7a3b4c857a19.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "KS",
+      "city": "USIPS",
+      "title": "Signed Landscape Oil Painting",
+      "description": "Oil on board painting depicting a small cottage beside a pond, the landscape illuminated by the warm glow of the setting",
+      "createdAt": "2026-08-29T04:56:40.000Z",
+      "updatedAt": "2026-08-29T04:56:44.871Z",
+      "auctionEndDate": "2026-09-17T16:00:00.000Z",
+      "estimatePrice": 100,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.116667,
+        "longitude": 97.7
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100003,
+        "ahPositionInBucket": 0,
+        "interleaveWeight": 4,
+        "position": 0,
+        "score": 12.805256,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 79
+      }
+    },
+    {
+      "id": "632128999",
+      "auctionHouse": {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "bruce-tapola-crossroad-surrealist-painting-ATZ29DC-632128999",
+      "affiliate": true,
+      "externalUrl": "https://www.liveauctioneers.com/item/239441636",
+      "imageUrl": "https://bbys.imgix.net/3529/f95f6874b28c0584544c01dd1ce32072a6e118880e60010b6b23c9c2c6fe8474.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "KS",
+      "city": "USIPS",
+      "title": "Bruce Tapola \"Crossroad\" Surrealist Painting",
+      "description": "Bruce Tapola (American, b. 1956). Oil on canvas painting titled \"Crossroad,\" depicting a surrealist apocalyptic-style",
+      "createdAt": "2026-08-29T04:48:06.000Z",
+      "updatedAt": "2026-08-29T04:48:11.735Z",
+      "auctionEndDate": "2026-09-16T16:00:00.000Z",
+      "estimatePrice": 1000,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.116667,
+        "longitude": 97.7
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100003,
+        "ahPositionInBucket": 0,
+        "interleaveWeight": 4,
+        "position": 1,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632129107",
+      "auctionHouse": {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "frank-howell-canyon-plants-painting-icJZmwZ-632129107",
+      "affiliate": true,
+      "externalUrl": "https://www.liveauctioneers.com/item/239441745",
+      "imageUrl": "https://bbys.imgix.net/3529/7255a1940d9712a1429cdae0bf5377a3a97617a6a18b4be091469e1c01f310d8.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "KS",
+      "city": "USIPS",
+      "title": "Frank Howell \"Canyon Plants\" Painting",
+      "description": "Frank Howell (Lakota Sioux, 1937-1997). Acrylic on canvas painting titled \"Canyon Plants,\" 1981. Depicting a portrait of a",
+      "createdAt": "2026-08-29T04:50:16.000Z",
+      "updatedAt": "2026-08-29T04:50:22.740Z",
+      "auctionEndDate": "2026-09-16T16:00:00.000Z",
+      "estimatePrice": 2000,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.116667,
+        "longitude": 97.7
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100003,
+        "ahPositionInBucket": 0,
+        "interleaveWeight": 4,
+        "position": 2,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632129167",
+      "auctionHouse": {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "patrick-bradley-alexandria-acrylic-painting-VBFBVQQ-632129167",
+      "affiliate": true,
+      "externalUrl": "https://www.liveauctioneers.com/item/239442738",
+      "imageUrl": "https://bbys.imgix.net/3529/9bcb66226a36b4e8520e84d8f4d71ef55a938ccb0252c2d60a4c65ffe6b077ac.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "KS",
+      "city": "USIPS",
+      "title": "Patrick Bradley \"Alexandria\" Acrylic Painting",
+      "description": "Patrick Bradley (American, 20th/21st c). Acrylic on canvas painting titled \"Alexandria\" depicting patterned small squares",
+      "createdAt": "2026-08-29T04:51:29.000Z",
+      "updatedAt": "2026-08-29T04:51:30.902Z",
+      "auctionEndDate": "2026-09-17T16:00:00.000Z",
+      "estimatePrice": 100,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.116667,
+        "longitude": 97.7
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100003,
+        "ahPositionInBucket": 0,
+        "interleaveWeight": 4,
+        "position": 3,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632578904",
+      "auctionHouse": {
+        "id": 197,
+        "name": "Morphy Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "branding-cows-painting-of-wooden-sign-tDegwuh-632578904",
+      "affiliate": true,
+      "externalUrl": "http://auctions.morphyauctions.com/BRANDING_COWS_PAINTING_OF_WOODEN_SIGN-LOT678565.aspx",
+      "imageUrl": "https://bbys.imgix.net/197/4bb0a3f3a04eb5c68a4cd58e91fda67fe09e22def5ec16b827f2153a52861459.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "PA",
+      "city": "USQV2",
+      "title": "BRANDING COWS PAINTING OF WOODEN SIGN",
+      "description": "BRANDING COWS PAINTING OF WOODEN SIGN Hand-painted on plywood sign depicting a chuck wagon marked \"66\", with the cook working by the fire, three cowboys branding a calf. Very brightly-colored and detailed cattle in the background with great scenery. The wooden frame is original and has original old green paint with several holes throughout for mounting. This is a very heavy piece. Possibly circa 1960s, used in hotels, restaurants, ranch homes, a very iconic piece. CONDITION: Overall good condition with some paint loss throughout, some chips and some scuffs consistent with age. A very nice piece. This is not a standard shippable item and will require 3rd party shipping or pickup arrangements to be made. Condition: (Good). Item Dimensions: 40\" X 120\", This is not a standard shippable item and will require 3rd party shipping or pickup arrangements to be made. Condition:, Item Dimensions:",
+      "createdAt": "2026-09-13T08:57:34.000Z",
+      "updatedAt": "2026-09-13T08:57:36.507Z",
+      "auctionEndDate": "2026-10-16T13:00:00.000Z",
+      "estimatePrice": 1500,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7,
+        "longitude": 78
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100009,
+        "ahPositionInBucket": 1,
+        "interleaveWeight": 3,
+        "position": 4,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632082780",
+      "auctionHouse": {
+        "id": 197,
+        "name": "Morphy Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "garage-hand-painted-wood-sign-hb8Y39G-632082780",
+      "affiliate": true,
+      "externalUrl": "http://auctions.morphyauctions.com/GARAGE_HAND_PAINTED_WOOD_SIGN-LOT673981.aspx",
+      "imageUrl": "https://bbys.imgix.net/197/6dd867189592763f5123f6d369f5cd66bcfab5dce39ca839b32fdcbb59d19c89.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "PA",
+      "city": "USQV2",
+      "title": "GARAGE HAND PAINTED WOOD SIGN",
+      "description": "GARAGE HAND PAINTED WOOD SIGN Double Sided Hand Painted Wood, C. 1920s. CONDITION: Showing an excellent original patina throughout each side with no notable damage. Light areas of surface wear with minimal wear at the outer edges. Original hanging hooks intact on the topside. A well displaying all original example. Condition: (ORIGINAL). Item Dimensions: 23 - 1/4\" x 5 - 1/2\" x 3/4\". Condition:, Item Dimensions:",
+      "createdAt": "2026-08-27T08:02:08.000Z",
+      "updatedAt": "2026-09-15T07:50:17.720Z",
+      "auctionEndDate": "2026-10-04T13:00:00.000Z",
+      "estimatePrice": 500,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7,
+        "longitude": 78
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100009,
+        "ahPositionInBucket": 1,
+        "interleaveWeight": 3,
+        "position": 5,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632082707",
+      "auctionHouse": {
+        "id": 197,
+        "name": "Morphy Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "no-parking-hand-painted-wood-sign-uBfTHmu-632082707",
+      "affiliate": true,
+      "externalUrl": "http://auctions.morphyauctions.com/NO_PARKING_HAND_PAINTED_WOOD_SIGN-LOT677204.aspx",
+      "imageUrl": "https://bbys.imgix.net/197/c1c6745e4ff8ff4f92958394ad71051abda9394dd508e04266b3a69d78b05499.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "PA",
+      "city": "USQV2",
+      "title": "NO PARKING HAND PAINTED WOOD SIGN",
+      "description": "NO PARKING HAND PAINTED WOOD SIGN Single Sided Hand Painted Wood Sign. C. 1920s. CONDITION: Excellent color throughout showing \"No Parking\" in bold script with cream backing color. Exceptional original patina throughout with some minor wear at the mounting holes. Light wear along the outer edges with original eye hooks at the topside for hanging. An excellent displaying example. Condition: (ORIGINAL). Item Dimensions: 24 - 1/4\" x 10 - 3/8\" x 3/4\". Condition:, Item Dimensions:",
+      "createdAt": "2026-08-27T06:01:25.000Z",
+      "updatedAt": "2026-09-15T07:50:17.584Z",
+      "auctionEndDate": "2026-10-04T13:00:00.000Z",
+      "estimatePrice": 200,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7,
+        "longitude": 78
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100009,
+        "ahPositionInBucket": 1,
+        "interleaveWeight": 3,
+        "position": 6,
+        "score": 11.994162,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 74
+      }
+    },
+    {
+      "id": "632594544",
+      "auctionHouse": {
+        "id": 462,
+        "name": "Clarke Auction Gallery",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "unsigned-framed-pastel-painting-xUu6rtV-632594544",
+      "affiliate": true,
+      "externalUrl": "https://clarkeny.com/auctions/?a=361&search=lot 213",
+      "imageUrl": "https://bbys.imgix.net/462/cf8de55c698510cb9db6cbf95fcf79cdf3441ea6a1cfee7cc6ba3488a4bde520.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "NY",
+      "city": "USNYC",
+      "title": "UNSIGNED Framed Pastel Painting.",
+      "description": "Ladies and flowers. Large, very well executed, glazed. From a Glen Head LI estate. Dimensions: 41\" x 28\" Frame 45\" x 31\" Condition: Good, not examined out of glass. Dimensions:, Condition:, Ladies and flowers. Large, very well executed, glazed. From a Glen Head LI estate. Dimensions: 41\" x 28\" Frame 45\" x 31\" Condition: Good, not examined out of glass. Est: $100.00 - $1,000.00",
+      "createdAt": "2026-09-14T14:43:34.000Z",
+      "updatedAt": "2026-09-14T14:43:45.911Z",
+      "auctionEndDate": "2026-09-22T17:00:00.000Z",
+      "estimatePrice": 100,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7128,
+        "longitude": -74.006
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100011,
+        "ahPositionInBucket": 2,
+        "interleaveWeight": 3,
+        "position": 7,
+        "score": 12.8649025,
+        "matchedFields": [
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 80
+      }
+    },
+    {
+      "id": "631658390",
+      "auctionHouse": {
+        "id": 462,
+        "name": "Clarke Auction Gallery",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "illegibly-landscape-oil-painting-EpcFg7m-631658390",
+      "affiliate": true,
+      "externalUrl": "https://clarkeny.com/auctions/?a=361&search=lot 129",
+      "imageUrl": "https://bbys.imgix.net/462/ac8bcd7fbe8eb3262f5fce17f254443dce996b654fec991f081afc9f9c562efd.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "NY",
+      "city": "USNYC",
+      "title": "Illegibly. Landscape Oil Painting.",
+      "description": "Hudson River Waterfall Scene. Oil on canvas affixed to masonite board. Pelham, NY collection. Dimensions: 24\" x 19.75\" & Frame 27.5\" x 23.5\" Condition: Good. Dimensions:, Condition:, Hudson River Waterfall Scene. Oil on canvas affixed to masonite board. Pelham, NY collection. Dimensions: 24\" x 19.75\" & Frame 27.5\" x 23.5\" Condition: Good. Est: $100.00 - $1,000.00",
+      "createdAt": "2026-08-10T22:51:03.000Z",
+      "updatedAt": "2026-09-14T14:42:02.979Z",
+      "auctionEndDate": "2026-09-22T17:00:00.000Z",
+      "estimatePrice": 100,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7128,
+        "longitude": -74.006
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100011,
+        "ahPositionInBucket": 2,
+        "interleaveWeight": 3,
+        "position": 8,
+        "score": 12.805256,
+        "matchedFields": [
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 79
+      }
+    },
+    {
+      "id": "631315655",
+      "auctionHouse": {
+        "id": 462,
+        "name": "Clarke Auction Gallery",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "unsigned-watercolor-still-life-painting-3wXFPE9-631315655",
+      "affiliate": true,
+      "externalUrl": "https://clarkeny.com/auctions/?a=361&search=lot 57",
+      "imageUrl": "https://bbys.imgix.net/462/ea866834717652f6c7ac6633fe80070d86c41bf886a0699e184e340e695a27a0.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "NY",
+      "city": "USNYC",
+      "title": "UNSIGNED Watercolor Still Life Painting.",
+      "description": "Watercolor, still life of fruit. Apparently unsigned, framed behind glass. From a Harrison NY estate. Dimensions: 14\" x 19\" & Frame: 20\" x 25\" Condition: Small tear upper rt not examined out of frame. Dimensions:, Condition:, Watercolor, still life of fruit. Apparently unsigned, framed behind glass. From a Harrison NY estate. Dimensions: 14\" x 19\" & Frame: 20\" x 25\" Condition: Small tear upper rt not examined out of frame. Est: $100.00 - $1,000.00",
+      "createdAt": "2026-07-27T12:13:26.000Z",
+      "updatedAt": "2026-09-14T14:41:19.745Z",
+      "auctionEndDate": "2026-09-22T17:00:00.000Z",
+      "estimatePrice": 100,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7128,
+        "longitude": -74.006
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100011,
+        "ahPositionInBucket": 2,
+        "interleaveWeight": 3,
+        "position": 9,
+        "score": 11.994162,
+        "matchedFields": [
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 74
+      }
+    },
+    {
+      "id": "631914137",
+      "auctionHouse": {
+        "id": 1483,
+        "name": "Hunt Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "steve-carlton-signed-inscribed-hand-painted-m6S29s5-631914137",
+      "affiliate": true,
+      "externalUrl": "https://huntauctions.com/phone/imageviewer.cfm?auction_num=237&lot_num=468",
+      "imageUrl": "https://bbys.imgix.net/1483/2c868574318cf39cc729dd999f4066bf7daddbb9103ce1f4c2ebbfe3f5947358.jpg",
+      "category": "22",
+      "categoryName": "Sports & Leisure",
+      "locale": "us",
+      "country": "US",
+      "region": "PA",
+      "city": "USQV2",
+      "title": "Steve Carlton signed & inscribed hand painted...",
+      "description": "Steve Carlton signed & inscribed hand painted Philadelphia Phillies helmet by Gregg Packer - JSA (EX/MT). Vintage full size Phillies souvenir helmet (c.1970s) with an image of Carlton painted on the exterior and signed by artist Gregg Packer. The brim is signed by Carlton in black marker with \"1972 Season\" \"27 W's - 10 Losses\" inscription. Signature rates 9 out of 10. JSA serial #ed sticker is on the helmet. Minor surface wear: EX/MT",
+      "createdAt": "2026-08-21T00:32:41.000Z",
+      "updatedAt": "2026-09-16T00:11:31.231Z",
+      "auctionEndDate": "2026-09-17T04:59:00.000Z",
+      "estimatePrice": 145,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7,
+        "longitude": 78
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100012,
+        "ahPositionInBucket": 3,
+        "interleaveWeight": 2,
+        "position": 10,
+        "score": 11.335596,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 70
+      }
+    },
+    {
+      "id": "631915416",
+      "auctionHouse": {
+        "id": 1483,
+        "name": "Hunt Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "ty-cobb-original-painting-by-mike-schacht-nm-X9nmDFM-631915416",
+      "affiliate": true,
+      "externalUrl": "https://huntauctions.com/phone/imageviewer.cfm?auction_num=237&lot_num=774",
+      "imageUrl": "https://bbys.imgix.net/1483/abfc0732800e6f37a0069364cf1dd8bb381962eabdbdad70395c447e3f6747bd.jpg",
+      "category": "22",
+      "categoryName": "Sports & Leisure",
+      "locale": "us",
+      "country": "US",
+      "region": "PA",
+      "city": "USQV2",
+      "title": "Ty Cobb original painting by Mike Schacht (NM)",
+      "description": "Ty Cobb original painting by Mike Schacht (NM). Appealing grayscale portrait of Cobb as a member of the Detroit Tigers is done in acrylic on canvas. Signed \"M Schacht\" in the upper left. Mounted within 23\"x23\" showbox for display: NM",
+      "createdAt": "2026-08-21T00:47:23.000Z",
+      "updatedAt": "2026-09-09T00:17:57.067Z",
+      "auctionEndDate": "2026-09-17T04:59:00.000Z",
+      "estimatePrice": 237,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7,
+        "longitude": 78
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100012,
+        "ahPositionInBucket": 3,
+        "interleaveWeight": 2,
+        "position": 11,
+        "score": 10.645561,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 66
+      }
+    },
+    {
+      "id": "632318086",
+      "auctionHouse": {
+        "id": 3059,
+        "name": "Blackwell Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "van-dieghem-pastoral-painting-SqUcWzR-632318086",
+      "affiliate": true,
+      "externalUrl": "https://blackwellauctions.hibid.com/lot/320789128/",
+      "imageUrl": "https://bbys.imgix.net/3059/f4362a07f1c72af3ddd747eefe13cd178473aea8b31a1014da5f6d48a1e045ed.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "FL",
+      "city": "USCLW",
+      "title": "VAN DIEGHEM Pastoral Painting",
+      "description": "Oil on board painting featuring sheep and chickens in a grassy landscape, signed lower left \"Van Dieghem\"and dated 1871, artist is likely Jacob Van Diegham (Belgium, 1843-1885), although the label on the frame reads \"P. H. Von Dieghem\". Image mea res 6\" x 7-1/2\" frame measures 12\" x 13\". Some staining on surface, crease down the center, some losses to frame, see images for more details on condition. shipping info This item can be shipped in-house. Multiple lot combined shipping may require 3rd Party shipping.",
+      "createdAt": "2026-09-05T00:04:56.000Z",
+      "updatedAt": "2026-09-05T00:05:29.752Z",
+      "auctionEndDate": "2026-09-20T04:59:00.000Z",
+      "estimatePrice": 200,
+      "currency": "USD",
+      "location": {
+        "latitude": 46.016667,
+        "longitude": 115.883333
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100013,
+        "ahPositionInBucket": 4,
+        "interleaveWeight": 2,
+        "position": 12,
+        "score": 13.734009,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 85
+      }
+    },
+    {
+      "id": "632317943",
+      "auctionHouse": {
+        "id": 3059,
+        "name": "Blackwell Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "henri-maik-lion-painting-SKiKyjV-632317943",
+      "affiliate": true,
+      "externalUrl": "https://blackwellauctions.hibid.com/lot/320788985/",
+      "imageUrl": "https://bbys.imgix.net/3059/d1fdfdb2513d9b94aec7b8f6b76835e34a0bb99fe250f0203d201e6758b5925c.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "FL",
+      "city": "USCLW",
+      "title": "HENRI MAIK Lion Painting",
+      "description": "Oil on canvas painting featuring a lion and lion cub surrounded by stylized plants, signed lower left and dated 1984, by Henri Maik (French, 1922-1993). Canvas measures 9-1/2\" x 7-1/2\" frame measures 19\" x 17\". See images for more details on cond ion. shipping info This item can be shipped in-house. Multiple lot combined shipping may require 3rd Party shipping.",
+      "createdAt": "2026-09-05T00:04:08.000Z",
+      "updatedAt": "2026-09-05T00:05:13.773Z",
+      "auctionEndDate": "2026-09-20T04:59:00.000Z",
+      "estimatePrice": 4000,
+      "currency": "USD",
+      "location": {
+        "latitude": 46.016667,
+        "longitude": 115.883333
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100013,
+        "ahPositionInBucket": 4,
+        "interleaveWeight": 2,
+        "position": 13,
+        "score": 12.8649025,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 80
+      }
+    },
+    {
+      "id": "522698943",
+      "auctionHouse": {
+        "id": 3201,
+        "name": "Louis Wine LTD",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "swiss-gold-painted-miniature-c-1800-attributed-anton-graff-f7EwDzM-522698943",
+      "affiliate": true,
+      "externalUrl": "https://louiswine.com/products/swiss-gold-painted-miniature-c-1800-attributed-anton-graff",
+      "imageUrl": "https://bbys.imgix.net/3201/8b0c91301adb72184ca1f136d1a671b767852df99c3844c2f5a2cb2745a37c5c.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "CA",
+      "region": "ON",
+      "city": "CATOR",
+      "title": "Swiss Gold Painted Miniature C.1800 attributed Anton Graff.",
+      "description": "Antique Portrait Miniature original bevelled crystal, Swiss, C.1800, attrib Anton Graff, depicting a boy with pull toy and orange tree, foliate gold (tests as 18K)frame (minor solder at reverse), fitted box. Anton Graff (1736-1813) was among the most talented portrait artists of Goethe's era. He was known for his sensitive portraits of the nobility and wealthy bourgeois and is considered to have been a forerunner of realism. Measures: 1.75 x 1.50 inches. Ref: Skinners Fine Jewelry 2007 sold US$2350. Antique Portrait Miniature original bevelled crystal, Swiss, C.1800, attrib Anton Graff, depicting a boy with pull toy and orange tree, foliate gold (tests as 18K)frame (minor solder at reverse), fitted box. Anton Graff (1736-1813) was among the most talented portrait artists of Goethe's era. He was known for his sensitive portraits of the nobility and wealthy bourgeois and is considered to have been a forerunner of realism. Measures: 1.75 x 1.50 inches. Ref: Skinners Fine Jewelry 2007 sold US$2350",
+      "createdAt": "2020-11-18T15:53:31.000Z",
+      "updatedAt": "2026-09-13T02:47:51.056Z",
+      "auctionEndDate": "2026-09-23T00:58:42.000Z",
+      "estimatePrice": 2850,
+      "currency": "USD",
+      "location": {
+        "latitude": 43.6532,
+        "longitude": -79.3832
+      },
+      "auction_type": "fixed_price",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100015,
+        "ahPositionInBucket": 5,
+        "interleaveWeight": 2,
+        "position": 14,
+        "score": 9.620205,
+        "matchedFields": [
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 60
+      }
+    },
+    {
+      "id": "522697373",
+      "auctionHouse": {
+        "id": 3201,
+        "name": "Louis Wine LTD",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "antique-18-karat-artists-paint-palette-tools-brooch-circa-1900-bsTACyU-522697373",
+      "affiliate": true,
+      "externalUrl": "https://louiswine.com/products/antique-18-karat-artist-s-paint-palette-tools-brooch-circa-1900",
+      "imageUrl": "https://bbys.imgix.net/3201/66c6b74ac6018e3e9c142dd6fd4040ee91faca7ceb358744e6e20b3940e3cd0e.jpg",
+      "category": "11",
+      "categoryName": "Jewelry & Gems",
+      "locale": "us",
+      "country": "CA",
+      "region": "ON",
+      "city": "CATOR",
+      "title": "Antique 18 Karat Artist\u2019s Paint Palette Tools Brooch, circa 1900",
+      "description": "Antique 18K custom artist\u2019s paint palette and tools Brooch, C.1900. The brooch of curvilinear form and accented with six individually milligrain collet set gemstones: old cushion cut diamond, approximately 0.30 ct, cabochon ruby, sapphire, opals and emerald. The palette is further fitted with two realistically modelled paint brushes and a maul stick with natural pearl. Measures: 1.63 x 1.13 inches. Item Weight: 15.95 grams. Antique 18K custom artist\u2019s paint palette and tools Brooch, C.1900. The brooch of curvilinear form and accented with six individually milligrain collet set gemstones: old cushion cut diamond, approximately 0.30 ct, cabochon ruby, sapphire, opals and emerald. The palette is further fitted with two realistically modelled paint brushes and a maul stick with natural pearl. Measures: 1.63 x 1.13 inches. Item Weight: 15.95 grams",
+      "createdAt": "2020-11-18T15:43:17.000Z",
+      "updatedAt": "2026-09-13T02:04:07.633Z",
+      "auctionEndDate": "2026-09-23T00:58:42.000Z",
+      "estimatePrice": 0,
+      "currency": "USD",
+      "location": {
+        "latitude": 43.6532,
+        "longitude": -79.3832
+      },
+      "auction_type": "fixed_price",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100015,
+        "ahPositionInBucket": 5,
+        "interleaveWeight": 2,
+        "position": 15,
+        "score": 9.109227,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 56
+      }
+    },
+    {
+      "id": "632126858",
+      "auctionHouse": {
+        "id": 3433,
+        "name": "BILLINGS",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "abstract-drip-painting-K9zUmUd-632126858",
+      "affiliate": true,
+      "externalUrl": "https://bid.billingsauction.com/online-auctions/billings/abstract-drip-painting-9688833",
+      "imageUrl": "https://bbys.imgix.net/3433/79583b61b2edf7fd9d6c3742b810d38bcc53176fcb2fcc29a4ff6f3fe2020725.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "CA",
+      "city": "USLAX",
+      "title": "Abstract, Drip Painting",
+      "description": "ABSTRACT Large drip painting, 1960s Oil, canvas. Signed 'Totaro'.",
+      "createdAt": "2026-08-29T00:34:46.000Z",
+      "updatedAt": "2026-08-29T00:34:46.764Z",
+      "auctionEndDate": "2026-09-20T07:59:00.000Z",
+      "estimatePrice": 800,
+      "currency": "USD",
+      "location": {
+        "latitude": 34.0522,
+        "longitude": -118.2437
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100017,
+        "ahPositionInBucket": 6,
+        "interleaveWeight": 1,
+        "position": 16,
+        "score": 13.734009,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 85
+      }
+    },
+    {
+      "id": "631989766",
+      "auctionHouse": {
+        "id": 3473,
+        "name": "Artemis Fine Arts",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "mycenaean-painted-stirrup-jar-argolid-greece-9BNkRvS-631989766",
+      "affiliate": true,
+      "externalUrl": "https://auctions.artemisgallery.com/auction-lot/mycenaean-painted-stirrup-jar-argolid-greece/8004ab599d",
+      "imageUrl": "https://bbys.imgix.net/3473/0e46970431c45442ed511c95f730c4f6133fee5a705ac14eae09c3c8c43c31ad.jpg",
+      "category": "19",
+      "categoryName": "Porcelain & Pottery",
+      "locale": "us",
+      "country": "US",
+      "region": "CO",
+      "city": "USLUE",
+      "title": "Mycenaean Painted Stirrup Jar, Argolid Greece",
+      "description": "Aegean, Greece, Mycenaean. A broad-shouldered vessel of buff terracotta whose ingenious plumbing announces its purpose: a solid false neck capped by a disc, flanked by two arching strap handles, with the true spout set apart on the shoulder so that precious liquid could be poured in a controlled trickle and stoppered without loss. Encircling bands of lustrous brown slip sweep across the depressed globular body, gathering density toward the base, while the shoulder carries chevron-like curvilinear arcs with hatched edging. Stirrup jars of this form were the standard shipping container of the Mycenaean world, carrying perfumed oil and wine from Argolid workshops across the Aegean and into Egypt and the Levant. Their design is functional poetry, engineered for sealing, stacking, and the long haul of maritime trade. The stirrup jar (Greek pseudostomos amphoreus, \"false-mouthed amphora\") is the type fossil of Late Helladic commerce. Linear B tablets from Knossos and Pylos record the oil industry these vessels served, and inscribed coarse-ware examples found at Thebes and in Cyprus preserve place names and personal names in the same script, making the humble container one of the few Bronze Age objects that occasionally speaks. Argolid workshops around Mycenae and Berbati were the dominant exporters, and their products turn up from Sardinia to Ugarit, tracing the reach of a palace economy that vanished with the collapse of the twelfth century BCE. This item is a dropship lot and will ship directly from the consignor's location. All condition, dimension, material, and chemical composition data reflect consignor-supplied information. This item is a dropship lot and will ship directly from the consignor's location. All condition, dimension, material, and chemical composition data reflect consignor-supplied information. Item # 204259",
+      "createdAt": "2026-08-22T23:03:43.000Z",
+      "updatedAt": "2026-08-29T01:25:17.857Z",
+      "auctionEndDate": "2026-09-17T04:59:00.000Z",
+      "estimatePrice": 2000,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.2639,
+        "longitude": -103.6922
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100018,
+        "ahPositionInBucket": 7,
+        "interleaveWeight": 1,
+        "position": 17,
+        "score": 11.279694,
+        "matchedFields": [
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 70
+      }
+    },
+    {
+      "id": "632129267",
+      "auctionHouse": {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "armond-lara-the-poet-painting-1988-Muuvwp2-632129267",
+      "affiliate": true,
+      "externalUrl": "https://www.liveauctioneers.com/item/239442829",
+      "imageUrl": "https://bbys.imgix.net/3529/27612f8ad6087ede811bb2487f14435fa65355732665efc1dbdef8a96772f25e.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "KS",
+      "city": "USIPS",
+      "title": "Armond Lara \"The Poet\" Painting 1988",
+      "description": "Armond Lara (Navajo/Mexican, b. 1939). Large oil on canvas painting titled \"The Poet,\" 1988. Signed and dated along the",
+      "createdAt": "2026-08-29T04:53:27.000Z",
+      "updatedAt": "2026-08-29T04:53:32.549Z",
+      "auctionEndDate": "2026-09-17T16:00:00.000Z",
+      "estimatePrice": 500,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.116667,
+        "longitude": 97.7
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100003,
+        "ahPositionInBucket": 0,
+        "interleaveWeight": 4,
+        "position": 18,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632129280",
+      "auctionHouse": {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "surrealist-figurative-oil-painting-1978-e8zLYvZ-632129280",
+      "affiliate": true,
+      "externalUrl": "https://www.liveauctioneers.com/item/239442842",
+      "imageUrl": "https://bbys.imgix.net/3529/4cba83993555b63732e2ac11d09c06593dfab32574137fae248ca382ef95bfb8.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "KS",
+      "city": "USIPS",
+      "title": "Surrealist Figurative Oil Painting 1978",
+      "description": "Oil on board painting depicting surrealist motifs, 1978. Pencil inscribed \"Protestant, 1978, September, A New Order, Matthew",
+      "createdAt": "2026-08-29T04:53:42.000Z",
+      "updatedAt": "2026-08-29T04:53:45.619Z",
+      "auctionEndDate": "2026-09-17T16:00:00.000Z",
+      "estimatePrice": 300,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.116667,
+        "longitude": 97.7
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100003,
+        "ahPositionInBucket": 0,
+        "interleaveWeight": 4,
+        "position": 19,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632129297",
+      "auctionHouse": {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "william-elmer-johnson-townscape-painting-BWknWUj-632129297",
+      "affiliate": true,
+      "externalUrl": "https://www.liveauctioneers.com/item/239442859",
+      "imageUrl": "https://bbys.imgix.net/3529/3afa50d8530f41303bf36b5b2a2b5ecfa1293c1ca8e884884592963553a5e105.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "KS",
+      "city": "USIPS",
+      "title": "William Elmer Johnson Townscape Painting",
+      "description": "William Elmer Johnson (American, 1925-2003). Oil on canvas American Regionalist townscape painting, mid-20th century.",
+      "createdAt": "2026-08-29T04:54:06.000Z",
+      "updatedAt": "2026-08-29T04:54:08.858Z",
+      "auctionEndDate": "2026-09-17T16:00:00.000Z",
+      "estimatePrice": 400,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.116667,
+        "longitude": 97.7
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100003,
+        "ahPositionInBucket": 0,
+        "interleaveWeight": 4,
+        "position": 20,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632129309",
+      "auctionHouse": {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "henry-schnakenberg-beach-at-montauk-painting-n28g5GL-632129309",
+      "affiliate": true,
+      "externalUrl": "https://www.liveauctioneers.com/item/239442871",
+      "imageUrl": "https://bbys.imgix.net/3529/8618affa43b28dbef08d5298d5550a8fe808603c685ac2fafb4dd9a5e9eb5cd5.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "KS",
+      "city": "USIPS",
+      "title": "Henry Schnakenberg \"Beach at Montauk\" Painting",
+      "description": "Henry Ernest Schnakenberg (American, 1892-1970). Watercolor on paper painting titled \"The Beach at Montauk.\" Depicting a",
+      "createdAt": "2026-08-29T04:54:21.000Z",
+      "updatedAt": "2026-08-29T04:54:24.011Z",
+      "auctionEndDate": "2026-09-17T16:00:00.000Z",
+      "estimatePrice": 400,
+      "currency": "USD",
+      "location": {
+        "latitude": 39.116667,
+        "longitude": 97.7
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100003,
+        "ahPositionInBucket": 0,
+        "interleaveWeight": 4,
+        "position": 21,
+        "score": 12.0519285,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 75
+      }
+    },
+    {
+      "id": "632083832",
+      "auctionHouse": {
+        "id": 197,
+        "name": "Morphy Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "binns-painted-metal-neon-sign-7in9eZJ-632083832",
+      "affiliate": true,
+      "externalUrl": "http://auctions.morphyauctions.com/BINNS_PAINTED_METAL_NEON_SIGN-LOT674814.aspx",
+      "imageUrl": "https://bbys.imgix.net/197/1db60fd588012e42b01c4f2a83d8d571656379af7e640692b8536ca5dc2a6fcc.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "PA",
+      "city": "USQV2",
+      "title": "BINNS PAINTED METAL NEON SIGN",
+      "description": "BINNS PAINTED METAL NEON SIGN Single Sided Painted Metal Lettering for \"BINNS\" showing original painted surface with new neon as well as new metal display base. CONDITION: Neon is in excellent working condition showing tubing throughout the outer channels of each letter. Each letter showing moderate to heavy paint wear but displaying an excellent patina. Each letter mounted on metal base with upper metal strap appearing original to the piece. Overall unique and well displaying. This is not a standard shippable item and will require 3rd party shipping or pickup arrangements to be made. Condition: (Original). Item Dimensions: Approx: 192\" x 48\" x 10 - 1/4\". This is not a standard shippable item and will require 3rd party shipping or pickup arrangements to be made. Condition:, Item Dimensions:",
+      "createdAt": "2026-08-27T08:08:21.000Z",
+      "updatedAt": "2026-09-15T07:54:24.768Z",
+      "auctionEndDate": "2026-10-04T13:00:00.000Z",
+      "estimatePrice": 4000,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7,
+        "longitude": 78
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100009,
+        "ahPositionInBucket": 1,
+        "interleaveWeight": 3,
+        "position": 22,
+        "score": 11.994162,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 74
+      }
+    },
+    {
+      "id": "632578886",
+      "auctionHouse": {
+        "id": 197,
+        "name": "Morphy Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "wooden-colorful-painted-native-american-statue-Py3mdfs-632578886",
+      "affiliate": true,
+      "externalUrl": "http://auctions.morphyauctions.com/WOODEN_COLORFUL_PAINTED_NATIVE_AMERICAN_STATUE-LOT681254.aspx",
+      "imageUrl": "https://bbys.imgix.net/197/cb1a4b2839aa85c75f8b1aa6883e4f09b67d907d7c9b7b762bfa63a20272df93.jpg",
+      "category": "29",
+      "categoryName": "Ethnographic",
+      "locale": "us",
+      "country": "US",
+      "region": "PA",
+      "city": "USQV2",
+      "title": "WOODEN COLORFUL PAINTED NATIVE AMERICAN STATUE",
+      "description": "WOODEN COLORFUL PAINTED NATIVE AMERICAN STATUE A wooden cigar store carving of a Native American with original paint. This particular mid-century carving shows very nicely. CONDITION: There are areas of scuffs, scrapes, and dings consistent with age and application. Condition: (Good - Very Good). Item Dimensions: 24\" X 21\" X 73 - 1/2\", Condition:, Item Dimensions:",
+      "createdAt": "2026-09-13T08:56:20.000Z",
+      "updatedAt": "2026-09-13T08:56:21.889Z",
+      "auctionEndDate": "2026-10-16T13:00:00.000Z",
+      "estimatePrice": 500,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7,
+        "longitude": 78
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100009,
+        "ahPositionInBucket": 1,
+        "interleaveWeight": 3,
+        "position": 23,
+        "score": 11.335596,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 70
+      }
+    },
+    {
+      "id": "632578911",
+      "auctionHouse": {
+        "id": 197,
+        "name": "Morphy Auctions",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "cowboy-ranch-house-painting-on-wooden-sign-aBR7Zya-632578911",
+      "affiliate": true,
+      "externalUrl": "http://auctions.morphyauctions.com/COWBOY_RANCH_HOUSE_PAINTING_ON_WOODEN_SIGN-LOT678569.aspx",
+      "imageUrl": "https://bbys.imgix.net/197/63ef899467faa699cb8fd2b46fa66427c099d9f36fc3cbc8d017324beacfdadc.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "PA",
+      "city": "USQV2",
+      "title": "COWBOY RANCH HOUSE PAINTING ON WOODEN SIGN",
+      "description": "COWBOY RANCH HOUSE PAINTING ON WOODEN SIGN A large hand-painted Western mural depicting a log homestead on the American frontier with cowboy, logs, livestock, wagon wheel, mountain landscape, executed in oil on composition board and signed in the lower-left hand corner \"~P. Hutchins -50\". Retains its original green painted wooden frame with evidence of having been installed on a commercial decorative display or mural program. A well-executed mid-century Western scene with decorative appeal. CONDITION: Slight surface wear, with some scattered scuffs and abrasions. Age-related paint losses consistent with long-term commercial use. This is not a standard shippable item and will require 3rd party shipping or pickup arrangements to be made. Condition: (Very Good). Item Dimensions: 40\" X 96\", This is not a standard shippable item and will require 3rd party shipping or pickup arrangements to be made. Condition:, Item Dimensions:",
+      "createdAt": "2026-09-13T08:58:03.000Z",
+      "updatedAt": "2026-09-13T08:58:18.054Z",
+      "auctionEndDate": "2026-10-16T13:00:00.000Z",
+      "estimatePrice": 1000,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7,
+        "longitude": 78
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100009,
+        "ahPositionInBucket": 1,
+        "interleaveWeight": 3,
+        "position": 24,
+        "score": 11.335596,
+        "matchedFields": [
+          "desc_us",
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 70
+      }
+    },
+    {
+      "id": "631828129",
+      "auctionHouse": {
+        "id": 462,
+        "name": "Clarke Auction Gallery",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "orientalist-school-oil-paintings-2-works-qg9Jo8E-631828129",
+      "affiliate": true,
+      "externalUrl": "https://clarkeny.com/auctions/?a=361&search=lot 166",
+      "imageUrl": "https://bbys.imgix.net/462/b08d353b6f749051ffa047dedc3abaaac308003e06d1bb877a4c9ab8cafc679a.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "NY",
+      "city": "USNYC",
+      "title": "ORIENTALIST School Oil Paintings. [2 Works]",
+      "description": "One Souk scene, oil on board, signed Vethal 28 (9\"x10\" & Frame 14\"x12\"), and one Arab scout on horse, oil on wood (6.5\" x 4.5\" & Frame 12\"x10\"). From a Greenwich CT collector. Condition: Good. Condition:, One Souk scene, oil on board, signed Vethal 28 (9\"x10\" & Frame 14\"x12\"), and one Arab scout on horse, oil on wood (6.5\" x 4.5\" & Frame 12\"x10\"). From a Greenwich CT collector. Condition: Good. Est: $100.00 - $1,000.00",
+      "createdAt": "2026-08-16T13:05:38.000Z",
+      "updatedAt": "2026-09-14T14:42:22.091Z",
+      "auctionEndDate": "2026-09-22T17:00:00.000Z",
+      "estimatePrice": 100,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7128,
+        "longitude": -74.006
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100011,
+        "ahPositionInBucket": 2,
+        "interleaveWeight": 3,
+        "position": 25,
+        "score": 11.279694,
+        "matchedFields": [
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 70
+      }
+    },
+    {
+      "id": "632594572",
+      "auctionHouse": {
+        "id": 462,
+        "name": "Clarke Auction Gallery",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "m-f-monogrammed-framed-oil-paintings-3-works-XHgdyrE-632594572",
+      "affiliate": true,
+      "externalUrl": "https://clarkeny.com/auctions/?a=361&search=lot 225",
+      "imageUrl": "https://bbys.imgix.net/462/a4ca0da38a91be2fcd267323ed21e881f1fe364cf9e6945e18a71936ad1a2b69.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "NY",
+      "city": "USNYC",
+      "title": "M.F. Monogrammed Framed Oil Paintings [3 Works]",
+      "description": "All 3 monogrammed MF and glazed. From a Rye estate. From a Rye NY estate. Dimensions: 8.5\" x 4.75\" & Frame 8.25\" x 11.75\"; 5.5\" x 6.5\" & Frame 9.75\" x 11.25\" & 5.5\" x 4.5\" 11.25\" x 10.5\". Condition: Good, not examined out of frame. Condition:, All 3 monogrammed MF and glazed. From a Rye estate. From a Rye NY estate. Dimensions: 8.5\" x 4.75\" & Frame 8.25\" x 11.75\"; 5.5\" x 6.5\" & Frame 9.75\" x 11.25\" & 5.5\" x 4.5\" 11.25\" x 10.5\". Condition: Good, not examined out of frame. Est: $100.00 - $1,000.00",
+      "createdAt": "2026-09-14T14:43:57.000Z",
+      "updatedAt": "2026-09-14T14:43:58.958Z",
+      "auctionEndDate": "2026-09-22T17:00:00.000Z",
+      "estimatePrice": 100,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7128,
+        "longitude": -74.006
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100011,
+        "ahPositionInBucket": 2,
+        "interleaveWeight": 3,
+        "position": 26,
+        "score": 10.69964,
+        "matchedFields": [
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 66
+      }
+    },
+    {
+      "id": "631828135",
+      "auctionHouse": {
+        "id": 462,
+        "name": "Clarke Auction Gallery",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "unsigned-british-school-oil-paintings-2-works-XvotKEU-631828135",
+      "affiliate": true,
+      "externalUrl": "https://clarkeny.com/auctions/?a=361&search=lot 168",
+      "imageUrl": "https://bbys.imgix.net/462/3ba47b28627ae7319718e5eab70dcf9968b91f89f7acbf18a986f81e9a4dd063.jpg",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "US",
+      "region": "NY",
+      "city": "USNYC",
+      "title": "UNSIGNED British School Oil Paintings [2 Works]",
+      "description": "2 Oils on board. One Scottish school, The Fishwife (8.5\" x 10.5\" & frame 12\" x 14\"). The other British school Cottage on pond (5.5\" x 8.5\" & Frame 9\" x 12\"). From a Greenwich CT collection. Condition: Good. Condition:, 2 Oils on board. One Scottish school, The Fishwife (8.5\" x 10.5\" & frame 12\" x 14\"). The other British school Cottage on pond (5.5\" x 8.5\" & Frame 9\" x 12\"). From a Greenwich CT collection. Condition: Good. Est: $100.00 - $1,000.00",
+      "createdAt": "2026-08-16T13:05:41.000Z",
+      "updatedAt": "2026-09-14T14:42:23.603Z",
+      "auctionEndDate": "2026-09-22T17:00:00.000Z",
+      "estimatePrice": 100,
+      "currency": "USD",
+      "location": {
+        "latitude": 40.7128,
+        "longitude": -74.006
+      },
+      "auction_type": "auction",
+      "debugBucket": 1,
+      "_rankingInfo": {
+        "bucket": 1,
+        "effectiveBucket": 11,
+        "matchTier": 1,
+        "ahRankValue": 100011,
+        "ahPositionInBucket": 2,
+        "interleaveWeight": 3,
+        "position": 27,
+        "score": 10.645561,
+        "matchedFields": [
+          "title_us"
+        ],
+        "isLocal": true,
+        "isPaying": true,
+        "isUnderCap": true,
+        "scorePercent": 66
+      }
+    }
+  ],
+  "sponsored": [
+    {
+      "id": "632228683",
+      "auctionHouse": {
+        "id": 2986,
+        "name": "Dreweatts",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "l-erte-french-1892-1990-fashion-design-1925-FynSz5i-632228683",
+      "affiliate": true,
+      "externalUrl": "https://auctions.dreweatts.com/auctions/9779/drewea1-10688/lot-details/afe01173-2269-48d7-9fef-b4b200a94235",
+      "imageUrl": "https://bbys.imgix.net/2986/952bb663b3e16369a6d084890299dcf3f80c3ac087267480ea01beda2da42a4a.webp",
+      "category": "1",
+      "categoryName": "Arts & Graphics",
+      "locale": "us",
+      "country": "GB",
+      "region": "LND",
+      "city": "GBLON",
+      "title": "\u03bb ERT\u00c9 (FRENCH, 1892-1990), FASHION DESIGN, 1925",
+      "description": "\u03bb ERT\u00c9 (FRENCH, 1892-1990) FASHION DESIGN, 1925 Pen and ink Designed for Harper's Bazaar June 1925 issue Signed lower right; dated, numbered with studio and 'Composition originale' stamp and 'Page 75 /HARPER'S BAZAR/ Feature Ert\u00e9/ Issue June, Number 43/ 4-28-25' stamped and handwritten with various other notes in pencil verso 29cm x 23cm Provenance:Acquired directly from the artist and thence by descent The Russian-born French artist and designer Romain de Tirtoff, known universally as Ert\u00e9, was a defining pioneer of the Art Deco style. In 1915, he entered into a landmark exclusive collaboration with the premier American fashion magazine Harper's Bazar (now known as Harper's Bazaar after a name change in 1929/1930), a prolific creative partnership that famously spanned over two decades. Between 1915 and 1936, Ert\u00e9 shaped the visual landscape of modern luxury by designing over 240 covers and providing hundreds of interior fashion illustrations for the publication. The original production stamp preserved on the verso of the present lot details its preparation for the June 1925 issue. Received and processed by the editorial offices on 28 April 1925, the piece is recorded under inventory tracking number 43, registering its place in the publication's layout sequence. Condition Report Disclaimer, \u03bb, \u03bb ERT\u00c9 (FRENCH, 1892-1990) FASHION DESIGN, 1925 Pen and ink Designed for Harper's Bazaar June 1925 issue Signed lower right; dated, numbered with studio and 'Composition originale' stamp and 'Page 75 /HARPER'S BAZAR/ Feature Ert\u00e9/ Issue June, Number 43/ 4-28-25' stamped and handwritten with various other notes in pencil verso 29cm x 23cm, ERT\u00c9 (FRENCH, 1892-1990), Composition originale, 'Page 75 /HARPER'S BAZAR/ Feature Ert\u00e9, Issue, June, Number 43/ 4-28-25, 29cm x 23cm, Provenance:, Acquired directly from the artist and thence by descent, The Russian-born French artist and designer Romain de Tirtoff, known universally as Ert\u00e9, was a defining pioneer of the Art Deco style. In 1915, he entered into a landmark exclusive collaboration with the premier American fashion magazine Harper's Bazar (now known as Harper's Bazaar after a name change in 1929/1930), a prolific creative partnership that famously spanned over two decades. Between 1915 and 1936, Ert\u00e9 shaped the visual landscape of modern luxury by designing over 240 covers and providing hundreds of interior fashion illustrations for the publication. Ert\u00e9, was a defining pioneer of the Art Deco style. In 1915, he entered into a landmark exclusive collaboration with the premier American fashion magazine Harper's Bazar (now known as Harper's Bazaar after a name change in 1929/1930), a prolific creative partnership that famously spanned over two decades. Between 1915 and 1936, Harper's Bazar (, Harper's Bazaar, Ert\u00e9 shaped the visual landscape of modern luxury by designing over 240 covers and providing hundreds of interior fashion illustrations for the publication. The original production stamp preserved on the verso of the present lot details its preparation for the June 1925 issue. Received and processed by the editorial offices on 28 April 1925, the piece is recorded under inventory tracking number 43, registering its place in the publication's layout sequence. 43, Condition Report Disclaimer",
+      "createdAt": "2026-09-02T01:19:27.000Z",
+      "updatedAt": "2026-09-02T01:19:46.856Z",
+      "auctionEndDate": "2026-10-07T10:30:00.000Z",
+      "estimatePrice": 1081.04,
+      "currency": "USD",
+      "location": {
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "auction_type": "auction"
+    },
+    {
+      "id": "632273539",
+      "auctionHouse": {
+        "id": 39,
+        "name": "Christie's",
+        "paying": true,
+        "disabled": false
+      },
+      "uid": "a-pair-of-painted-pottery-figures-of-seated-female-musicians-TLf2As2-632273539",
+      "affiliate": true,
+      "externalUrl": "https://www.christies.com/lot/lot-6599601?cid=ms:lot|pl:BRNBY|lp:ldp|mt:con|ca:ASM|sn:24496",
+      "imageUrl": "https://bbys.imgix.net/39/f61eae3e94a149e7b1d9a1b23b00be737aa94e8ffbd430540afae66fa5cb30ca.jpg",
+      "category": "19",
+      "categoryName": "Porcelain & Pottery",
+      "locale": "us",
+      "country": "GB",
+      "region": "KEC",
+      "city": "GBCSE",
+      "title": "A Pair of Painted Pottery Figures of Seated Female Musicians",
+      "description": "One: 6 3\u20448 in. (16.3 cm.) high The other: 6 9\u204416 in. (16.7 cm.) high",
+      "createdAt": "2026-09-03T10:27:53.000Z",
+      "updatedAt": "2026-09-03T10:28:03.630Z",
+      "auctionEndDate": "2026-09-24T23:59:00.000Z",
+      "estimatePrice": 1500,
+      "currency": "USD",
+      "location": {
+        "latitude": 51.4833,
+        "longitude": -0.1667
+      },
+      "auction_type": "auction"
+    }
+  ],
+  "total": 20957,
+  "pages": 34,
+  "took": 330,
+  "aggregations": {
+    "auction_house": [
+      {
+        "id": 34,
+        "name": "Catawiki",
+        "count": 6381
+      },
+      {
+        "id": 2885,
+        "name": "Zatista",
+        "count": 5619
+      },
+      {
+        "id": 3845,
+        "name": "EASYLIVEAUCTION",
+        "count": 1083
+      },
+      {
+        "id": 442,
+        "name": "Vermot & Associ\u00e9s",
+        "count": 731
+      },
+      {
+        "id": 197,
+        "name": "Morphy Auctions",
+        "count": 675
+      },
+      {
+        "id": 3380,
+        "name": "Whitley's Auctioneers",
+        "count": 370
+      },
+      {
+        "id": 2548,
+        "name": "Everything But The House",
+        "count": 367
+      },
+      {
+        "id": 3529,
+        "name": "Revere Auctions",
+        "count": 343
+      },
+      {
+        "id": 207,
+        "name": "Tennants Auctioneers",
+        "count": 245
+      },
+      {
+        "id": 180,
+        "name": "Clars Auction Gallery",
+        "count": 224
+      },
+      {
+        "id": 97,
+        "name": "Koller",
+        "count": 194
+      },
+      {
+        "id": 3799,
+        "name": "Richard Stedman Estate Services",
+        "count": 186
+      },
+      {
+        "id": 3831,
+        "name": "Five Star Auctions",
+        "count": 185
+      },
+      {
+        "id": 3828,
+        "name": "Antique Kingdom Inc",
+        "count": 175
+      },
+      {
+        "id": 3830,
+        "name": "Prime Auction Gallery",
+        "count": 172
+      },
+      {
+        "id": 3782,
+        "name": "Mathewsons",
+        "count": 159
+      },
+      {
+        "id": 103,
+        "name": "Leland Little",
+        "count": 158
+      },
+      {
+        "id": 2986,
+        "name": "Dreweatts",
+        "count": 152
+      },
+      {
+        "id": 3826,
+        "name": "Auction Plus Inc",
+        "count": 152
+      },
+      {
+        "id": 157,
+        "name": "Toovey's",
+        "count": 141
+      },
+      {
+        "id": 3698,
+        "name": "Dane Fine Art",
+        "count": 138
+      },
+      {
+        "id": 35,
+        "name": "Cheffins",
+        "count": 117
+      },
+      {
+        "id": 3087,
+        "name": "Regent Antiques",
+        "count": 116
+      },
+      {
+        "id": 108,
+        "name": "Lyon & Turnbull",
+        "count": 115
+      },
+      {
+        "id": 29,
+        "name": "Bukowskis",
+        "count": 102
+      },
+      {
+        "id": 2317,
+        "name": "Hofer Antikschmuck",
+        "count": 102
+      },
+      {
+        "id": 3298,
+        "name": "Philip Carrol Antiques",
+        "count": 99
+      },
+      {
+        "id": 2289,
+        "name": "Wick Antiques",
+        "count": 98
+      },
+      {
+        "id": 1073,
+        "name": "Adam Partridge",
+        "count": 90
+      },
+      {
+        "id": 3314,
+        "name": "Ed Butcher",
+        "count": 83
+      },
+      {
+        "id": 3433,
+        "name": "BILLINGS",
+        "count": 81
+      },
+      {
+        "id": 3517,
+        "name": "500 Gallery",
+        "count": 76
+      },
+      {
+        "id": 1408,
+        "name": "Locati, LLC",
+        "count": 74
+      },
+      {
+        "id": 3093,
+        "name": "Elstob & Elstob",
+        "count": 69
+      },
+      {
+        "id": 3720,
+        "name": "William Smith Auctions",
+        "count": 64
+      },
+      {
+        "id": 3775,
+        "name": "Dore & Rees",
+        "count": 63
+      },
+      {
+        "id": 727,
+        "name": "Subasta Real",
+        "count": 61
+      },
+      {
+        "id": 1344,
+        "name": "Railtons",
+        "count": 61
+      },
+      {
+        "id": 3706,
+        "name": "Curated Auctions",
+        "count": 59
+      },
+      {
+        "id": 128,
+        "name": "Roseberys",
+        "count": 57
+      },
+      {
+        "id": 2665,
+        "name": "Crows Auction Gallery Ltd",
+        "count": 54
+      },
+      {
+        "id": 3446,
+        "name": "Celebrity Authentics Store",
+        "count": 54
+      },
+      {
+        "id": 3924,
+        "name": "Apollo Art Auctions",
+        "count": 53
+      },
+      {
+        "id": 3901,
+        "name": "Antikauktion Krefeld",
+        "count": 50
+      },
+      {
+        "id": 3696,
+        "name": "Art Research Paris",
+        "count": 44
+      },
+      {
+        "id": 39,
+        "name": "Christie's",
+        "count": 43
+      },
+      {
+        "id": 1056,
+        "name": "Whyte's",
+        "count": 43
+      },
+      {
+        "id": 145,
+        "name": "Stockholms Auktionsverk",
+        "count": 42
+      },
+      {
+        "id": 2916,
+        "name": "Ai Bo Gallery",
+        "count": 42
+      },
+      {
+        "id": 2955,
+        "name": "Fichter Kunsthandel e.K.",
+        "count": 41
+      },
+      {
+        "id": 28,
+        "name": "Bruun Rasmussen",
+        "count": 40
+      },
+      {
+        "id": 3059,
+        "name": "Blackwell Auctions",
+        "count": 39
+      },
+      {
+        "id": 3401,
+        "name": "London Fine Antiques",
+        "count": 39
+      },
+      {
+        "id": 3175,
+        "name": "C&T Auctioneers",
+        "count": 37
+      },
+      {
+        "id": 3473,
+        "name": "Artemis Fine Arts",
+        "count": 37
+      },
+      {
+        "id": 2695,
+        "name": "Bel-Air Fine Art",
+        "count": 35
+      },
+      {
+        "id": 3215,
+        "name": "Matthew Bullock Auctioneers",
+        "count": 30
+      },
+      {
+        "id": 778,
+        "name": "Arader Galleries",
+        "count": 29
+      },
+      {
+        "id": 3687,
+        "name": "Ols\u00e9ns Auktioner",
+        "count": 28
+      },
+      {
+        "id": 3558,
+        "name": "Paris Oise Ench\u00e8res",
+        "count": 27
+      },
+      {
+        "id": 329,
+        "name": "Rossini",
+        "count": 26
+      },
+      {
+        "id": 2793,
+        "name": "Canvas Gallery",
+        "count": 24
+      },
+      {
+        "id": 276,
+        "name": "Gray's Auctioneers and Appraisers",
+        "count": 23
+      },
+      {
+        "id": 544,
+        "name": "Kodner Galleries Inc.",
+        "count": 23
+      },
+      {
+        "id": 3967,
+        "name": "Rhoswens",
+        "count": 22
+      },
+      {
+        "id": 586,
+        "name": "Morand & Morand",
+        "count": 21
+      },
+      {
+        "id": 3851,
+        "name": "Mallet Japan",
+        "count": 21
+      },
+      {
+        "id": 130,
+        "name": "RR Auction",
+        "count": 20
+      },
+      {
+        "id": 3349,
+        "name": "Modern Gallery Stockholm",
+        "count": 20
+      },
+      {
+        "id": 3889,
+        "name": "Wetterling Gallery",
+        "count": 20
+      },
+      {
+        "id": 1232,
+        "name": "Stevens Auction Company",
+        "count": 19
+      },
+      {
+        "id": 2736,
+        "name": "My Comic Shop",
+        "count": 18
+      },
+      {
+        "id": 49,
+        "name": "Dorotheum",
+        "count": 17
+      },
+      {
+        "id": 100,
+        "name": "Lacy Scott & Knight",
+        "count": 17
+      },
+      {
+        "id": 55,
+        "name": "Eppli",
+        "count": 16
+      },
+      {
+        "id": 1483,
+        "name": "Hunt Auctions",
+        "count": 15
+      },
+      {
+        "id": 2599,
+        "name": "Stack's Bowers",
+        "count": 15
+      },
+      {
+        "id": 2788,
+        "name": "AbeBooks",
+        "count": 15
+      },
+      {
+        "id": 3251,
+        "name": "Worboys Antiques",
+        "count": 15
+      },
+      {
+        "id": 3617,
+        "name": "AAG Auctioneers",
+        "count": 15
+      },
+      {
+        "id": 2365,
+        "name": "Bertolami Fine Art",
+        "count": 14
+      },
+      {
+        "id": 3751,
+        "name": "Noonans",
+        "count": 14
+      },
+      {
+        "id": 3798,
+        "name": "World of Luxury",
+        "count": 14
+      },
+      {
+        "id": 2563,
+        "name": "Herbette",
+        "count": 13
+      },
+      {
+        "id": 3223,
+        "name": "Rehaus",
+        "count": 13
+      },
+      {
+        "id": 6,
+        "name": "Artcurial",
+        "count": 12
+      },
+      {
+        "id": 462,
+        "name": "Clarke Auction Gallery",
+        "count": 12
+      },
+      {
+        "id": 3500,
+        "name": "MusicGoldmine",
+        "count": 12
+      },
+      {
+        "id": 210,
+        "name": "Gardiner Houlgate",
+        "count": 11
+      },
+      {
+        "id": 3710,
+        "name": "Sotheby's Buy Now",
+        "count": 11
+      },
+      {
+        "id": 380,
+        "name": "Augusta Auction",
+        "count": 10
+      },
+      {
+        "id": 2509,
+        "name": "The Furniture Rooms",
+        "count": 10
+      },
+      {
+        "id": 3169,
+        "name": "The Ode To",
+        "count": 10
+      },
+      {
+        "id": 3931,
+        "name": "Eaton & Brennan Auctions",
+        "count": 10
+      },
+      {
+        "id": 126,
+        "name": "RM Sotheby's",
+        "count": 9
+      },
+      {
+        "id": 1886,
+        "name": "Plazzart",
+        "count": 9
+      },
+      {
+        "id": 3201,
+        "name": "Louis Wine LTD",
+        "count": 9
+      },
+      {
+        "id": 113,
+        "name": "McTear's Fine Art Auctioneers",
+        "count": 8
+      },
+      {
+        "id": 860,
+        "name": "Chalkwell Auctions",
+        "count": 7
+      },
+      {
+        "id": 3197,
+        "name": "Modernisten",
+        "count": 7
+      },
+      {
+        "id": 3566,
+        "name": "Harley's Time",
+        "count": 7
+      },
+      {
+        "id": 148,
+        "name": "Sworders",
+        "count": 6
+      },
+      {
+        "id": 284,
+        "name": "Strauss & Co",
+        "count": 6
+      },
+      {
+        "id": 294,
+        "name": "Vendu Dickhaut Maastricht",
+        "count": 6
+      },
+      {
+        "id": 438,
+        "name": "Nordlings Antik",
+        "count": 6
+      },
+      {
+        "id": 712,
+        "name": "Alex Cooper Auctioneers",
+        "count": 6
+      },
+      {
+        "id": 875,
+        "name": "Piguet H\u00f4tel des Ventes",
+        "count": 5
+      },
+      {
+        "id": 2676,
+        "name": "Spink Auctions",
+        "count": 5
+      },
+      {
+        "id": 3259,
+        "name": "Castlegate House Gallery",
+        "count": 5
+      },
+      {
+        "id": 3,
+        "name": "Antiquorum",
+        "count": 4
+      },
+      {
+        "id": 232,
+        "name": "Balclis",
+        "count": 4
+      },
+      {
+        "id": 2338,
+        "name": "Nelson & Nelson Antiques",
+        "count": 4
+      },
+      {
+        "id": 3066,
+        "name": "Mayflower Antiques",
+        "count": 4
+      },
+      {
+        "id": 3022,
+        "name": "Ahlers & Ogletree",
+        "count": 3
+      },
+      {
+        "id": 3080,
+        "name": "Box House Antiques",
+        "count": 3
+      },
+      {
+        "id": 3663,
+        "name": "Ystads Auktioner",
+        "count": 3
+      },
+      {
+        "id": 3903,
+        "name": "Trianon Ench\u00e8res",
+        "count": 3
+      },
+      {
+        "id": 3959,
+        "name": "Scandinavian Fine Art",
+        "count": 3
+      },
+      {
+        "id": 1223,
+        "name": "Nazmiyal Auctions",
+        "count": 2
+      },
+      {
+        "id": 2399,
+        "name": "Forum Auctions",
+        "count": 2
+      },
+      {
+        "id": 2826,
+        "name": "Miller & Miller Auctions",
+        "count": 2
+      },
+      {
+        "id": 3163,
+        "name": "Dale Rogers Ammonite",
+        "count": 2
+      },
+      {
+        "id": 3196,
+        "name": "Vendu Rotterdam",
+        "count": 2
+      },
+      {
+        "id": 3351,
+        "name": "Mary Cooke Antiques Ltd",
+        "count": 2
+      },
+      {
+        "id": 3946,
+        "name": "Simrit Collection",
+        "count": 2
+      },
+      {
+        "id": 3963,
+        "name": "Victorins Auctions",
+        "count": 2
+      },
+      {
+        "id": 10,
+        "name": "Auktionshuset Gom\u00e9r&Andersson",
+        "count": 1
+      },
+      {
+        "id": 43,
+        "name": "Criterion Auctions",
+        "count": 1
+      },
+      {
+        "id": 75,
+        "name": "Hampel",
+        "count": 1
+      },
+      {
+        "id": 333,
+        "name": "Archives International",
+        "count": 1
+      },
+      {
+        "id": 430,
+        "name": "Galleri Melefors",
+        "count": 1
+      },
+      {
+        "id": 639,
+        "name": "Anticomondo GmbH",
+        "count": 1
+      },
+      {
+        "id": 2359,
+        "name": "Vintage Movie Posters",
+        "count": 1
+      },
+      {
+        "id": 3060,
+        "name": "SVV Ruellan",
+        "count": 1
+      },
+      {
+        "id": 3167,
+        "name": "Antiques Armoury",
+        "count": 1
+      },
+      {
+        "id": 3202,
+        "name": "Farringdons Jewellery",
+        "count": 1
+      },
+      {
+        "id": 3637,
+        "name": "Derksen",
+        "count": 1
+      },
+      {
+        "id": 3645,
+        "name": "Rumsey\u2019s Auctioneers",
+        "count": 1
+      },
+      {
+        "id": 3652,
+        "name": "H\u00e4lsinglands Auktionsverk",
+        "count": 1
+      },
+      {
+        "id": 3708,
+        "name": "K\u00e2-Mondo",
+        "count": 1
+      },
+      {
+        "id": 3728,
+        "name": "A & C Casa d'Aste Argenta",
+        "count": 1
+      },
+      {
+        "id": 3953,
+        "name": "RM Sotheby's Private Sale",
+        "count": 1
+      },
+      {
+        "id": 3975,
+        "name": "Knight Fine Antiques & Collectables",
+        "count": 1
+      }
+    ],
+    "category": [
+      {
+        "id": 1,
+        "name": "Arts & Graphics",
+        "count": 9253
+      },
+      {
+        "id": 32,
+        "name": "Contemporary Art",
+        "count": 2843
+      },
+      {
+        "id": 16,
+        "name": "Miscellaneous",
+        "count": 1845
+      },
+      {
+        "id": 19,
+        "name": "Porcelain & Pottery",
+        "count": 1482
+      },
+      {
+        "id": 9,
+        "name": "Furniture, Design & Mirrors",
+        "count": 1007
+      },
+      {
+        "id": 15,
+        "name": "Asian Art",
+        "count": 982
+      },
+      {
+        "id": 5,
+        "name": "Toys & Collectibles",
+        "count": 718
+      },
+      {
+        "id": 12,
+        "name": "Lighting",
+        "count": 294
+      },
+      {
+        "id": 20,
+        "name": "Sculptures",
+        "count": 290
+      },
+      {
+        "id": 25,
+        "name": "Vehicles",
+        "count": 265
+      },
+      {
+        "id": 29,
+        "name": "Ethnographic",
+        "count": 223
+      },
+      {
+        "id": 26,
+        "name": "Watches & Clocks",
+        "count": 198
+      },
+      {
+        "id": 2,
+        "name": "Books, Maps & Manuscripts",
+        "count": 191
+      },
+      {
+        "id": 3,
+        "name": "Carpets, Rugs & Textile",
+        "count": 153
+      },
+      {
+        "id": 11,
+        "name": "Jewelry & Gems",
+        "count": 150
+      },
+      {
+        "id": 4,
+        "name": "Medals, Arms & Armor",
+        "count": 148
+      },
+      {
+        "id": 10,
+        "name": "Glass",
+        "count": 135
+      },
+      {
+        "id": 30,
+        "name": "Ancient Art",
+        "count": 135
+      },
+      {
+        "id": 14,
+        "name": "Nautica, Technica & Optic",
+        "count": 125
+      },
+      {
+        "id": 17,
+        "name": "Photographs",
+        "count": 85
+      },
+      {
+        "id": 22,
+        "name": "Sports & Leisure",
+        "count": 79
+      },
+      {
+        "id": 21,
+        "name": "Silver & Gold",
+        "count": 74
+      },
+      {
+        "id": 13,
+        "name": "Music & Musical Instruments",
+        "count": 68
+      },
+      {
+        "id": 7,
+        "name": "Fashion & Vintage",
+        "count": 65
+      },
+      {
+        "id": 23,
+        "name": "Tin & Metals",
+        "count": 60
+      },
+      {
+        "id": 31,
+        "name": "Coins & Banknotes",
+        "count": 52
+      },
+      {
+        "id": 18,
+        "name": "Postcards & Stamps",
+        "count": 24
+      },
+      {
+        "id": 27,
+        "name": "Wine & Spirits",
+        "count": 13
+      }
+    ],
+    "country": [
+      {
+        "code": "us",
+        "name": "USA",
+        "count": 9541
+      },
+      {
+        "code": "gb",
+        "name": "United Kingdom",
+        "count": 3192
+      },
+      {
+        "code": "fr",
+        "name": "France",
+        "count": 2090
+      },
+      {
+        "code": "it",
+        "name": "Italy",
+        "count": 2003
+      },
+      {
+        "code": "es",
+        "name": "Spain",
+        "count": 1383
+      },
+      {
+        "code": "nl",
+        "name": "Netherlands",
+        "count": 968
+      },
+      {
+        "code": "de",
+        "name": "Germany",
+        "count": 761
+      },
+      {
+        "code": "be",
+        "name": "Belgium",
+        "count": 397
+      },
+      {
+        "code": "se",
+        "name": "Sweden",
+        "count": 245
+      },
+      {
+        "code": "ch",
+        "name": "Switzerland",
+        "count": 244
+      },
+      {
+        "code": "ie",
+        "name": "Ireland",
+        "count": 43
+      },
+      {
+        "code": "dk",
+        "name": "Denmark",
+        "count": 40
+      },
+      {
+        "code": "ca",
+        "name": "Canada",
+        "count": 28
+      },
+      {
+        "code": "jp",
+        "name": "Japan",
+        "count": 21
+      },
+      {
+        "code": "mt",
+        "name": "Malta",
+        "count": 1
+      }
+    ],
+    "auction_type": [
+      {
+        "name": "auction",
+        "count": 14452
+      },
+      {
+        "name": "fixed_price",
+        "count": 6505
+      }
+    ]
+  },
+  "page": 1,
+  "perPage": 30
+}

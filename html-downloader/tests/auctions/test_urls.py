@@ -170,3 +170,55 @@ def test_artcurial_lot_normalize_and_entity() -> None:
         "https://www.artcurial.com/en/sales/6641"
     )
     assert not is_auction_url("https://www.artcurial.com/en/sales/6641/lots/1-a")
+
+
+def test_barnebys_live_lot_slug_normalize_and_entity() -> None:
+    from html_downloader.auctions.urls import (
+        barnebys_entity_from_url,
+        barnebys_realized_twin_url,
+        is_barnebys_auction_url,
+    )
+
+    url = (
+        "https://barnebys.com/auctions/lot/"
+        "f-clark-oil-painting-of-bridge-gGZS28C-629739503?utm_source=x"
+    )
+    assert (
+        normalize_auction_url(url)
+        == "https://www.barnebys.com/auctions/lot/"
+        "f-clark-oil-painting-of-bridge-gGZS28C-629739503"
+    )
+    assert barnebys_entity_from_url(url) == ("lot", "629739503")
+    assert is_barnebys_auction_url(url)
+    twin = barnebys_realized_twin_url(url)
+    assert twin == (
+        "https://www.barnebys.com/realized-prices/lot/"
+        "f-clark-oil-painting-of-bridge-gGZS28C-629739503"
+    )
+    assert barnebys_entity_from_url(twin) == ("result_lot", "629739503")
+
+
+def test_barnebys_live_lot_id_slug_form() -> None:
+    from html_downloader.auctions.urls import barnebys_entity_from_url
+
+    url = "https://www.barnebys.com/auctions/lot/443468158/Lockers/"
+    assert (
+        normalize_auction_url(url)
+        == "https://www.barnebys.com/auctions/lot/443468158/lockers"
+    )
+    assert barnebys_entity_from_url(url) == ("lot", "443468158")
+
+
+def test_barnebys_rejects_non_lot_paths() -> None:
+    from html_downloader.auctions.urls import is_barnebys_auction_url
+
+    rejected = [
+        "https://www.barnebys.com/auctions/all",
+        "https://www.barnebys.com/redirect",
+        "https://www.barnebys.com/re/foo",
+        "https://www.barnebys.com/realized-prices",
+        "https://www.barnebys.com/blog/search/foo",
+        "https://www.example.com/auctions/lot/1/x",
+    ]
+    for url in rejected:
+        assert not is_barnebys_auction_url(url), url
