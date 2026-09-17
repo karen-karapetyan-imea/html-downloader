@@ -12,6 +12,7 @@ from typing import Any
 from html_downloader.auctions.paths import (
     auction_algolia_artworks_browse_state_file,
     auction_algolia_browse_state_file,
+    auction_art_urls_file,
     auction_artist_sold_progress_file,
     auction_diff_file,
     auction_house_expand_progress_file,
@@ -82,6 +83,10 @@ def _known_keys_for_house(data_root: Path, auction_house: str) -> set[tuple[str,
         from html_downloader.auctions.barnebys import known_barnebys_keys_from_paths
 
         return known_barnebys_keys_from_paths(paths)
+    if auction_house == "saleroom":
+        from html_downloader.auctions.saleroom import known_saleroom_keys_from_paths
+
+        return known_saleroom_keys_from_paths(paths)
     keys: set[tuple[str, str]] = set()
     for path in paths:
         # Generic fallback: parse as invaluable-style if possible
@@ -368,6 +373,9 @@ def run_auction_discover(
             )
         else:
             algolia_state = auction_algolia_browse_state_file(state_root, spec.name)
+    elif expand_algolia and spec.name == "saleroom":
+        # Art/collectables master categories only (Algolia-first discovery).
+        algolia_state = auction_algolia_browse_state_file(state_root, spec.name)
     else:
         algolia_state = None
     sitemap_progress = (
@@ -468,6 +476,31 @@ def run_auction_discover(
             all_count += added_all
             crawl_count += added_crawl
 
+        if expand_algolia and algolia_state is not None and spec.name == "saleroom":
+            from html_downloader.auctions.saleroom_algolia import (
+                iter_lot_cache_rows as sr_iter_rows,
+                load_lot_cache_urls,
+                lot_cache_path as sr_lot_cache_path,
+            )
+
+            cache_path = sr_lot_cache_path(algolia_state)
+            already_ids = {
+                e.entity_id for e in entries if e.entity_type == "lot" and e.entity_id
+            }
+            added_all, added_crawl = _stream_lot_cache_into_job_files(
+                cache_path,
+                sitemap_all_path=sitemap_all_path,
+                urls_path=urls_path,
+                already_written_ids=already_ids,
+                known_keys=known_keys,
+                incremental=incremental,
+                entity_type="lot",
+                iter_rows=sr_iter_rows,
+                label="saleroom Algolia",
+            )
+            all_count += added_all
+            crawl_count += added_crawl
+
         already_keys: set[tuple[str, str]] = {
             (e.entity_type, e.entity_id)
             for e in entries
@@ -532,6 +565,19 @@ def run_auction_discover(
             all_count += added_all
             crawl_count += added_crawl
 
+        art_lot_count = 0
+        if spec.name == "saleroom" and expand_algolia and algolia_state is not None:
+            from html_downloader.auctions.saleroom_algolia import (
+                load_lot_cache_urls,
+                lot_cache_path as sr_art_cache_path,
+            )
+
+            # Algolia discovery is already art/collectables-scoped → art_urls == all.
+            art_urls = load_lot_cache_urls(sr_art_cache_path(algolia_state))
+            art_lot_count = len(art_urls)
+            write_url_list(auction_art_urls_file(job), art_urls)
+            LOGGER.info("saleroom art_urls.txt written count=%s", art_lot_count)
+
         auction_diff_file(job).write_text(
             json.dumps(diff.to_report(), ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
@@ -548,6 +594,8 @@ def run_auction_discover(
             "unchanged_entities": diff.stats.unchanged_entities,
             "algolia_supercategories": cats or None,
             "memory_entries": len(entries),
+            "all_lots": all_count if spec.name == "saleroom" else None,
+            "art_lots": art_lot_count if spec.name == "saleroom" else None,
         }
         auction_metadata_file(job).write_text(
             json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
@@ -564,6 +612,8 @@ def run_auction_discover(
                 from html_downloader.auctions.artcurial import save_auction_lastmod_state
             elif spec.name == "barnebys":
                 from html_downloader.auctions.barnebys import save_auction_lastmod_state
+            elif spec.name == "saleroom":
+                from html_downloader.auctions.saleroom import save_auction_lastmod_state
             else:
                 from html_downloader.auctions.invaluable import save_auction_lastmod_state
 
@@ -631,6 +681,13 @@ def run_auction_download(
         config.require_window_data = True
         config.block_keywords = tuple(
             dict.fromkeys((*config.block_keywords, *IMPERVA_BLOCK_KEYWORDS))
+        )
+
+    if spec.name == "saleroom":
+        from html_downloader.auctions.saleroom import AWS_WAF_KEYWORDS
+
+        config.block_keywords = tuple(
+            dict.fromkeys((*config.block_keywords, *AWS_WAF_KEYWORDS))
         )
 
     # Reuse marketplace Manifest shape; marketplace field stores auction house name.

@@ -78,6 +78,8 @@ _INVALUABLE_HOSTS = frozenset({"www.invaluable.com", "invaluable.com"})
 _LIVEAUCTIONEERS_HOSTS = frozenset({"www.liveauctioneers.com", "liveauctioneers.com"})
 _ARTCURIAL_HOSTS = frozenset({"www.artcurial.com", "artcurial.com"})
 _BARNEBYS_HOSTS = frozenset({"www.barnebys.com", "barnebys.com"})
+_SALEROOM_HOSTS = frozenset({"www.the-saleroom.com", "the-saleroom.com"})
+_SALEROOM_PREFERRED_LOCALE = "en-gb"
 
 # SEO sold-lot page: /price-result/{slug}/
 LIVEAUCTIONEERS_PRICE_RESULT_RE = re.compile(
@@ -118,6 +120,31 @@ BARNEBYS_RESULT_LOT_SLUG_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Lot: /{locale}/auction-catalogues/{house}/catalogue-id-{id}/lot-{uuid}
+SALEROOM_LOT_RE = re.compile(
+    r"^https://www\.the-saleroom\.com/"
+    r"(en-gb|en-us|fr-fr|de-de|it-it|zh-cn)/auction-catalogues/"
+    r"([A-Za-z0-9_-]+)/catalogue-id-([A-Za-z0-9_-]+)/"
+    r"lot-([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/?$",
+    re.IGNORECASE,
+)
+
+# Catalogue event: /{locale}/auction-catalogues/{house}/catalogue-id-{id}
+SALEROOM_CATALOGUE_RE = re.compile(
+    r"^https://www\.the-saleroom\.com/"
+    r"(en-gb|en-us|fr-fr|de-de|it-it|zh-cn)/auction-catalogues/"
+    r"([A-Za-z0-9_-]+)/catalogue-id-([A-Za-z0-9_-]+)/?$",
+    re.IGNORECASE,
+)
+
+# Category browse: /{locale}/for-sale/{primary}[/{secondary}...]
+SALEROOM_FOR_SALE_RE = re.compile(
+    r"^https://www\.the-saleroom\.com/"
+    r"(en-gb|en-us|fr-fr|de-de|it-it|zh-cn)/for-sale/"
+    r"([A-Za-z0-9_/-]+)/?$",
+    re.IGNORECASE,
+)
+
 
 def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | None:
     """
@@ -128,10 +155,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     - Drop fragments
     - Strip common tracking / Algolia query params
     - Lowercase scheme/host; force www.invaluable.com / www.liveauctioneers.com /
-      www.artcurial.com / www.barnebys.com
+      www.artcurial.com / www.barnebys.com / www.the-saleroom.com
     - Catalog / lot / house / artist / category / price-result ids lowercased
     - Artcurial lot paths force /en/ locale
     - Barnebys lot slug paths lowercased (token/id preserved as in sitemap)
+    - Saleroom lot/catalogue/for-sale paths force /en-gb/ locale; lot UUID lowercased
     - Strip trailing slash (except bare `/`)
     """
     text = (url or "").strip()
@@ -161,6 +189,9 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         netloc = host
     elif host == "barnebys.com":
         host = "www.barnebys.com"
+        netloc = host
+    elif host == "the-saleroom.com":
+        host = "www.the-saleroom.com"
         netloc = host
     else:
         netloc = host
@@ -222,6 +253,25 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         path,
         re.IGNORECASE,
     )
+    saleroom_lot = re.match(
+        r"^/(en-gb|en-us|fr-fr|de-de|it-it|zh-cn)/auction-catalogues/"
+        r"([A-Za-z0-9_-]+)/catalogue-id-([A-Za-z0-9_-]+)/"
+        r"lot-([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+        r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(/?)$",
+        path,
+        re.IGNORECASE,
+    )
+    saleroom_catalogue = re.match(
+        r"^/(en-gb|en-us|fr-fr|de-de|it-it|zh-cn)/auction-catalogues/"
+        r"([A-Za-z0-9_-]+)/catalogue-id-([A-Za-z0-9_-]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
+    saleroom_for_sale = re.match(
+        r"^/(en-gb|en-us|fr-fr|de-de|it-it|zh-cn)/for-sale/([A-Za-z0-9_/-]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
 
     if catalog_match and host in _INVALUABLE_HOSTS:
         path = f"/catalog/{catalog_match.group(2).lower()}"
@@ -273,6 +323,24 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         token = barnebys_result_slug.group(3)
         lot_id = barnebys_result_slug.group(4)
         path = f"/realized-prices/lot/{slug}-{token}-{lot_id}"
+    elif saleroom_lot and host in _SALEROOM_HOSTS:
+        house = saleroom_lot.group(2).lower()
+        catalogue_id = saleroom_lot.group(3).lower()
+        lot_uuid = saleroom_lot.group(4).lower()
+        path = (
+            f"/{_SALEROOM_PREFERRED_LOCALE}/auction-catalogues/{house}/"
+            f"catalogue-id-{catalogue_id}/lot-{lot_uuid}"
+        )
+    elif saleroom_catalogue and host in _SALEROOM_HOSTS:
+        house = saleroom_catalogue.group(2).lower()
+        catalogue_id = saleroom_catalogue.group(3).lower()
+        path = (
+            f"/{_SALEROOM_PREFERRED_LOCALE}/auction-catalogues/{house}/"
+            f"catalogue-id-{catalogue_id}"
+        )
+    elif saleroom_for_sale and host in _SALEROOM_HOSTS:
+        rest = saleroom_for_sale.group(2).strip("/").lower()
+        path = f"/{_SALEROOM_PREFERRED_LOCALE}/for-sale/{rest}"
     else:
         path = path.rstrip("/") or "/"
 
@@ -307,6 +375,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         if barnebys_entity_from_url_path(candidate) is not None:
             query = ""
         out_netloc = "www.barnebys.com"
+    elif host in _SALEROOM_HOSTS:
+        candidate = urlunsplit(("https", "www.the-saleroom.com", path, "", ""))
+        if saleroom_entity_from_url_path(candidate) is not None:
+            query = ""
+        out_netloc = "www.the-saleroom.com"
     else:
         out_netloc = netloc
 
@@ -539,3 +612,48 @@ def barnebys_realized_twin_url(live_url: str) -> str | None:
         return None
     suffix = path[len(prefix) :]
     return f"https://www.barnebys.com/realized-prices/lot/{suffix}"
+
+
+def saleroom_entity_from_url_path(url: str) -> tuple[str, str] | None:
+    """Classify a normalized Saleroom absolute URL without re-entering normalize."""
+    lot = SALEROOM_LOT_RE.match(url)
+    if lot:
+        return "lot", lot.group(4).lower()
+
+    catalogue = SALEROOM_CATALOGUE_RE.match(url)
+    if catalogue:
+        return "catalogue", catalogue.group(3).lower()
+
+    return None
+
+
+def saleroom_entity_from_url(url: str) -> tuple[str, str] | None:
+    """
+    Return (entity_type, entity_id) for Saleroom crawl targets.
+
+    Accepted:
+      /en-gb/auction-catalogues/{house}/catalogue-id-{id}/lot-{uuid}
+        → ("lot", uuid)
+      /en-gb/auction-catalogues/{house}/catalogue-id-{id}
+        → ("catalogue", id)
+
+    Rejected: for-sale hubs, auctioneer indexes, archivelot, search-filter, etc.
+    """
+    normalized = normalize_auction_url(url)
+    if not normalized:
+        return None
+    host = (urlsplit(normalized).hostname or "").lower()
+    if host not in _SALEROOM_HOSTS:
+        return None
+    return saleroom_entity_from_url_path(normalized)
+
+
+def is_saleroom_auction_url(url: str) -> bool:
+    """True for Saleroom lot (or catalogue) crawl targets."""
+    return saleroom_entity_from_url(url) is not None
+
+
+def is_saleroom_lot_url(url: str) -> bool:
+    """True only for Saleroom lot pages (not catalogue hubs)."""
+    key = saleroom_entity_from_url(url)
+    return key is not None and key[0] == "lot"

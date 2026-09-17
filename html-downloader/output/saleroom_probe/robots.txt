@@ -1,0 +1,57 @@
+User-agent: *
+Disallow: */my-account*
+Disallow: */*?callingPageUrl*
+Disallow: */*?Country=*
+Disallow: */international-delivery
+Disallow: */archivelot*
+Disallow: */*?preview*
+Disallow: */*&preview*
+Disallow: */url-for-lot-number*
+Disallow: */timed-bid-details*
+Disallow: */sitemap.xml.gz/* 
+Disallow: *.well-known*
+Disallow: */favourite-auctioneers*
+Disallow: */signupwizard*
+Disallow: */login*
+Disallow: */buyitnow*
+
+
+Disallow: */*?pgSearchTerm*
+
+
+
+
+
+
+
+
+
+
+
+
+Disallow: */en-us*
+Disallow: */it-it*
+Disallow: */zh-cn*
+Disallow: */search-filter*
+
+Disallow: *it-it/news
+Disallow: *de-de/news
+Disallow: *fr-fr/news
+Disallow: */marketplace-content/
+Disallow: *please_ignore_this_404.htm
+Disallow: *PLEASE_IGNORE_THIS_404.htm
+
+
+Sitemap: https://www.the-saleroom.com/sitemapindex
+Sitemap: https://www.the-saleroom.com/lots_sitemapindex
+Sitemap: https://www.the-saleroom.com/auctions_sitemapindex
+Sitemap: https://www.the-saleroom.com/categories_sitemapindex
+Sitemap: https://www.the-saleroom.com/filteredpages_sitemapindex
+Sitemap: https://www.the-saleroom.com/auctioneers_sitemapindex
+
+
+
+
+Sitemap: https://www.the-saleroom.com/secondary_categories_sitemapindex
+
+

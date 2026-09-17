@@ -1,0 +1,2787 @@
+
+
+
+<!doctype html>
+<html lang="en-gb" class="en-gb">
+
+<head id="SR">
+
+        <script type="text/javascript" src="https://566d175d0f25.edge.sdk.awswaf.com/566d175d0f25/86bced2c7375/challenge.js" defer></script>
+    
+        
+            <script src="https://cdn-ukwest.onetrust.com/scripttemplates/otSDKStub.js" data-document-language="true" type="text/javascript" charset="UTF-8" data-domain-script="54c9717f-15d2-4880-8add-b5efc2ab3c2c">
+            </script>
+        
+    <script type="text/javascript">
+        var gapPerformanceConsentOnLoad = false;
+
+        function gapHasOneTrustPerformanceConsent() {
+            try {
+                if (typeof OnetrustActiveGroups !== 'undefined' && OnetrustActiveGroups) {
+                    return OnetrustActiveGroups.indexOf('C0002') !== -1;
+                }
+                var consentMatch = document.cookie.match(/(?:^|;\s*)OptanonConsent=([^;]*)/);
+                if (!consentMatch) {
+                    return false;
+                }
+                var decoded = decodeURIComponent(consentMatch[1]);
+                return /C0002(:|%3A)1/.test(decoded);
+            } catch (e) {
+                return false;
+            }
+        }
+
+        var GAP_CONSENT_REVOKE_RELOAD_GUARD = 'gap_consent_reload_revoked';
+        var GAP_CONSENT_REVOKE_RELOAD_VALUE = '1';
+        var GAP_CONSENT_REVOKE_RELOAD_MAX_AGE_SECONDS = 120;
+
+        function gapIsSessionStorageAvailable() {
+            if (typeof window.sessionStorage === 'undefined' || window.sessionStorage === null) {
+                return false;
+            }
+            try {
+                var testKey = '__gap_storage_test__';
+                window.sessionStorage.setItem(testKey, GAP_CONSENT_REVOKE_RELOAD_VALUE);
+                window.sessionStorage.removeItem(testKey);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function gapGetConsentRevokeReloadFromSessionStorage() {
+            if (!gapIsSessionStorageAvailable()) {
+                return '';
+            }
+            return window.sessionStorage.getItem(GAP_CONSENT_REVOKE_RELOAD_GUARD) || '';
+        }
+
+        function gapGetConsentRevokeReloadFromCookie() {
+            if (typeof GetCookie === 'function') {
+                return GetCookie(GAP_CONSENT_REVOKE_RELOAD_GUARD);
+            }
+            return '';
+        }
+
+        function gapSetConsentRevokeReloadCookie(value) {
+            if (typeof SetCookieWithMaxAge !== 'function') {
+                return;
+            }
+            var maxAge = value
+                ? (typeof GAP_COOKIE_MAX_AGE_TWO_MINUTES !== 'undefined' ? GAP_COOKIE_MAX_AGE_TWO_MINUTES : GAP_CONSENT_REVOKE_RELOAD_MAX_AGE_SECONDS)
+                : 0;
+            SetCookieWithMaxAge(GAP_CONSENT_REVOKE_RELOAD_GUARD, value, maxAge);
+        }
+
+        function gapHasConsentRevokeReloadAttempted() {
+            return gapGetConsentRevokeReloadFromSessionStorage() === GAP_CONSENT_REVOKE_RELOAD_VALUE
+                || gapGetConsentRevokeReloadFromCookie() === GAP_CONSENT_REVOKE_RELOAD_VALUE;
+        }
+
+        function gapMarkConsentRevokeReloadAttempted() {
+            if (gapIsSessionStorageAvailable()) {
+                window.sessionStorage.setItem(GAP_CONSENT_REVOKE_RELOAD_GUARD, GAP_CONSENT_REVOKE_RELOAD_VALUE);
+            }
+            // Cookie survives reload when sessionStorage is unavailable.
+            gapSetConsentRevokeReloadCookie(GAP_CONSENT_REVOKE_RELOAD_VALUE);
+        }
+
+        function gapClearConsentRevokeReloadGuard() {
+            if (gapIsSessionStorageAvailable()) {
+                window.sessionStorage.removeItem(GAP_CONSENT_REVOKE_RELOAD_GUARD);
+            }
+            gapSetConsentRevokeReloadCookie('');
+        }
+
+        // Grant at runtime: inject Amplitude + GTM client-side (no reload — avoids OptanonConsent cookie race).
+        // GTM drives Revive homepage banners; omitting it leaves #ads-slider-homepage empty when the
+        // server baked gapPerformanceConsentOnLoad=false despite C0002 already being granted (GAP-11858).
+        // Revoke at runtime: reload so server stops emitting consent-gated scripts.
+        function OptanonWrapper() {
+            var currentConsent = gapHasOneTrustPerformanceConsent();
+            if (gapPerformanceConsentOnLoad === currentConsent) {
+                gapClearConsentRevokeReloadGuard();
+                return;
+            }
+
+            if (currentConsent && !gapPerformanceConsentOnLoad) {
+                if (typeof window.gapInjectAmplitudeAfterConsent === 'function') {
+                    window.gapInjectAmplitudeAfterConsent();
+                }
+                if (typeof window.gapInjectGtmAfterConsent === 'function') {
+                    window.gapInjectGtmAfterConsent();
+                }
+                return;
+            }
+
+            if (gapHasConsentRevokeReloadAttempted()) {
+                return;
+            }
+
+            gapMarkConsentRevokeReloadAttempted();
+            window.location.reload();
+        }
+    </script>
+
+
+    
+
+
+
+    <script>
+        window.gapLogAmplitudeError = function (context, err) {
+            if (!window.console || typeof window.console.error !== 'function') {
+                return;
+            }
+            try {
+                console.error('[Amplitude] ' + context, err);
+            } catch (logErr) {
+                try { console.error('[Amplitude] Failed to write Amplitude error log.', logErr); } catch (_) {}
+            }
+        };
+
+        window.gapAmplitudeConfig = {
+            apiKey: "8695f22b4ae5b734c038c8382f1ac134",
+            region: 'US',
+            enabled: true,
+            clientScriptUrl: '/scripts/telemetry/amplitude.client.js',
+            debug: false,
+            pageViewedProps: {"Page Type":"Homepage"},
+            customerId: "",
+            isAuthenticated: false,
+            authStatus: 'anonymous',
+            baseProps: {"Page Type":"Homepage","Site Locale":"en-GB","Is Logged In":"False"},
+            clientHints: null,
+            forItem: null,
+            autowire: null,
+            pipeline: ""
+        };
+        window.gapAmplitudeConfig.httpApiUrl = window.gapAmplitudeConfig.region === 'EU'
+            ? 'https://api.eu.amplitude.com/2/httpapi'
+            : 'https://api2.amplitude.com/2/httpapi';
+        window.gapAmplitudeConfig.cdnBaseUrl = window.gapAmplitudeConfig.region === 'EU'
+            ? 'https://cdn.eu.amplitude.com'
+            : 'https://cdn.amplitude.com';
+        try { window.gapAmplitudeConfig.clientHints = null; } catch (e) { window.gapAmplitudeConfig.clientHints = null; window.gapLogAmplitudeError('Failed to parse client hints config.', e); }
+        try { window.gapAmplitudeConfig.forItem = null; } catch (e) { window.gapAmplitudeConfig.forItem = null; window.gapLogAmplitudeError('Failed to parse per-item Amplitude config.', e); }
+        try { window.gapAmplitudeConfig.autowire = null; } catch (e) { window.gapAmplitudeConfig.autowire = null; window.gapLogAmplitudeError('Failed to parse Amplitude autowire config.', e); }
+
+        window.gapExposeAmplitudeConfigGlobals = function () {
+            var c = window.gapAmplitudeConfig;
+            window.GapAmplitudeApiKey = c.apiKey;
+            window.GapAmplitudeRegion = c.region;
+            window.GapAmplitudeEnabled = c.enabled;
+            window.GapAmplitudeHttpApiUrl = c.httpApiUrl;
+            window.GapAmplitudeClientScriptUrl = c.clientScriptUrl;
+            window.gapAmplitudeDebug = c.debug;
+            window.amplitudeDebug = c.debug;
+            window.gapAmplitudePageViewedProps = c.pageViewedProps;
+            window.gapAmplitudeCustomerId = c.customerId;
+            window.gapAmplitudeIsAuthenticated = c.isAuthenticated;
+            window.gapAmplitudeAuthStatus = c.authStatus;
+            window.gapAmplitudeBaseProps = c.baseProps;
+            window.gapAmplitudeClientHints = c.clientHints;
+            window.gapAmplitudeForItem = c.forItem;
+            window.gapAmplitudeAutowire = c.autowire;
+            window.gapAmplitudePipeline = c.pipeline;
+            window.AmplitudePipeline = c.pipeline || '';
+            window.AmplitudeAutowire = c.autowire || null;
+        };
+        window.gapExposeAmplitudeConfigGlobals();
+
+        try {
+            if (document.documentElement && window.gapAmplitudeConfig.pipeline) {
+                document.documentElement.setAttribute('data-amplitude-pipeline', window.gapAmplitudeConfig.pipeline);
+            }
+        } catch (e) { window.gapLogAmplitudeError('Failed to set Amplitude pipeline data attribute.', e); }
+
+        window.gapBootstrapAmplitudeClientHints = function () {
+            if (window.__gapAmplitudeClientHintsBootstrapped) {
+                return;
+            }
+
+            var cfg = window.gapAmplitudeConfig;
+            var pipeline = cfg.pipeline || window.AmplitudePipeline || '';
+            if (pipeline !== 'client-hints' || typeof window.amplitude === 'undefined') {
+                return;
+            }
+
+            var bootstrapCfg = {
+                enabled: true,
+                apiKey: cfg.apiKey,
+                baseProps: cfg.baseProps || {},
+                clientHints: cfg.clientHints || {},
+                perItem: cfg.forItem || {},
+                autowire: cfg.autowire || [],
+                pipeline: pipeline,
+                debug: cfg.debug
+            };
+            var tries = 0;
+            function tryBootstrap() {
+                var ok = (window.Gap && Gap.Portal && Gap.Portal.UI && Gap.Portal.UI.Amplitude && typeof Gap.Portal.UI.Amplitude.bootstrap === 'function');
+                if (ok) {
+                    window.__gapAmplitudeClientHintsBootstrapped = true;
+                    Gap.Portal.UI.Amplitude.bootstrap(bootstrapCfg);
+                } else if (tries < 50) {
+                    tries++;
+                    if (cfg.debug && tries === 1) {
+                        try { console.log('[Amplitude] waiting for telemetry script to load...'); } catch (e) { window.gapLogAmplitudeError('Failed to log telemetry script wait message.', e); }
+                    }
+                    setTimeout(tryBootstrap, 100);
+                } else if (cfg.debug) {
+                    try { console.warn('[Amplitude] telemetry script not available; skipping bootstrap'); } catch (e) { window.gapLogAmplitudeError('Failed to log telemetry script unavailable warning.', e); }
+                }
+            }
+            tryBootstrap();
+        };
+
+        window.gapSetAmplitudeCookies = function () {
+            if (!window.amplitude) {
+                window.gapLogAmplitudeError('Skipping Amplitude cookie sync: SDK not loaded.');
+                return;
+            }
+            if (typeof SetCookieWithMaxAge !== 'function') {
+                window.gapLogAmplitudeError('Skipping Amplitude cookie sync: SetCookieWithMaxAge unavailable (global-libs not loaded yet).');
+                return;
+            }
+            var cfg = window.gapAmplitudeConfig;
+            var deviceId = window.amplitude.getDeviceId();
+            var sessionId = window.amplitude.getSessionId();
+            var userId = window.amplitude.getUserId();
+
+            if (deviceId) {
+                SetCookieWithMaxAge('AmplitudeDeviceId', deviceId, GAP_COOKIE_MAX_AGE_ONE_YEAR);
+            }
+            if (sessionId) {
+                SetCookieWithMaxAge('AmplitudeSessionId', sessionId, GAP_COOKIE_MAX_AGE_ONE_HOUR);
+            }
+            SetCookieWithMaxAge('AmplitudeUserId', userId || '', GAP_COOKIE_MAX_AGE_ONE_YEAR);
+            SetCookieWithMaxAge('AmplitudeAuthStatus', cfg.authStatus, GAP_COOKIE_MAX_AGE_ONE_YEAR);
+        };
+
+        window.gapHasAmplitudeUserChanged = function () {
+            var cfg = window.gapAmplitudeConfig;
+            var currentCustomerId = cfg.customerId || '';
+            var storedCustomerId = typeof GetCookie === 'function' ? GetCookie('AmplitudeCurrentUserId') : '';
+            try {
+                storedCustomerId = decodeURIComponent(storedCustomerId);
+            } catch (e) {
+                window.gapLogAmplitudeError('Failed to decode AmplitudeCurrentUserId cookie.', e);
+                return false;
+            }
+            return currentCustomerId !== storedCustomerId;
+        };
+
+        window.gapSetAmplitudeCurrentUserIdCookie = function () {
+            if (typeof SetCookieWithMaxAge !== 'function') {
+                window.gapLogAmplitudeError('Skipping AmplitudeCurrentUserId cookie write: SetCookieWithMaxAge unavailable (global-libs not loaded yet).');
+                return;
+            }
+            var currentCustomerId = window.gapAmplitudeConfig.customerId || '';
+            SetCookieWithMaxAge('AmplitudeCurrentUserId', currentCustomerId, GAP_COOKIE_MAX_AGE_ONE_YEAR, { encodeValue: true });
+        };
+
+        window.gapCheckAmplitudeUserChange = function () {
+            if (!window.gapHasAmplitudeUserChanged()) {
+                return;
+            }
+            window.gapSetAmplitudeCurrentUserIdCookie();
+        };
+
+        // Mirror SDK device/session/user IDs to cookies for server-side AmplitudeService.
+        // Runs once per page after init (deferred to DOMContentLoaded when global-libs is not ready yet).
+        window.gapSyncAmplitudeCookies = function () {
+            window.gapCheckAmplitudeUserChange();
+            window.gapSetAmplitudeCookies();
+        };
+
+        window.gapScheduleAmplitudeCookieSync = function () {
+            if (window.__gapAmplitudeCookieSyncWired) { return; }
+            window.__gapAmplitudeCookieSyncWired = true;
+            if (document.readyState === 'loading') {
+                function onDomReady() {
+                    document.removeEventListener('DOMContentLoaded', onDomReady);
+                    window.gapSyncAmplitudeCookies();
+                }
+                document.addEventListener('DOMContentLoaded', onDomReady);
+            } else {
+                window.gapSyncAmplitudeCookies();
+            }
+        };
+
+        window.gapInitAmplitude = function () {
+            if (window.__gapAmplitudeInited) {
+                return;
+            }
+            if (typeof window.amplitude === 'undefined') {
+                window.gapLogAmplitudeError('Skipping Amplitude init: SDK not loaded.');
+                return;
+            }
+            window.__gapAmplitudeInited = true;
+
+            var cfg = window.gapAmplitudeConfig;
+            var pageViewEnrichment = {
+                name: 'page-view-enrichment',
+                type: 'enrichment',
+                setup: function () { return undefined; },
+                execute: function (event) {
+                    var pageViewedProps = cfg.pageViewedProps || {};
+                    if (event && event.event_type === '[Amplitude] Page Viewed') {
+                        event.event_properties = event.event_properties || {};
+                        for (var key in pageViewedProps) {
+                            if (pageViewedProps.hasOwnProperty(key)) {
+                                event.event_properties[key] = pageViewedProps[key];
+                            }
+                        }
+                    }
+                    return event;
+                }
+            };
+
+            if (typeof window.amplitude.add === 'function') {
+                window.amplitude.add(pageViewEnrichment);
+            }
+
+            var initOptions = {
+                deviceId: (window.gapResolveAmplitudeDeviceId ? window.gapResolveAmplitudeDeviceId() : undefined),
+                fetchRemoteConfig: true,
+                autocapture: {
+                    attribution: true,
+                    elementInteractions: false,
+                    fileDownloads: false,
+                    formInteractions: false,
+                    pageViews: true,
+                    sessions: false
+                }
+            };
+            if (cfg.region === 'EU') {
+                initOptions.serverZone = 'EU';
+            }
+
+            window.amplitude.init(cfg.apiKey, initOptions);
+
+            if (cfg.isAuthenticated && cfg.customerId) {
+                window.amplitude.setUserId(cfg.customerId);
+            } else {
+                window.amplitude.setUserId(null);
+            }
+
+            window.gapScheduleAmplitudeCookieSync();
+        };
+
+        window.gapLoadAmplitudeScript = function (src) {
+            return new Promise(function (resolve) {
+                var s = document.createElement('script');
+                s.src = src;
+                s.async = false;
+                s.onload = function () { resolve(); };
+                s.onerror = function (err) {
+                    window.gapLogAmplitudeError('Failed to load Amplitude script: ' + src, err);
+                    resolve();
+                };
+                (document.head || document.documentElement).appendChild(s);
+            });
+        };
+
+        window.gapFinishAmplitudeConsentInjection = function () {
+            if (typeof window.gapInitAmplitude === 'function') {
+                window.gapInitAmplitude();
+            }
+            if (typeof window.gapBootstrapAmplitudeClientHints === 'function') {
+                window.gapBootstrapAmplitudeClientHints();
+            }
+            if (typeof window.gapOnHomepageAmplitudeWireReady === 'function') {
+                window.gapOnHomepageAmplitudeWireReady(function () {
+                    window.gapWireHomepageAmplitudeClickListeners();
+                });
+            } else {
+                window.__gapPendingHomepageWire = true;
+            }
+        };
+
+        window.gapInjectAmplitudeAfterConsent = function () {
+            if (window.__gapAmplitudeInjected) { return; }
+            var cfg = window.gapAmplitudeConfig;
+            if (!cfg.enabled || !cfg.apiKey) { return; }
+            window.__gapAmplitudeInjected = true;
+
+            Promise.all([
+                window.gapLoadAmplitudeScript(cfg.cdnBaseUrl + '/script/' + cfg.apiKey + '.experiment.js'),
+                window.gapLoadAmplitudeScript(cfg.cdnBaseUrl + '/script/' + cfg.apiKey + '.js')
+            ]).then(function () {
+                return window.gapLoadAmplitudeScript(cfg.clientScriptUrl);
+            }).then(function () {
+                window.gapExposeAmplitudeConfigGlobals();
+                window.gapFinishAmplitudeConsentInjection();
+            }).catch(function (e) {
+                window.gapLogAmplitudeError('Failed to inject Amplitude after consent.', e);
+            });
+        };
+    </script>
+ 
+    <!-- Layout - New Ui -->
+    <!-- 3.1.0.1578 -->
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no, minimal-ui"/>
+    <meta name="author" content="the-saleroom.com"/>
+
+
+    <link href="https://www.googletagmanager.com" rel="dns-prefetch" />
+<link href="https://www.googletagmanager.com" rel="preconnect" />
+<link href="https://cdn.the-saleroom.com" rel="dns-prefetch" />
+<link href="https://cdn.the-saleroom.com" rel="preconnect" />
+<link href="https://cdn-ukwest.onetrust.com" rel="dns-prefetch" />
+<link href="https://cdn-ukwest.onetrust.com" rel="preconnect" />
+<link href="https://cdn.jsdelivr.net" rel="dns-prefetch" />
+<link href="https://cdn.jsdelivr.net" rel="preconnect" />
+<link href="https://d10aaldnfoji0c.cloudfront.net" rel="dns-prefetch" />
+<link href="https://d10aaldnfoji0c.cloudfront.net" rel="preconnect" />
+<link href="https://portal-assets.azureedge.net" rel="dns-prefetch" />
+<link href="https://portal-assets.azureedge.net" rel="preconnect" />
+<link href="https://az416426.vo.msecnd.net" rel="dns-prefetch" />
+<link href="https://az416426.vo.msecnd.net" rel="preconnect" />
+<link href="https://static.zdassets.com" rel="dns-prefetch" />
+<link href="https://static.zdassets.com" rel="preconnect" />
+
+    
+        <link rel="canonical" href="https://www.the-saleroom.com/en-gb"/>
+
+
+
+
+    
+    
+    
+    <meta name="description" content="Bid online for collectables and antiques at the Web&amp;#32s No.1 online auction site.   Over 100,000 live lots each day!" />
+    <meta name="keyword" content="antiques, auction, online auctions, auction house, collectables, auctioneers, live auctions, buy to auction, bidding site, auction software" />
+
+    <meta property="og:image" content="https://www.the-saleroom.com/Content/SR/images/site-logo.png"/>
+
+    <title class="notranslate">the-saleroom | Live online auctions site | Collectables &amp; Antiques</title>
+
+    <!-- Data Layer -->
+    <script src="/scripts/abhelper.js?v=639252306507939423"></script>
+<!-- google data layer --->
+<script> window.dataLayer = window.dataLayer || []; 
+window.dataLayer.push({
+"loggedIn" : "False",
+"pageType" : "Homepage",
+"modelName" : "HomePage",
+"platformCode" : "SR",
+"referrer" : "https%3a%2f%2fwww.the-saleroom.com%2fen-gb",
+"reskinAuctionRegFlow" : "True",
+"reskinHomepage" : "True",
+"reskinSearchResults" : "True",
+"reskinAuctionCalendar" : "True",
+"reskinAuctionCatalogue" : "True",
+"reskinCurrentLotsTimed" : "False",
+"reskinCurrentLotsLiveCompetitive" : "False",
+"reskinCurrentLotsLiveAutoBid" : "False",
+"reskinCurrentLotsCatalogue" : "False",
+"reskinCurrentLotsTender" : "False",
+"reskinExpiredLots" : "False",
+"reskinAuctioneerDirectory" : "False",
+"reskinPriceGuide" : "False",
+"reskinHeaderFooter" : "False",
+"enhancedSearch" : "True",
+});
+
+           
+          processValues([['globalId','uid'],
+                         ['lastActivity','timeout'],
+                         ['sessionNumber','session'],                  
+                         ['pageNumber','counter'],
+                         ['sessionId','sessionid'],
+                         ['userId','mirror'],
+                         ['userStatus','userStatus'],
+                         ['auctionAlerts','mirror'],
+                         ['watchedItems','mirror']]);
+         // check if we have event to fire
+         //
+         // export processValue for other scripts to add values to ls and datalayer
+        window.processValue = processValue;
+
+            
+
+</script>
+
+    <!-- end data layer  -->
+
+    <script src="/en-gb/script-resources.js?v=639252306507939423"></script>
+
+    
+    <!-- TODO: Rename this file to _CookieConsentManager.cshtml and all references. GoogleOptimise is a legacy name for
+when this file was started with Google Optimize + Universal Analytics, which was deprecated in 2023. Was replaced by
+Google Analytics 4 (GA4). -->
+
+<script>
+    window.GA_TRACKING = {
+        COOKIE_GROUPS: {
+            PERFORMANCE: 'C0002',
+            FUNCTIONAL: 'C0003',
+            TARGETING: 'C0004'
+        }
+    };
+</script>
+
+
+
+<script type="text/javascript">
+    window.COOKIE_CONFIG = window.COOKIE_CONFIG || {};
+    window.COOKIE_CONFIG.BLOCKED_COOKIES = {
+        FUNCTIONAL: ["VISITOR_INFO1_LIVE","__zlcid","__zlcmid","__zlcstore","clerk-log-email","deviceType","esOptOut","firedEventIds","gap-lot","i-bidder-search-option","kameleoonVisitorCode","lidc","rxVisitor"],
+        PERFORMANCE: ["AMP_*","AmplitudeAuthStatus","AmplitudeCurrentUserId","AmplitudeDeviceId","AmplitudeSessionId","AmplitudeUserId","AmplitudeVisitorCode","AnalyticsSyncHistory","OAID","YSC","_dd_s","_ga*","_gcl*","_gid","_hjAbsoluteSessionInProgress","_hjFirstSeen","_hjIncludedInSessionSample","_hjIncludedInSessionSample_3763826","_hjSessionUser_1090032","_hjSessionUser_3763826","_hjSession_1090032","_hjSession_3763826","_hjTLDTest","catbanner","dtCookie","dtPC","dtSa","hpbanner","rxvt","ubpv","ubvs","ubvt","zte2095"],
+        TARGETING: ["AWSALB*","CONSENT","IDE","NID","OAGEO","TESTCOOKIESENABLED","VISITOR_INFO1_LIVE","VISITOR_PRIVACY_METADATA","YSC","__Secure-BUCKET","__Secure-ROLLOUT_TOKEN","__Secure-YEC","__Secure-YNID","_fbp","awxxxx","bcookie","bscookie","deviceType","li_sugr","personalisationGroupsNumberOfVisits","personalisationGroupsNumberOfVisitsSessionStarted","survey_started","test_cookie"],
+        OTHERS: ["fm-websync-*"]
+    };
+</script>
+<script type="text/javascript">
+    const CookieGroups = {
+        FUNCTIONAL: 'FUNCTIONAL',
+        PERFORMANCE: 'PERFORMANCE',
+        TARGETING: 'TARGETING',
+        OTHERS: 'OTHERS'
+};
+</script>
+
+
+
+    <script>
+        if (localStorage.getItem('disableCookieMonitoring') === 'true') {
+            window.startCookieMonitoring = function() { 
+            };
+            window.OnConsentChanged = function() {
+            };
+        } else {
+            // Lists the other Top level domains (other than ".com"), which is only applicable for co.uk (from bidspotter.co.uk)
+            // This is needed because native hostname parsing treats co.uk as a possible domain from www.bidspotter.co.uk, which browsers reject as a cookie domain.
+            // So we need to check for this domain specifically and rewrite it to a correct full domain if found.
+            const multiPartPublicSuffixes = ['co.uk'];
+
+            // Returns domain variants from the browser url
+            // ie: www.bidspotter.co.uk will return ['', '.bidspotter.co.uk', 'bidspotter.co.uk', 'www.bidspotter.co.uk']
+            function getCookieDomains() {
+                const rootDomain = getRootCookieDomain(window.location.hostname);
+                return ['', '.' + rootDomain, rootDomain, window.location.hostname];
+            }
+
+            // Derives the cookie domain attribute from the hostname
+            // Third-party scripts (GTM, AWS WAF, Facebook) often guess wrong domains
+            // If domain is www.bidspotter.co.uk, some scripts will guess every iteration of the domain:
+            //   .www.bidspotter.co.uk, www.bidspotter.co.uk, .bidspotter.co.uk, bidspotter.co.uk, .co.uk, co.uk
+            //   However, .www.* and .co.uk and co.uk are invalid domain values
+            // Examples:
+            //   www.bidspotter.co.uk     -> bidspotter.co.uk
+            //   staging.bidspotter.co.uk -> bidspotter.co.uk
+            //   www.bidspotter.com       -> bidspotter.com
+            //   bidspotter.com           -> bidspotter.com
+            function getRootCookieDomain(hostname) {
+                const lowerHostname = hostname.toLowerCase();
+                for (const suffix of multiPartPublicSuffixes) {
+                    if (lowerHostname === suffix || lowerHostname.endsWith('.' + suffix)) {
+                        const prefix = lowerHostname.slice(0, -(suffix.length + 1));
+                        const label = prefix.split('.').pop();
+                        return label ? label + '.' + suffix : suffix;
+                    }
+                }
+                const parts = lowerHostname.split('.');
+                return parts.length > 2 ? parts.slice(1).join('.') : lowerHostname;
+            }
+
+            // Rewrites invalid "domain=" attributes
+            // www.bidspotter.co.uk is split into [.www.bidspotter.co.uk, www.bidspotter.co.uk, .bidspotter.co.uk, bidspotter.co.uk, .co.uk, co.uk]
+            // Invalid examples where we remap to the correct domain
+            //   domain=co.uk                 -> domain=bidspotter.co.uk
+            //   domain=.co.uk                -> domain=.bidspotter.co.uk
+            //   domain=.www.bidspotter.co.uk -> domain=.bidspotter.co.uk  (AWS WAF sets '.' + hostname)
+            // Valid examples where remapping has the same result
+            //   domain=bidspotter.co.uk      -> domain=bidspotter.co.uk
+            //   domain=www.bidspotter.co.uk  -> domain=www.bidspotter.co.uk
+            //   domain=.bidspotter.co.uk     -> domain=.bidspotter.co.uk
+            function sanitizeCookieDomain(value) {
+                const match = /;\s*domain=([^;]+)/i.exec(value);
+                if (!match) {
+                    return value;
+                }
+
+                const domain = match[1].trim();
+                const bareDomain = domain.toLowerCase().replace(/^\./, '');
+                const hostname = window.location.hostname.toLowerCase();
+                const rootDomain = getRootCookieDomain(hostname);
+                const useLeadingDot = domain.startsWith('.');
+
+                const needsFix =
+                    multiPartPublicSuffixes.includes(bareDomain) ||
+                    (useLeadingDot && bareDomain !== rootDomain && bareDomain.endsWith('.' + rootDomain));
+
+                if (!needsFix) {
+                    return value;
+                }
+
+                const correctedDomain = (useLeadingDot ? '.' : '') + rootDomain;
+                return value.replace(/;\s*domain=[^;]*/i, ';domain=' + correctedDomain);
+            }
+
+            function createCookieInterceptors() {
+                // Early return if feature is disabled
+                if (!true) {
+                    return;
+                }
+
+                // Cache the blocked cookie patterns for faster lookup
+                const blockedPatterns = {
+                    PERFORMANCE: COOKIE_CONFIG.BLOCKED_COOKIES.PERFORMANCE.map(p => p.replace('*', '')),
+                    FUNCTIONAL: COOKIE_CONFIG.BLOCKED_COOKIES.FUNCTIONAL.map(p => p.replace('*', '')),
+                    TARGETING: COOKIE_CONFIG.BLOCKED_COOKIES.TARGETING.map(p => p.replace('*', '')),
+                    OTHERS: COOKIE_CONFIG.BLOCKED_COOKIES.OTHERS.map(p => p.replace('*', ''))
+                };
+
+                const isCookieDeletion = (value) => {
+                    const eqIndex = value.indexOf('=');
+                    if (eqIndex === -1) {
+                        return false;
+                    }
+                    const cookieValue = value.substring(eqIndex + 1);
+                    // checks if the cookie has properties on it defining its expiration. ie:
+                    // expires=Thu, 01 Jan 1970 00:00:00 GMT
+                    // max-age=0
+                    return /^;\s*expires=/i.test(cookieValue) || /^;\s*max-age=0\b/i.test(cookieValue);
+                };
+
+                // Single function to check if cookie is blocked
+                const isCookieBlocked = (cookieName, group) => {
+                    // OTHERS uses TARGETING consent group
+                    const consentGroup = group === 'OTHERS' ? 'TARGETING' : group;
+                    if (!OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS[consentGroup])) {
+                        return blockedPatterns[group].some(pattern => cookieName.startsWith(pattern));
+                    }
+                    return false;
+                };
+
+                // Intercept cookie creation
+                const originalDocumentCookie = Object.getOwnPropertyDescriptor(Document.prototype, 'cookie');
+                Object.defineProperty(document, 'cookie', {
+                    configurable: true,
+                    enumerable: true,
+                    get: function() {
+                        return originalDocumentCookie.get.call(this);
+                    },
+                    set: function(value) {
+                        if (typeof OnetrustActiveGroups === 'undefined') {
+                            return;
+                        }
+
+                        const cookieName = value.split('=')[0].trim();
+                        const sanitizedValue = sanitizeCookieDomain(value);
+
+                        if (isCookieDeletion(sanitizedValue)) {
+                            originalDocumentCookie.set.call(this, sanitizedValue);
+                            return;
+                        }
+
+                        // Check all cookie types in one pass, including OTHERS
+                        if (isCookieBlocked(cookieName, 'PERFORMANCE') ||
+                            isCookieBlocked(cookieName, 'FUNCTIONAL') ||
+                            isCookieBlocked(cookieName, 'TARGETING') ||
+                            isCookieBlocked(cookieName, 'OTHERS')) {
+                            return;
+                        }
+
+                        originalDocumentCookie.set.call(this, sanitizedValue);
+                    }
+                });
+            }
+
+            // blockedEntry is either a blocked cookie or a blocked wildcard pattern
+            // Deletes a single cookie name or all document.cookie names matching a block-list entry (e.g. _ga*)
+            async function deleteCookie(blockedEntry) {
+                var domains = getCookieDomains();
+                var paths = ['/'];
+                var currentPath = window.location.pathname;
+                if (currentPath && currentPath !== '/') {
+                    paths.push(currentPath);
+                }
+                var cookieNamesToDelete = [];
+
+                // if the blocked entry is a wildcard such as _ga*, get all cookies from the full list that match the pattern
+                if (blockedEntry.endsWith('*')) {
+                    var prefix = blockedEntry.slice(0, -1);
+                    document.cookie.split(';').forEach(function (cookie) {
+                        var cookieName = cookie.trim().split('=')[0];
+                        if (cookieName && cookieName.startsWith(prefix)) {
+                            cookieNamesToDelete.push(cookieName);
+                        }
+                    });
+                } else if (cookieExists(blockedEntry)) {
+                    // if the blocked entry is a single cookie name, add it to the list
+                    cookieNamesToDelete.push(blockedEntry);
+                }
+
+                for (var cookieName of cookieNamesToDelete) {
+                    if (!cookieExists(cookieName)) {
+                        continue;
+                    }
+
+                    if (await deleteCookieWithStore(cookieName)) {
+                        continue;
+                    }
+
+                    // if we cannot delete cookie with cookie store, try to expire the cookie manually
+                    for (var path of paths) {
+                        for (var domain of domains) {
+                            setExpiredCookie(cookieName, domain, path);
+                            if (!cookieExists(cookieName)) {
+                                break;
+                            }
+                        }
+                        if (!cookieExists(cookieName)) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            function cookieExists(cookieName) {
+                return document.cookie.split(';').some(function (cookie) {
+                    return cookie.trim().split('=')[0] === cookieName;
+                });
+            }
+
+            // Cookie Store API exposes domain/path (document.cookie does not). No-op when unavailable in older browsers.
+            async function deleteCookieWithStore(cookieName) {
+                if (!window.cookieStore || !cookieExists(cookieName)) {
+                    return false;
+                }
+
+                try {
+                    var cookies = await cookieStore.getAll({ name: cookieName });
+                    for (var cookie of cookies) {
+                        await cookieStore.delete({
+                            name: cookie.name,
+                            path: cookie.path,
+                            domain: cookie.domain
+                        });
+                    }
+                    return !cookieExists(cookieName);
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // fallback method to expire a cookie manually if the cookie store API is not available
+            function setExpiredCookie(cookieName, cookieDomain, cookiePath) {
+                var domainAttr = cookieDomain ? ';domain=' + cookieDomain : '';
+                var secureSuffix = window.location.protocol === 'https:' ? ';Secure' : '';
+                var expiry = 'expires=Thu, 01 Jan 1970 00:00:01 GMT';
+                var path = cookiePath || '/';
+                document.cookie = cookieName + '=;' + expiry + ';path=' + path + domainAttr + secureSuffix;
+            }
+
+            async function cleanCookies() {
+                if (window.ApplicationInsights) {
+                    delete window.ApplicationInsights;
+                }
+
+                if (window.dtrum) {  // Dynatrace
+                    delete window.dtrum;
+                }
+
+                if (window.esOptOut) {  // Search OptOut
+                    delete window.esOptOut;
+                }
+
+                if (window.dataLayer) {
+                    window.dataLayer.push({
+                        'event': 'cookie_consent_update',
+                        'functional_storage': 'denied'
+                    });
+                }
+            }
+
+            // Function to delete all Performance, Functional, Targeting, and Other cookies that user has opted out of
+            async function deleteCookiesForGroup(groupKey) {
+                const blockedList = COOKIE_CONFIG.BLOCKED_COOKIES[groupKey];
+                if (!blockedList) return;
+
+                // for each cookie or cookie wildcard pattern in the blocked list, delete the cookie
+                for (var blockedEntry of blockedList) {
+                    await deleteCookie(blockedEntry);
+                }
+
+                cleanCookies();
+            }
+
+            // check for this consent type if there are any existing cookies in the browser that match the blocked list
+            async function hasBlockedCookiesForGroup(groupKey) {
+                const cookies = document.cookie.split(';');
+                const blockedList = COOKIE_CONFIG.BLOCKED_COOKIES[groupKey] || [];
+
+                return cookies.some(cookie => {
+                    const cookieName = cookie.trim().split('=')[0];
+
+                    // blocked is either a blocked cookie or a blocked wildcard pattern
+                    return blockedList.some(blocked => {
+                        if (blocked.endsWith('*')) {
+                            return cookieName.startsWith(blocked.replace('*', ''));
+                        }
+                        return cookieName === blocked;
+                    });
+                });
+            }
+
+            // Function to check consent state
+            async function checkConsentState() {
+                if (await hasBlockedCookiesForGroup(CookieGroups.PERFORMANCE) && !OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS.PERFORMANCE)) {
+                    await deleteCookiesForGroup(CookieGroups.PERFORMANCE);
+                }
+
+                if (await hasBlockedCookiesForGroup(CookieGroups.FUNCTIONAL) && !OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS.FUNCTIONAL)) {
+                    await deleteCookiesForGroup(CookieGroups.FUNCTIONAL);
+                }
+
+                if (await hasBlockedCookiesForGroup(CookieGroups.TARGETING) && !OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS.TARGETING)) {
+                    await deleteCookiesForGroup(CookieGroups.TARGETING);
+                }
+
+                if (await hasBlockedCookiesForGroup(CookieGroups.OTHERS) && !OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS.TARGETING)) {
+                    await deleteCookiesForGroup(CookieGroups.OTHERS);
+                }
+            }
+
+            let cookieMonitoringIntervalId;
+            let cookieMonitoringAttemptCount = 0;
+
+            // Function for continuous monitoring
+            function startCookieMonitoring() {
+                createCookieInterceptors();
+
+                if (cookieMonitoringIntervalId) {
+                    clearInterval(cookieMonitoringIntervalId);
+                }
+
+                const INITIAL_ATTEMPTS = 10;
+                const LONG_INTERVAL = 10000; // 10 seconds in milliseconds
+
+                const getCookieMonitoringInterval = (attemptCount) => {
+                    if (attemptCount < INITIAL_ATTEMPTS) {
+                        if (attemptCount === 0) return 100;
+                        if (attemptCount === 1) return 300;
+                        if (attemptCount === 2) return 500;
+                        return 1000;
+                    }
+                    return LONG_INTERVAL;
+                };
+
+                async function checkAndDeleteBlockedCookies() {
+                    if (typeof OnetrustActiveGroups === 'undefined') {
+                        return;
+                    }
+
+                    if (localStorage.getItem('disableCookieDeletion') === 'true') {
+                        return;
+                    }
+
+                    // Add explicit cookie checks and deletions
+                    if (await hasBlockedCookiesForGroup(CookieGroups.PERFORMANCE) && !OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS.PERFORMANCE)) {
+                        await deleteCookiesForGroup(CookieGroups.PERFORMANCE);
+                    }
+
+                    if (await hasBlockedCookiesForGroup(CookieGroups.FUNCTIONAL) && !OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS.FUNCTIONAL)) {
+                        await deleteCookiesForGroup(CookieGroups.FUNCTIONAL);
+                    }
+
+                    if (await hasBlockedCookiesForGroup(CookieGroups.TARGETING) && !OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS.TARGETING)) {
+                        await deleteCookiesForGroup(CookieGroups.TARGETING);
+                    }
+
+                    if (await hasBlockedCookiesForGroup(CookieGroups.OTHERS) && !OnetrustActiveGroups?.includes(GA_TRACKING.COOKIE_GROUPS.TARGETING)) {
+                        await deleteCookiesForGroup(CookieGroups.OTHERS);
+                    }
+
+                    clearInterval(cookieMonitoringIntervalId);
+                    cookieMonitoringAttemptCount++;
+
+                    const nextMonitoringInterval = getCookieMonitoringInterval(cookieMonitoringAttemptCount);
+                    cookieMonitoringIntervalId = setInterval(checkAndDeleteBlockedCookies, nextMonitoringInterval);
+                }
+
+                cookieMonitoringIntervalId = setInterval(checkAndDeleteBlockedCookies, getCookieMonitoringInterval(cookieMonitoringAttemptCount));
+            }
+
+            window.OnConsentChanged = async function () {
+                await checkConsentState();
+                await deleteCookiesByConsent();
+            };
+
+            async function deleteCookiesByConsent() {
+                if ('False' != 'True' && await hasBlockedCookiesForGroup(CookieGroups.FUNCTIONAL)) {
+                    await deleteCookiesForGroup(CookieGroups.FUNCTIONAL);
+                }
+
+                if ('False' != 'True' && await hasBlockedCookiesForGroup(CookieGroups.TARGETING)) {
+                    await deleteCookiesForGroup(CookieGroups.TARGETING);
+                }
+
+                if ('False' != 'True' && await hasBlockedCookiesForGroup(CookieGroups.PERFORMANCE)) {
+                    await deleteCookiesForGroup(CookieGroups.PERFORMANCE);
+                }
+
+                startCookieMonitoring();
+            }
+
+            // Immediate protection when script loads
+            (async function () {
+                createCookieInterceptors();  // First line of defense
+                await deleteCookiesByConsent();
+            })();
+        }
+    </script>
+ 
+
+
+    
+
+
+    <script type="text/javascript">
+        window.gapInjectGtmAfterConsent = function () {
+            if (window.__gapGtmInjected) {
+                return;
+            }
+            window.__gapGtmInjected = true;
+            (function (w, d, s, l, i) {
+                w[l] = w[l] || [];
+                w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+                var f = d.getElementsByTagName(s)[0],
+                    j = d.createElement(s),
+                    dl = l != 'dataLayer' ? '&l=' + l : '';
+                j.async = true;
+                j.src = '//www.googletagmanager.com/gtm.js?id=' + i + dl;
+                f.parentNode.insertBefore(j, f);
+            })(window, document, 'script', 'dataLayer', 'GTM-57G265B');
+        };
+    </script>
+
+
+    <!-- FONTS -->
+    <link rel="stylesheet" href="https://portal-assets.azureedge.net/fonts/roboto.css"/>
+    <link href="https://portal-assets.azureedge.net/fonts/montserrat.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/content/sr/css/icon-fonts.css?v=2.4.0">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/content/lib/css/newuiskin-third-party?v=TMVyAF491jqbocrsoj_HthZaXLPbW4Ee2QCbPtgF9CU1" media="screen"  />
+    <link rel="stylesheet" href="/content/lib/css/newuiskin-semantic?v=eCF1tXPMG3hOyZ6HhVUr5_GPk6grcISphSaETF15AIs1" media="screen"  />
+    
+    <link href="https://portal-assets.azureedge.net/fonts/montserrat.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="/css/print?v=-OSrUGHCBV0WBbFlStG4CTeIuClBCs82_Ln4BXt_hyI1" media="print"  />
+
+<link href="/content/app/searchasyoutypecss-newuiskin?v=T-3rP-cwhQDb0lGBzWs3AsFxAA3IzRJsd2ALdIUWB9Q1" rel="stylesheet"/>
+
+    <!-- ICONS -->
+    <link rel="apple-touch-icon" sizes="57x57" href="/content/sr/images/icons/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/content/sr/images/icons/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/content/sr/images/icons/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/content/sr/images/icons/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/content/sr/images/icons/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/content/sr/images/icons/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/content/sr/images/icons/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/content/sr/images/icons/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/content/sr/images/icons/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/content/sr/images/icons/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/content/sr/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/content/sr/images/icons/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/content/sr/images/icons/favicon-16x16.png">
+<link rel="icon" href="/content/sr/images/icons/favicon.ico">
+<link rel='stylesheet prefetch' href='//cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.8/components/icon.min.css'>
+<link rel="manifest" href="/content/sr/images/icons/manifest.json">
+<meta name="msapplication-TileColor" content="#414042">
+<meta name="msapplication-TileImage" content="/content/sr/images/icons/ms-icon-144x144.png">
+<meta name="theme-color" content="#414042">
+    <link href="https://portal-assets.azureedge.net/fonts/material-icons.css" rel="stylesheet">
+
+    <!-- JS -->
+    <!--[if lt IE 9]>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/es5-shim/4.5.9/es5-shim.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <script src="/js/newuiskin-lib?v=cnY_pIcjpiEeLgf7SdzmFE0wB4N9fH8RwihsBhql51I1"></script>
+
+
+    <!-- ZenDesk -->
+<script src="/scripts/zenDeskWidget?v=Owm2ywEsrXcrXngL3QPmsIzGXEwOihRw76f-L5yfIhQ1"></script>
+
+    <!-- AppInsights -->
+    
+<script>
+    (function () {
+        var noop = function () { };
+        var stub = {
+            queue: [],
+            config: {},
+            trackEvent: noop,
+            trackException: noop,
+            trackPageView: noop,
+            trackTrace: noop,
+            trackAjax: noop,
+            flush: noop,
+            setAuthenticatedUserContext: noop,
+            clearAuthenticatedUserContext: noop,
+            context: {
+                addTelemetryInitializer: noop
+            }
+        };
+        window.appInsights = stub;
+        var appInsights = window.appInsights;
+    })();
+</script>
+
+
+    
+
+    
+
+
+    <!-- openreplay config options -->
+    <script>
+    // https://docs.openreplay.com/en/sdk/constructor/#initialization-options
+    var initOpts = {
+        projectKey: "tOrtOLsSWOhMRhmLNZI2",
+        ingestPoint: "https://openreplay.auctiontechnologygroup.com/ingest",
+        capturePerformance: false,
+        defaultInputMode: 0,
+        disableStringDict: true,
+        domSanitizer: function (node) {
+            const isPassword = node.getAttribute('password') === 'password';
+
+            if (isPassword) {
+                return 1; // obscured
+            }
+
+            return 0; // plain
+        },
+        network: {
+            failuresOnly: false,
+            sessionTokenHeader: false,
+            ignoreHeaders: false,
+            capturePayload: true,
+            sanitizer: function (data) {
+                return data;
+            },
+            captureInIframes: false
+        }
+    };
+
+    var startOpts = {
+     userID: "",
+     metadata: {
+         name: "",
+         email: "",
+         ip: "10.10.30.216",
+         userAgent: "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+         buildNumer: "3.1.0.1578.63a864d"
+         }
+     };
+
+    // boilerplate script tag
+    (function (A, s, a, y, e, r) {
+        r = window.OpenReplay = [e, r, y, [s - 1, e]];
+        s = document.createElement('script'); s.src = A; s.async = !a;
+        document.getElementsByTagName('head')[0].appendChild(s);
+        r.start = function (v) { r.push([0]) };
+        r.stop = function (v) { r.push([1]) };
+        r.setUserID = function (id) { r.push([2, id]) };
+        r.setUserAnonymousID = function (id) { r.push([3, id]) };
+        r.setMetadata = function (k, v) { r.push([4, k, v]) };
+        r.event = function (k, p, i) { r.push([5, k, p, i]) };
+        r.issue = function (k, p) { r.push([6, k, p]) };
+        r.isActive = function () { return false };
+        r.getSessionToken = function () { };
+    })("//static.openreplay.com/11.0.1/openreplay.js", 1, 0, initOpts, startOpts);
+    </script>
+
+</head>
+
+<body class="notranslate new-ui-skin"  >
+    <script>
+        (function () {
+            'use strict';
+            window.Gap = window.Gap || {};
+            Gap.Portal = Gap.Portal || {};
+            Gap.Portal.UI = Gap.Portal.UI || {};
+            Gap.Portal.UI.Culture = 'en-gb';
+            Gap.Portal.UI.IsAuthenticated = false;
+            Gap.Portal.UI.WatchlistUrl = '/en-gb/my-account/wishlist-add-remove';
+            Gap.Portal.UI.DecimalSeparator = '.';
+            Gap.Portal.UI.NumberGroupSeparator = ',';
+            Gap.Portal.UI.ZendeskKey = '20b47bd2-730b-4784-b6d0-e401110fd538';
+            Gap.Portal.UI.ZendeskDepartmentName = 'Customer Services';
+            Gap.Portal.UI.isUpdatingCountdownEnabled =  false;
+            Gap.Portal.UI.isNewUpdatingCountdownEnabled = true;
+            Gap.Portal.UI.isLotStateChangeSignalRUpdateEnabled = true;
+            Gap.Portal.UI.ImageCdnBaseUrl = 'https://cdn.globalauctionplatform.com/';
+
+        })();
+    </script>
+
+    
+
+
+    
+
+
+
+    
+
+    <div class="viewport-wrapper">
+
+
+
+<link rel="stylesheet" href="/content/lib/css/gap-header?v=Nv012GQ7YCGTQYUXmIq6eU1vGudsmNdHvXlncR_I_As1" media="screen"  />
+
+<div class="gap-header">
+    <div class="gap-header__content">
+        <nav class="gap-header__helpers">
+            <ul>
+
+    <li>
+        <div class="gap-header__button">
+            <button type="button"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                    aria-controls="dropdown1">
+                Help<span class="gap-header__button--icon-arrow"></span>
+            </button>
+            <ul class="gap-header__button--dropdown" id="dropdown1">
+                    <li><a href="https://support.the-saleroom.com/hc/en-gb/categories/115000008514-Bidding-Buying" target="_self" id="reskin_nav_help_centre_submenu_how_to_buy" class="item">How to Buy</a></li>
+                <li><a href="https://support.the-saleroom.com/hc/en-gb" target="_blank" id="reskin_nav_help_centre_submenu_help" class="item">Help Centre</a></li>
+                <li><a id="reskin_supportChat" class="chat-trigger" href="#" target="_blank">Live Chat</a></li>
+            </ul>
+        </div>
+    </li>
+<li>
+    <div class="gap-header__button">
+        <button type="button"
+                aria-haspopup="true"
+                aria-expanded="true"
+                aria-controls="sr-helpers-sold-prices">
+            Sold prices<span class="gap-header__button--icon-arrow"></span>
+        </button>
+        <ul class="gap-header__button--dropdown" id="sr-helpers-sold-prices">
+            <li><a id="nav_prices_submenu_price_guide" href="/en-gb/price-guide">Price Guide</a></li>
+            <li><a id="nav_prices_submenu_realised_prices" href="/en-gb/auction-catalogues?auctions=past&AuctionType=Live">Realised Prices</a></li>
+        </ul>
+    </div>
+</li>
+            </ul>
+            <ul>
+                                    <li>
+                        <div class="gap-header__button">
+                            <button type="button"
+                                    aria-haspopup="true"
+                                    aria-expanded="true"
+                                    aria-controls="dropdown1">
+                                <span class="gap-header__culture gap-header__culture--en-gb"></span>
+                            </button>
+                            <ul class="gap-header__button--dropdown gap-header__button--dropdown-left">
+                                    <li><a class="current" onclick="Gap.Common.ReplaceLanguage('en-gb', 'en-gb')" href="#">English</a></li>
+                            </ul>
+                        </div>
+                    </li>
+            </ul>
+        </nav>
+        <div class="gap-header__hamburger-menu">
+
+
+
+<nav>
+    <input type="checkbox" id="side-menu" name="side-menu" class="side-menu__checkbox">
+    <label class="side-menu__main-toggle" for="side-menu" onclick="togglePageScrolling()">
+        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </label>
+    <label class="side-menu__overlay" onClick="closeHamburgerMenu()"></label>
+
+    <div class="side-menu">
+        <div class="side-menu__header">
+            <span>Menu</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+        </div>
+        <ul>
+            <li class="side-menu__label--menu_item">
+                <label class="a-label__chevron" for="item-2">My Account</label>
+                <input type="checkbox" id="item-2" name="item-2" class="side-menu__checkbox">
+                <div class="side-menu">
+                    <div class="side-menu__header">
+                        <label class="side-menu__toggle" for="item-2">
+                            <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                <path d="M19 12H6M12 5l-7 7 7 7" />
+                            </svg>
+                        </label>
+                        <span>My Account</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                    </div>
+                    <ul>
+                        <li class="side-menu__label--menu_item"><span>My Account</span></li>
+                            <li class="side-menu__label--submenu_item"><a id="nav_mobile_account_sign_in" href="#" onclick="showLoginBox();">Sign in</a></li>
+                            <li class="side-menu__label--submenu_item"><a id="nav_mobile_account_register" href="/en-gb/my-account/register?callingPageUrl=/en-gb">Register</a></li>
+                    </ul>
+                </div>
+            </li>
+<li class="side-menu__label--menu_item">
+    <label class="a-label__chevron" for="item-find-auctions">Find Auctions</label>
+    <input type="checkbox" id="item-find-auctions" name="item-find-auctions" class="side-menu__checkbox">
+    <div class="side-menu">
+        <div class="side-menu__header">
+            <label class="side-menu__toggle" for="item-find-auctions">
+                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                </svg>
+            </label>
+            <span>Find Auctions</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+        </div>
+        <ul>
+            <li class="side-menu__label--menu_item"><span>Find Auctions</span></li>
+            <li class="side-menu__label--submenu_item"><a id="nav_mobile_reskin_nav_auctions_submenu_auction_calendar" href="/en-gb/auction-catalogues">Auction Calendar</a></li>
+            <li class="side-menu__label--submenu_item"><a id="nav_mobile_reskin_nav_auctions_submenu_auction_houses" href="/en-gb/auctioneers">Auction Houses</a></li>
+            <li class="side-menu__label--submenu_item"><a id="nav_mobile_auctions_submenu_featured_lots" href="/en-gb/featured-lots">Featured Lots</a></li>
+        </ul>
+    </div>
+</li>
+            <li class="side-menu__label--menu_item"><a id="nav_mobile_account_alerts" href="/en-gb/auction-alerts">Auction Alerts</a></li>
+            <li class="side-menu__label--menu_item"><span>Categories</span></li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-fine art">Fine Art</label>
+                    <input type="checkbox" id="item-fine art" name="item-fine art" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-fine art">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Fine Art</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Fine Art</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FIA" href="/en-gb/for-sale/fine-art">All Fine Art</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FIA_DPS" href="/en-gb/for-sale/fine-art/drawings-and-pastels">Drawings &amp; Pastels</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FIA_OAP" href="/en-gb/for-sale/fine-art/oil-acrylic-paintings-and-mixed-media">Paintings &amp; Mixed Media</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FIA_PHT" href="/en-gb/for-sale/fine-art/photographs">Fine Art Photography</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FIA_PRT" href="/en-gb/for-sale/fine-art/prints">Prints &amp; Multiples</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FIA_SCP" href="/en-gb/for-sale/fine-art/sculpture">Sculptures</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FIA_WTC" href="/en-gb/for-sale/fine-art/watercolours">Watercolour Paintings</a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_fine-art_banksy" href="/en-gb/for-sale/fine-art/banksy">Banksy</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_fine-art_andy-warhol" href="/en-gb/for-sale/fine-art/andy-warhol">Andy Warhol</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_fine-art_david-hockney" href="/en-gb/for-sale/fine-art/david-hockney">David Hockney</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_fine-art_ls-lowry" href="/en-gb/for-sale/fine-art/ls-lowry">L.S. Lowry</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_fine-art_pablo-picasso" href="/en-gb/for-sale/fine-art/pablo-picasso">Pablo Picasso</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_fine-art_albrecht-durer" href="/en-gb/for-sale/fine-art/albrecht-durer">Albrecht D&#252;rer</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-collectables">Collectables</label>
+                    <input type="checkbox" id="item-collectables" name="item-collectables" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-collectables">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Collectables</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Collectables</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL" href="/en-gb/for-sale/collectables">All Collectables</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_BNK" href="/en-gb/for-sale/collectables/bank-notes">Bank Notes</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_BKP" href="/en-gb/for-sale/collectables/books-and-periodicals">Books &amp; Periodicals </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_CCE" href="/en-gb/for-sale/collectables/cameras-and-camera-equipment">Cameras &amp; Photography Equipment</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_COI" href="/en-gb/for-sale/collectables/coins">Coins</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_ENT" href="/en-gb/for-sale/collectables/entertainment-memorabilia">Entertainment Memorabilia</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_KTC" href="/en-gb/for-sale/collectables/kitchenalia">Antique Kitchenalia</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_MAP" href="/en-gb/for-sale/collectables/maps">Antique &amp; Vintage Maps</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_MOD" href="/en-gb/for-sale/collectables/models-toys-dolls-and-games">Toys &amp; Games</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_MUS" href="/en-gb/for-sale/collectables/musical-instruments-and-memorabilia">Musical Instruments &amp; Memorabilia</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_RWL" href="/en-gb/for-sale/collectables/railwayana">Railwayana </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_RIF" href="/en-gb/for-sale/collectables/religious-items-and-folk-art">Religious Items &amp; Folk Art </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_SIS" href="/en-gb/for-sale/collectables/scientific-instruments">Antique Scientific Instruments</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_SME" href="/en-gb/for-sale/collectables/sporting-memorabilia-and-equipment">Sports Memorabilia &amp; Equipment </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_STM" href="/en-gb/for-sale/collectables/stamps">Collectable Stamps </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_TNH" href="/en-gb/for-sale/collectables/taxidermy-and-natural-history">Taxidermy </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_TLS" href="/en-gb/for-sale/collectables/tools">Antique &amp; Vintage Tools</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_WSP" href="/en-gb/for-sale/collectables/wines-and-spirits">Vintage Wine &amp; Spirits </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_WIN" href="/en-gb/for-sale/collectables/writing-instruments">Writing Instruments </a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_cameras-and-camera-equipment_cameras" href="/en-gb/for-sale/collectables/cameras-and-camera-equipment/cameras">Cameras</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_sporting-memorabilia-and-equipment_sports-autographs" href="/en-gb/for-sale/collectables/sporting-memorabilia-and-equipment/sports-autographs">Sports Autographs</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_coins_british-coins" href="/en-gb/for-sale/collectables/coins/british-coins">British Coins</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_musical-instruments_vintage-guitars" href="/en-gb/for-sale/collectables/musical-instruments/vintage-guitars">Vintage Guitars</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_sporting-memorabilia-and-equipment_sports-posters" href="/en-gb/for-sale/collectables/sporting-memorabilia-and-equipment/sports-posters">Sports Posters</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-watches &amp; jewellery">Watches &amp; Jewellery</label>
+                    <input type="checkbox" id="item-watches &amp; jewellery" name="item-watches &amp; jewellery" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-watches &amp; jewellery">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Watches &amp; Jewellery</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Watches &amp; Jewellery</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_CWJ" href="/en-gb/for-sale/clocks-watches-and-jewellery">All Vintage Jewellery &amp; Watches</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_CWJ_BAR" href="/en-gb/for-sale/clocks-watches-and-jewellery/barometers">Barometers</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_CWJ_CLK" href="/en-gb/for-sale/clocks-watches-and-jewellery/clocks">Antique &amp; Vintage Clocks</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_CWJ_JWL" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery">Jewellery </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_CWJ_WAT" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories">Watches </a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_jewellery_rings" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/rings">Rings</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_jewellery_brooches" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/brooches">Brooches</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_watches-and-watch-accessories_pocket-watches" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories/pocket-watches">Pocket Watches</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_watches-and-watch-accessories_omega-watches" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories/omega-watches">Omega Watches</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_watches-and-watch-accessories_rolex-watches" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories/rolex-watches">Rolex Watches</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_jewellery_bracelets" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/bracelets">Bracelets</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_jewellery_earrings" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/earrings">Earrings</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_jewellery_tiffany-co-jewellery" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/tiffany-co-jewellery">Tiffany &amp; Co Jewellery</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_jewellery_cartier-jewellery" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/cartier-jewellery">Cartier Jewellery</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_clocks-watches-and-jewellery_watches-and-watch-accessories_seiko-watches" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories/seiko-watches">Seiko Watches</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-decorative art">Decorative Art</label>
+                    <input type="checkbox" id="item-decorative art" name="item-decorative art" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-decorative art">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Decorative Art</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Decorative Art</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_DEA" href="/en-gb/for-sale/decorative-art">All Decorative Art</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_DEA_CER" href="/en-gb/for-sale/decorative-art/ceramics">Antique &amp; Vintage Ceramics</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_DEA_GLS" href="/en-gb/for-sale/decorative-art/glassware">Antique &amp; Vintage Glassware</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_DEA_MTL" href="/en-gb/for-sale/decorative-art/metalware">Antique &amp; Vintage Metalware</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_DEA_PCL" href="/en-gb/for-sale/decorative-art/porcelain">Antique &amp; Vintage Porcelain</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_DEA_SIL" href="/en-gb/for-sale/decorative-art/silver-and-silver-plated-items">Antique &amp; Vintage Silver</a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_ceramics_ceramic-vases" href="/en-gb/for-sale/decorative-art/ceramics/ceramic-vases">Ceramic Vases</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_glassware_glass-vases" href="/en-gb/for-sale/decorative-art/glassware/glass-vases">Glass Vases</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_porcelain_porcelain-plates" href="/en-gb/for-sale/decorative-art/porcelain/porcelain-plates">Porcelain Plates</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_ceramics_ceramic-pots" href="/en-gb/for-sale/decorative-art/ceramics/ceramic-pots">Ceramic Pots</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_glassware_murano-glass" href="/en-gb/for-sale/decorative-art/glassware/murano-glass">Murano Glass</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_silver-and-silver-plated-items_silver-vases" href="/en-gb/for-sale/decorative-art/silver-and-silver-plated-items/silver-vases">Silver Vases</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_porcelain_sevres-porcelain" href="/en-gb/for-sale/decorative-art/porcelain/sevres-porcelain">S&#232;vres Porcelain</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_glassware_glass-bottles" href="/en-gb/for-sale/decorative-art/glassware/glass-bottles">Glass Bottles</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_glassware_glass-tumblers" href="/en-gb/for-sale/decorative-art/glassware/glass-tumblers">Glass Tumblers</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_glassware_glass-lamps" href="/en-gb/for-sale/decorative-art/glassware/glass-lamps">Glass Lamps</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_porcelain_meissen-porcelain" href="/en-gb/for-sale/decorative-art/porcelain/meissen-porcelain">Meissen Porcelain</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_ceramics_royal-doulton-ceramics" href="/en-gb/for-sale/decorative-art/ceramics/royal-doulton-ceramics">Royal Doulton Ceramics</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_ceramics_worcester-ceramics" href="/en-gb/for-sale/decorative-art/ceramics/worcester-ceramics">Worcester Ceramics</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_decorative-art_silver-and-silver-plated-items_silver-mirrors" href="/en-gb/for-sale/decorative-art/silver-and-silver-plated-items/silver-mirrors">Silver Mirrors</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-furniture">Furniture</label>
+                    <input type="checkbox" id="item-furniture" name="item-furniture" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-furniture">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Furniture</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Furniture</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FUR" href="/en-gb/for-sale/furniture">All Furniture</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FUR_CRG" href="/en-gb/for-sale/furniture/carpets-and-rugs">Rugs &amp; Carpets </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FUR_DES" href="/en-gb/for-sale/furniture/design">Designer Furniture - Modern &amp; Contemporary</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FUR_LIT" href="/en-gb/for-sale/furniture/lighting">Lighting</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_FUR_SAA" href="/en-gb/for-sale/furniture/salvage-and-architectural-antiques">Salvage &amp; Architectural Antiques</a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_tables" href="/en-gb/for-sale/furniture/tables">Tables</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_seating_chairs" href="/en-gb/for-sale/furniture/seating/chairs">Chairs</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_cabinets-and-case-pieces" href="/en-gb/for-sale/furniture/cabinets-and-case-pieces">Cabinets &amp; Case Pieces</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_seating_sofas" href="/en-gb/for-sale/furniture/seating/sofas">Sofas</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_tables_dining-tables" href="/en-gb/for-sale/furniture/tables/dining-tables">Dining Tables</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_beds" href="/en-gb/for-sale/furniture/beds">Beds</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_mouseman" href="/en-gb/for-sale/furniture/mouseman">Mouseman</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_heals" href="/en-gb/for-sale/furniture/heals">Heal&#39;s</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_chippendale" href="/en-gb/for-sale/furniture/chippendale">Chippendale</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_ercol" href="/en-gb/for-sale/furniture/ercol">Ercol</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_g-plan" href="/en-gb/for-sale/furniture/g-plan">G Plan</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_furniture_liberty" href="/en-gb/for-sale/furniture/liberty">Liberty</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-asian art">Asian Art</label>
+                    <input type="checkbox" id="item-asian art" name="item-asian art" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-asian art">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Asian Art</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Asian Art</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_AA" href="/en-gb/for-sale/asian-art">All Asian Art &amp; Antiques</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_AA_CWA" href="/en-gb/for-sale/asian-art/chinese-works-of-art">Chinese Art &amp; Antiques</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_AA_IWA" href="/en-gb/for-sale/asian-art/indian-works-of-art">Indian Art &amp; Antiques</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_AA_ISL" href="/en-gb/for-sale/asian-art/islamic-works-of-art">Islamic Art &amp; Antiques</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_AA_JAP" href="/en-gb/for-sale/asian-art/japanese-works-of-art">Japanese Art &amp; Antiques</a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_asian-art_chinese-works-of-art_qing-dynasty-art" href="/en-gb/for-sale/asian-art/chinese-works-of-art/qing-dynasty-art">Qing Dynasty Art</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_asian-art_japanese-works-of-art_meiji-period-art" href="/en-gb/for-sale/asian-art/japanese-works-of-art/meiji-period-art">Meiji Period Art</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_asian-art_chinese-works-of-art_ming-dynasty-art" href="/en-gb/for-sale/asian-art/chinese-works-of-art/ming-dynasty-art">Ming Dynasty Art</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-arms, armour &amp; militaria">Arms, Armour &amp; Militaria</label>
+                    <input type="checkbox" id="item-arms, armour &amp; militaria" name="item-arms, armour &amp; militaria" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-arms, armour &amp; militaria">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Arms, Armour &amp; Militaria</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Arms, Armour &amp; Militaria</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_AAM" href="/en-gb/for-sale/collectables/arms-armour-and-militaria">All Arms, Armour &amp; Militaria </a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_arms-armour-and-militaria_militaria" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/militaria">Militaria</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_arms-armour-and-militaria_knifes-and-blades_knives" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/knifes-and-blades/knives">Knives</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_arms-armour-and-militaria_armour" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/armour">Armour</a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_arms-armour-and-militaria_militaria_badges-medals-pins" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/militaria/badges-medals-pins">Badges, Medals &amp; Pins</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_arms-armour-and-militaria_militaria_ww2-memorabilia" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/militaria/ww2-memorabilia">WW2 Memorabilia For Sale</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_arms-armour-and-militaria_antique-arms_antique-pistols" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/antique-arms/antique-pistols">Antique Pistols</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_arms-armour-and-militaria_militaria_military-uniforms" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/militaria/military-uniforms">Military Uniforms</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_arms-armour-and-militaria_knifes-and-blades_swords" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/knifes-and-blades/swords">Swords</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-classic cars">Classic Cars</label>
+                    <input type="checkbox" id="item-classic cars" name="item-classic cars" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-classic cars">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Classic Cars</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Classic Cars</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_COL_CMA" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia">All Classic Cars &amp; Automobilia</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_classic-cars" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/classic-cars">Classic Cars</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_motorbikes" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/motorbikes">Motorbikes</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_scooters" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/scooters">Scooters</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_sporting-memorabilia-and-equipment_bicycles" href="/en-gb/for-sale/collectables/sporting-memorabilia-and-equipment/bicycles">Bicycles</a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_ford" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/ford">Ford</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_honda" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/honda">Honda</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_mercedes-benz" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/mercedes-benz">Mercedes-Benz</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="side-menu__label--submenu_item">
+                    <label class="a-label__chevron" for="item-vintage fashion">Vintage Fashion</label>
+                    <input type="checkbox" id="item-vintage fashion" name="item-vintage fashion" class="side-menu__checkbox">
+                    <div class="side-menu">
+                        <div class="side-menu__header">
+                            <label class="side-menu__toggle" for="item-vintage fashion">
+                                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                                </svg>
+                            </label>
+                            <span>Vintage Fashion</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+                        </div>
+                        <ul>
+                                <li class="side-menu__label--menu_item"><span>Vintage Fashion</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_VFT" href="/en-gb/for-sale/vintage-fashion-and-textiles">All Vintage Fashion</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_VFT_TXT" href="/en-gb/for-sale/vintage-fashion-and-textiles/textiles">Textiles</a></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_VFT_VIN" href="/en-gb/for-sale/vintage-fashion-and-textiles/vintage-fashion">Vintage Fashion</a></li>
+                                <li class="side-menu__label--menu_item"><span>Popular categories</span></li>
+                                    <li class="side-menu__label--submenu_item"><a id="nav_mobile_gap_header_menu_vintage-fashion-and-textiles_bags-and-handbags" href="/en-gb/for-sale/vintage-fashion-and-textiles/bags-and-handbags">Bags &amp; Handbags</a></li>
+                        </ul>
+                    </div>
+                </li>
+            
+
+<li class="side-menu__label--menu_item">
+    <label class="a-label__chevron" for="item-help">Help</label>
+    <input type="checkbox" id="item-help" name="item-help" class="side-menu__checkbox">
+    <div class="side-menu">
+        <div class="side-menu__header">
+            <label class="side-menu__toggle" for="item-help">
+                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                </svg>
+            </label>
+            <span>Help</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+        </div>
+        <ul>
+            <li class="side-menu__label--menu_item"><span>Help</span></li>
+                <li class="side-menu__label--submenu_item"><a href="https://support.the-saleroom.com/hc/en-gb/categories/115000008514-Bidding-Buying" target="_self" id="reskin_nav_help_centre_submenu_how_to_buy" class="item">How to Buy</a></li>
+            <li class="side-menu__label--submenu_item"><a href="https://support.the-saleroom.com/hc/en-gb" target="_blank" id="reskin_nav_help_centre_submenu_help" class="item">Help Centre</a></li>
+            <li class="side-menu__label--submenu_item"><a id="nav_mobile_reskin_supportChat" class="chat-trigger" href="#" target="_blank" onclick="closeHamburgerMenu()">Live Chat</a></li>
+        </ul>
+    </div>
+</li>
+<li class="side-menu__label--menu_item">
+    <label class="a-label__chevron" for="item-sold-prices">Sold prices</label>
+    <input type="checkbox" id="item-sold-prices" name="item-sold-prices" class="side-menu__checkbox">
+    <div class="side-menu">
+        <div class="side-menu__header">
+            <label class="side-menu__toggle" for="item-sold-prices">
+                <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+                    <path d="M19 12H6M12 5l-7 7 7 7" />
+                </svg>
+            </label>
+            <span>Sold prices</span>
+<label class="side-menu__toggle" onclick="closeHamburgerMenu()">
+    <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="butt" stroke-linejoin="arcs">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+</label>
+        </div>
+        <ul>
+            <li class="side-menu__label--menu_item"><span>Sold prices</span></li>
+            <li class="side-menu__label--submenu_item"><a id="nav_mobile_prices_submenu_price_guide" href="/en-gb/price-guide">Price Guide</a></li>
+            <li class="side-menu__label--submenu_item"><a id="nav_mobile_prices_submenu_realised_prices" href="/en-gb/auction-catalogues?auctions=past&AuctionType=Live">Realised Prices</a></li>
+        </ul>
+    </div>
+</li>
+
+        </ul>
+    </div>
+</nav>
+
+<script type="text/javascript">
+    function togglePageScrolling() {
+        $('body').toggleClass('menu-open');
+    }
+
+    function closeHamburgerMenu() {
+        var checkboxes = document.getElementsByClassName('side-menu__checkbox');
+        for (var i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = false;
+        }
+        togglePageScrolling();
+    }
+</script>
+        </div>
+        <div class="gap-header__logo">
+            <a id="logo" href="/en-gb">
+<h2>
+    the saleroom
+</h2>
+
+            </a>
+        </div>
+        <div class="gap-header__search">
+                    <div id="searchPlaceholder"></div>
+
+        </div>
+        <div class="gap-header__auction-dropdown">
+<div id="nav_auctions" class="gap-header__button gap-header__button--large gap-header__button--rounded gap-header__button--hover">
+    <button type="button"
+            aria-haspopup="true"
+            aria-expanded="true"
+            aria-controls="sr-auction-dropdown">
+        Find Auctions<span class="gap-header__button--icon-arrow"></span>
+    </button>
+    <ul class="gap-header__button--dropdown" id="sr-auction-dropdown">
+        <li><a id="reskin_nav_auctions_submenu_auction_calendar" href="/en-gb/auction-catalogues">Auction Calendar</a></li>
+        <li><a id="reskin_nav_auctions_submenu_auction_houses" href="/en-gb/auctioneers">Auction Houses</a></li>
+        <li><a id="nav_auctions_submenu_featured_lots" href="/en-gb/featured-lots">Featured Lots</a></li>
+    </ul>
+</div>
+        </div>
+        <div class="gap-header__content-buttons">
+                <div class="gap-header__button gap-header__button--rounded gap-header__button--large gap-header__button--minwidth-80 gap-header__button--hover">
+                    <a id="account_sign_in" href="#" onclick="showLoginBox();">Sign in</a>
+                </div>
+                <div class="gap-header__button gap-header__button--rounded  gap-header__button--large gap-header__button--minwidth-80 gap-header__button--hover gap-header__button--secondary-color">
+                    <a id="account_register" href="/en-gb/my-account/register?callingPageUrl=/en-gb">Register</a>
+                </div>
+                <div id="gap-header-alerts" class="gap-header__button gap-header__button--large gap-header__button--icon-vertical">
+                    <a id="account_alerts" href="/en-gb/auction-alerts">
+                        <i class="material-icons mi-hover-hidden">notifications_none</i>
+                        <i class="material-icons mi-hover-show">notifications</i>
+                        <span>Alerts</span>
+                    </a>
+                </div>
+        </div>
+        <nav class="gap-header__meganav">
+
+
+
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/fine-art">Fine Art</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Fine Art                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_FIA" href="/en-gb/for-sale/fine-art">All Fine Art</a>
+                                <a id="nav_gap_header_menu_FIA_DPS" href="/en-gb/for-sale/fine-art/drawings-and-pastels">Drawings &amp; Pastels</a>
+                                <a id="nav_gap_header_menu_FIA_OAP" href="/en-gb/for-sale/fine-art/oil-acrylic-paintings-and-mixed-media">Paintings &amp; Mixed Media</a>
+                                <a id="nav_gap_header_menu_FIA_PHT" href="/en-gb/for-sale/fine-art/photographs">Fine Art Photography</a>
+                                <a id="nav_gap_header_menu_FIA_PRT" href="/en-gb/for-sale/fine-art/prints">Prints &amp; Multiples</a>
+                                <a id="nav_gap_header_menu_FIA_SCP" href="/en-gb/for-sale/fine-art/sculpture">Sculptures</a>
+                                <a id="nav_gap_header_menu_FIA_WTC" href="/en-gb/for-sale/fine-art/watercolours">Watercolour Paintings</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_fine-art_banksy" href="/en-gb/for-sale/fine-art/banksy">Banksy</a>
+                                <a id="nav_gap_header_menu_fine-art_andy-warhol" href="/en-gb/for-sale/fine-art/andy-warhol">Andy Warhol</a>
+                                <a id="nav_gap_header_menu_fine-art_david-hockney" href="/en-gb/for-sale/fine-art/david-hockney">David Hockney</a>
+                                <a id="nav_gap_header_menu_fine-art_ls-lowry" href="/en-gb/for-sale/fine-art/ls-lowry">L.S. Lowry</a>
+                                <a id="nav_gap_header_menu_fine-art_pablo-picasso" href="/en-gb/for-sale/fine-art/pablo-picasso">Pablo Picasso</a>
+                                <a id="nav_gap_header_menu_fine-art_albrecht-durer" href="/en-gb/for-sale/fine-art/albrecht-durer">Albrecht D&#252;rer</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/collectables">Collectables</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Collectables                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_COL" href="/en-gb/for-sale/collectables">All Collectables</a>
+                                <a id="nav_gap_header_menu_COL_BNK" href="/en-gb/for-sale/collectables/bank-notes">Bank Notes</a>
+                                <a id="nav_gap_header_menu_COL_BKP" href="/en-gb/for-sale/collectables/books-and-periodicals">Books &amp; Periodicals </a>
+                                <a id="nav_gap_header_menu_COL_CCE" href="/en-gb/for-sale/collectables/cameras-and-camera-equipment">Cameras &amp; Photography Equipment</a>
+                                <a id="nav_gap_header_menu_COL_COI" href="/en-gb/for-sale/collectables/coins">Coins</a>
+                                <a id="nav_gap_header_menu_COL_ENT" href="/en-gb/for-sale/collectables/entertainment-memorabilia">Entertainment Memorabilia</a>
+                                <a id="nav_gap_header_menu_COL_KTC" href="/en-gb/for-sale/collectables/kitchenalia">Antique Kitchenalia</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_COL_MAP" href="/en-gb/for-sale/collectables/maps">Antique &amp; Vintage Maps</a>
+                                <a id="nav_gap_header_menu_COL_MOD" href="/en-gb/for-sale/collectables/models-toys-dolls-and-games">Toys &amp; Games</a>
+                                <a id="nav_gap_header_menu_COL_MUS" href="/en-gb/for-sale/collectables/musical-instruments-and-memorabilia">Musical Instruments &amp; Memorabilia</a>
+                                <a id="nav_gap_header_menu_COL_RWL" href="/en-gb/for-sale/collectables/railwayana">Railwayana </a>
+                                <a id="nav_gap_header_menu_COL_RIF" href="/en-gb/for-sale/collectables/religious-items-and-folk-art">Religious Items &amp; Folk Art </a>
+                                <a id="nav_gap_header_menu_COL_SIS" href="/en-gb/for-sale/collectables/scientific-instruments">Antique Scientific Instruments</a>
+                                <a id="nav_gap_header_menu_COL_SME" href="/en-gb/for-sale/collectables/sporting-memorabilia-and-equipment">Sports Memorabilia &amp; Equipment </a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_COL_STM" href="/en-gb/for-sale/collectables/stamps">Collectable Stamps </a>
+                                <a id="nav_gap_header_menu_COL_TNH" href="/en-gb/for-sale/collectables/taxidermy-and-natural-history">Taxidermy </a>
+                                <a id="nav_gap_header_menu_COL_TLS" href="/en-gb/for-sale/collectables/tools">Antique &amp; Vintage Tools</a>
+                                <a id="nav_gap_header_menu_COL_WSP" href="/en-gb/for-sale/collectables/wines-and-spirits">Vintage Wine &amp; Spirits </a>
+                                <a id="nav_gap_header_menu_COL_WIN" href="/en-gb/for-sale/collectables/writing-instruments">Writing Instruments </a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_collectables_cameras-and-camera-equipment_cameras" href="/en-gb/for-sale/collectables/cameras-and-camera-equipment/cameras">Cameras</a>
+                                <a id="nav_gap_header_menu_collectables_sporting-memorabilia-and-equipment_sports-autographs" href="/en-gb/for-sale/collectables/sporting-memorabilia-and-equipment/sports-autographs">Sports Autographs</a>
+                                <a id="nav_gap_header_menu_collectables_coins_british-coins" href="/en-gb/for-sale/collectables/coins/british-coins">British Coins</a>
+                                <a id="nav_gap_header_menu_collectables_musical-instruments_vintage-guitars" href="/en-gb/for-sale/collectables/musical-instruments/vintage-guitars">Vintage Guitars</a>
+                                <a id="nav_gap_header_menu_collectables_sporting-memorabilia-and-equipment_sports-posters" href="/en-gb/for-sale/collectables/sporting-memorabilia-and-equipment/sports-posters">Sports Posters</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/clocks-watches-and-jewellery">Watches &amp; Jewellery</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Watches &amp; Jewellery                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_CWJ" href="/en-gb/for-sale/clocks-watches-and-jewellery">All Vintage Jewellery &amp; Watches</a>
+                                <a id="nav_gap_header_menu_CWJ_BAR" href="/en-gb/for-sale/clocks-watches-and-jewellery/barometers">Barometers</a>
+                                <a id="nav_gap_header_menu_CWJ_CLK" href="/en-gb/for-sale/clocks-watches-and-jewellery/clocks">Antique &amp; Vintage Clocks</a>
+                                <a id="nav_gap_header_menu_CWJ_JWL" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery">Jewellery </a>
+                                <a id="nav_gap_header_menu_CWJ_WAT" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories">Watches </a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_jewellery_rings" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/rings">Rings</a>
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_jewellery_brooches" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/brooches">Brooches</a>
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_watches-and-watch-accessories_pocket-watches" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories/pocket-watches">Pocket Watches</a>
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_watches-and-watch-accessories_omega-watches" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories/omega-watches">Omega Watches</a>
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_watches-and-watch-accessories_rolex-watches" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories/rolex-watches">Rolex Watches</a>
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_jewellery_bracelets" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/bracelets">Bracelets</a>
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_jewellery_earrings" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/earrings">Earrings</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_jewellery_tiffany-co-jewellery" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/tiffany-co-jewellery">Tiffany &amp; Co Jewellery</a>
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_jewellery_cartier-jewellery" href="/en-gb/for-sale/clocks-watches-and-jewellery/jewellery/cartier-jewellery">Cartier Jewellery</a>
+                                <a id="nav_gap_header_menu_clocks-watches-and-jewellery_watches-and-watch-accessories_seiko-watches" href="/en-gb/for-sale/clocks-watches-and-jewellery/watches-and-watch-accessories/seiko-watches">Seiko Watches</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/decorative-art">Decorative Art</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Decorative Art                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_DEA" href="/en-gb/for-sale/decorative-art">All Decorative Art</a>
+                                <a id="nav_gap_header_menu_DEA_CER" href="/en-gb/for-sale/decorative-art/ceramics">Antique &amp; Vintage Ceramics</a>
+                                <a id="nav_gap_header_menu_DEA_GLS" href="/en-gb/for-sale/decorative-art/glassware">Antique &amp; Vintage Glassware</a>
+                                <a id="nav_gap_header_menu_DEA_MTL" href="/en-gb/for-sale/decorative-art/metalware">Antique &amp; Vintage Metalware</a>
+                                <a id="nav_gap_header_menu_DEA_PCL" href="/en-gb/for-sale/decorative-art/porcelain">Antique &amp; Vintage Porcelain</a>
+                                <a id="nav_gap_header_menu_DEA_SIL" href="/en-gb/for-sale/decorative-art/silver-and-silver-plated-items">Antique &amp; Vintage Silver</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_decorative-art_ceramics_ceramic-vases" href="/en-gb/for-sale/decorative-art/ceramics/ceramic-vases">Ceramic Vases</a>
+                                <a id="nav_gap_header_menu_decorative-art_glassware_glass-vases" href="/en-gb/for-sale/decorative-art/glassware/glass-vases">Glass Vases</a>
+                                <a id="nav_gap_header_menu_decorative-art_porcelain_porcelain-plates" href="/en-gb/for-sale/decorative-art/porcelain/porcelain-plates">Porcelain Plates</a>
+                                <a id="nav_gap_header_menu_decorative-art_ceramics_ceramic-pots" href="/en-gb/for-sale/decorative-art/ceramics/ceramic-pots">Ceramic Pots</a>
+                                <a id="nav_gap_header_menu_decorative-art_glassware_murano-glass" href="/en-gb/for-sale/decorative-art/glassware/murano-glass">Murano Glass</a>
+                                <a id="nav_gap_header_menu_decorative-art_silver-and-silver-plated-items_silver-vases" href="/en-gb/for-sale/decorative-art/silver-and-silver-plated-items/silver-vases">Silver Vases</a>
+                                <a id="nav_gap_header_menu_decorative-art_porcelain_sevres-porcelain" href="/en-gb/for-sale/decorative-art/porcelain/sevres-porcelain">S&#232;vres Porcelain</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_decorative-art_glassware_glass-bottles" href="/en-gb/for-sale/decorative-art/glassware/glass-bottles">Glass Bottles</a>
+                                <a id="nav_gap_header_menu_decorative-art_glassware_glass-tumblers" href="/en-gb/for-sale/decorative-art/glassware/glass-tumblers">Glass Tumblers</a>
+                                <a id="nav_gap_header_menu_decorative-art_glassware_glass-lamps" href="/en-gb/for-sale/decorative-art/glassware/glass-lamps">Glass Lamps</a>
+                                <a id="nav_gap_header_menu_decorative-art_porcelain_meissen-porcelain" href="/en-gb/for-sale/decorative-art/porcelain/meissen-porcelain">Meissen Porcelain</a>
+                                <a id="nav_gap_header_menu_decorative-art_ceramics_royal-doulton-ceramics" href="/en-gb/for-sale/decorative-art/ceramics/royal-doulton-ceramics">Royal Doulton Ceramics</a>
+                                <a id="nav_gap_header_menu_decorative-art_ceramics_worcester-ceramics" href="/en-gb/for-sale/decorative-art/ceramics/worcester-ceramics">Worcester Ceramics</a>
+                                <a id="nav_gap_header_menu_decorative-art_silver-and-silver-plated-items_silver-mirrors" href="/en-gb/for-sale/decorative-art/silver-and-silver-plated-items/silver-mirrors">Silver Mirrors</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/furniture">Furniture</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Furniture                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_FUR" href="/en-gb/for-sale/furniture">All Furniture</a>
+                                <a id="nav_gap_header_menu_FUR_CRG" href="/en-gb/for-sale/furniture/carpets-and-rugs">Rugs &amp; Carpets </a>
+                                <a id="nav_gap_header_menu_FUR_DES" href="/en-gb/for-sale/furniture/design">Designer Furniture - Modern &amp; Contemporary</a>
+                                <a id="nav_gap_header_menu_FUR_LIT" href="/en-gb/for-sale/furniture/lighting">Lighting</a>
+                                <a id="nav_gap_header_menu_FUR_SAA" href="/en-gb/for-sale/furniture/salvage-and-architectural-antiques">Salvage &amp; Architectural Antiques</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_furniture_tables" href="/en-gb/for-sale/furniture/tables">Tables</a>
+                                <a id="nav_gap_header_menu_furniture_seating_chairs" href="/en-gb/for-sale/furniture/seating/chairs">Chairs</a>
+                                <a id="nav_gap_header_menu_furniture_cabinets-and-case-pieces" href="/en-gb/for-sale/furniture/cabinets-and-case-pieces">Cabinets &amp; Case Pieces</a>
+                                <a id="nav_gap_header_menu_furniture_seating_sofas" href="/en-gb/for-sale/furniture/seating/sofas">Sofas</a>
+                                <a id="nav_gap_header_menu_furniture_tables_dining-tables" href="/en-gb/for-sale/furniture/tables/dining-tables">Dining Tables</a>
+                                <a id="nav_gap_header_menu_furniture_beds" href="/en-gb/for-sale/furniture/beds">Beds</a>
+                                <a id="nav_gap_header_menu_furniture_mouseman" href="/en-gb/for-sale/furniture/mouseman">Mouseman</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_furniture_heals" href="/en-gb/for-sale/furniture/heals">Heal&#39;s</a>
+                                <a id="nav_gap_header_menu_furniture_chippendale" href="/en-gb/for-sale/furniture/chippendale">Chippendale</a>
+                                <a id="nav_gap_header_menu_furniture_ercol" href="/en-gb/for-sale/furniture/ercol">Ercol</a>
+                                <a id="nav_gap_header_menu_furniture_g-plan" href="/en-gb/for-sale/furniture/g-plan">G Plan</a>
+                                <a id="nav_gap_header_menu_furniture_liberty" href="/en-gb/for-sale/furniture/liberty">Liberty</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/asian-art">Asian Art</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Asian Art                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_AA" href="/en-gb/for-sale/asian-art">All Asian Art &amp; Antiques</a>
+                                <a id="nav_gap_header_menu_AA_CWA" href="/en-gb/for-sale/asian-art/chinese-works-of-art">Chinese Art &amp; Antiques</a>
+                                <a id="nav_gap_header_menu_AA_IWA" href="/en-gb/for-sale/asian-art/indian-works-of-art">Indian Art &amp; Antiques</a>
+                                <a id="nav_gap_header_menu_AA_ISL" href="/en-gb/for-sale/asian-art/islamic-works-of-art">Islamic Art &amp; Antiques</a>
+                                <a id="nav_gap_header_menu_AA_JAP" href="/en-gb/for-sale/asian-art/japanese-works-of-art">Japanese Art &amp; Antiques</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_asian-art_chinese-works-of-art_qing-dynasty-art" href="/en-gb/for-sale/asian-art/chinese-works-of-art/qing-dynasty-art">Qing Dynasty Art</a>
+                                <a id="nav_gap_header_menu_asian-art_japanese-works-of-art_meiji-period-art" href="/en-gb/for-sale/asian-art/japanese-works-of-art/meiji-period-art">Meiji Period Art</a>
+                                <a id="nav_gap_header_menu_asian-art_chinese-works-of-art_ming-dynasty-art" href="/en-gb/for-sale/asian-art/chinese-works-of-art/ming-dynasty-art">Ming Dynasty Art</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/collectables/arms-armour-and-militaria">Arms, Armour &amp; Militaria</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Arms, Armour &amp; Militaria                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_COL_AAM" href="/en-gb/for-sale/collectables/arms-armour-and-militaria">All Arms, Armour &amp; Militaria </a>
+                                <a id="nav_gap_header_menu_collectables_arms-armour-and-militaria_militaria" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/militaria">Militaria</a>
+                                <a id="nav_gap_header_menu_collectables_arms-armour-and-militaria_knifes-and-blades_knives" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/knifes-and-blades/knives">Knives</a>
+                                <a id="nav_gap_header_menu_collectables_arms-armour-and-militaria_armour" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/armour">Armour</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_collectables_arms-armour-and-militaria_militaria_badges-medals-pins" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/militaria/badges-medals-pins">Badges, Medals &amp; Pins</a>
+                                <a id="nav_gap_header_menu_collectables_arms-armour-and-militaria_militaria_ww2-memorabilia" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/militaria/ww2-memorabilia">WW2 Memorabilia For Sale</a>
+                                <a id="nav_gap_header_menu_collectables_arms-armour-and-militaria_antique-arms_antique-pistols" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/antique-arms/antique-pistols">Antique Pistols</a>
+                                <a id="nav_gap_header_menu_collectables_arms-armour-and-militaria_militaria_military-uniforms" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/militaria/military-uniforms">Military Uniforms</a>
+                                <a id="nav_gap_header_menu_collectables_arms-armour-and-militaria_knifes-and-blades_swords" href="/en-gb/for-sale/collectables/arms-armour-and-militaria/knifes-and-blades/swords">Swords</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia">Classic Cars</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Classic Cars                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_COL_CMA" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia">All Classic Cars &amp; Automobilia</a>
+                                <a id="nav_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_classic-cars" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/classic-cars">Classic Cars</a>
+                                <a id="nav_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_motorbikes" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/motorbikes">Motorbikes</a>
+                                <a id="nav_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_scooters" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/scooters">Scooters</a>
+                                <a id="nav_gap_header_menu_collectables_sporting-memorabilia-and-equipment_bicycles" href="/en-gb/for-sale/collectables/sporting-memorabilia-and-equipment/bicycles">Bicycles</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_ford" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/ford">Ford</a>
+                                <a id="nav_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_honda" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/honda">Honda</a>
+                                <a id="nav_gap_header_menu_collectables_classic-cars-motorcycles-and-automobilia_mercedes-benz" href="/en-gb/for-sale/collectables/classic-cars-motorcycles-and-automobilia/mercedes-benz">Mercedes-Benz</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+    <div class="gap-header__meganav-menu-item">
+        <div class="gap-header__meganav-category">
+            <a href="/en-gb/for-sale/vintage-fashion-and-textiles">Vintage Fashion</a>
+        </div>
+        <div class="gap-header__meganav-category-content">
+            <div class="gap-header__meganav-container" style="grid-template-columns: repeat(4, 1fr)">
+                        <div class="gap-header__meganav-section-header">
+Vintage Fashion                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_VFT" href="/en-gb/for-sale/vintage-fashion-and-textiles">All Vintage Fashion</a>
+                                <a id="nav_gap_header_menu_VFT_TXT" href="/en-gb/for-sale/vintage-fashion-and-textiles/textiles">Textiles</a>
+                                <a id="nav_gap_header_menu_VFT_VIN" href="/en-gb/for-sale/vintage-fashion-and-textiles/vintage-fashion">Vintage Fashion</a>
+                        </div>
+                        <div class="gap-header__meganav-section-header">
+Popular categories                        </div>
+                        <div class="gap-header__meganav-section-links">
+                                <a id="nav_gap_header_menu_vintage-fashion-and-textiles_bags-and-handbags" href="/en-gb/for-sale/vintage-fashion-and-textiles/bags-and-handbags">Bags &amp; Handbags</a>
+                        </div>
+            </div>
+        </div>
+    </div>
+
+        </nav>
+    </div>
+</div>
+
+        <main role="main" class="primary-content-area">
+            <div class="ui page">
+                
+    <div class="homepage">
+        <div class="main-items">
+
+            <section class="homepage-hero">
+    <div class="homepage-hero-slider">
+        <div id="heroBannersCarousel">
+            <div class="homepage-hero-cta container homepage-hero-slider-item-img-gradient">
+                <div class="section">
+                    <div class="section-container">
+                        <h2 class="homepage-hero-info-titleAll"><span> Uncover hidden treasures </span></h2>
+                        <a href="" id="reskin_adBanner" class="ui button secondary"> View all auctions </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+            <div class="container">
+
+                <div class="section usp-messages">
+                    <div class="section-container">
+                        <div class="ui equal height grid stackable">
+                            <div class="row">
+                                <div class="four wide column">
+                                    <h3>Millions of unique items</h3>
+                                    <p>Each year 4 million unique items are added to The Saleroom giving you the chance to own something you could never ordinarily have. A piece of history.</p>
+                                </div>
+                                <div class="four wide column">
+                                    <h3>Curated by experts</h3>
+                                    <p>We connect you with over 700 auction houses from around the world, drawing upon decades of experience to bring you unique items selected by experts.</p>
+                                </div>
+                                <div class="four wide column">
+                                    <h3>Bid with ease</h3>
+                                    <p>We use the latest technology so that you can easily and conveniently bid in auctions across the world from the comfort of your own home.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <section class="section section-gray lots-carousel lots-carousel-recently-viewed hide">
+    <div class="section-container">
+        <div class="lots-carousel-container">
+            <div class="lots-carousel-header">
+                <div class="lots-carousel-headline">
+                    <h3 class="section-heading">Recently viewed</h3>
+                    <a href="#" class="lots-carousel-clear-all" id="reskin_recently_viewed_clear_all">Clear all</a>
+                </div>
+                <div class="lots-carousel-nav">
+                    <span class="lots-carousel-nav-prev noselect"><button type="button" class="slick-prev"><i class="material-icons">arrow_back_ios</i> Previous</button></span>
+                    <span class="lots-carousel-nav-dots noselect"></span>
+                    <span class="noselect lots-carousel-nav-next"><button type="button" class="slick-next"><i class="material-icons">arrow_forward_ios</i> Next</button></span>
+                </div>
+            </div>
+            <div class="lots-carousel-slider" id="recentlyViewedCarousel"></div>
+        </div>
+    </div>
+</section>
+
+                
+<script src="/js/recscarousel?v=aYezcq4SoHXBPLGLBIQLz361qA6WoVG1RCJr093_a4A1"></script>
+
+
+
+<script type="text/javascript">
+        var homepageCarousel = new Gap.Portal.UI.RecsCarousel();
+
+        $(document).ready(function () {
+            var item = homepageCarousel.getRecentlyViewedItem();
+            var itemsYouMightLikeDiv = document.querySelector('.items-you-might-like');
+            var iymlWidget = document.getElementById('items-you-might-like-widget')
+                || document.querySelector('.items-you-might-like a2o-similar-lots-widget');
+
+            if (item != undefined && iymlWidget) {
+                iymlWidget.setAttribute('lotid', item.id);
+            }
+            if (itemsYouMightLikeDiv != null) {
+                itemsYouMightLikeDiv.classList.remove('hide');
+            }
+        });
+
+</script>
+
+<div class="items-you-might-like hide">
+    <a2o-similar-lots-widget id="items-you-might-like-widget" lotid="" culture="en-gb" platformcode="SR" count="30" originsystem="GAP" variant="3"></a2o-similar-lots-widget>
+    <script src="/similar-lots/ui/polyfills.js?v=07152025" type="module"></script>
+    <script src="/similar-lots/ui/main.js?v=07152025" type="module"></script>
+</div>
+
+<script type="text/javascript">
+(function () {
+    function validateOneTrustPerformanceConsent() {
+        try {
+            if (typeof OnetrustActiveGroups !== 'undefined' && OnetrustActiveGroups) {
+                return OnetrustActiveGroups.includes('C0002');
+            }
+            return document.cookie.indexOf('C0002:1') !== -1;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function addIfNonEmpty(props, key, val) {
+        if (val === undefined || val === null) {
+            return;
+        }
+        var s = typeof val === 'string' ? val.trim() : String(val);
+        if (s !== '') {
+            props[key] = s;
+        }
+    }
+
+    function handleItemsYouMightLikeCardDetail(event) {
+        try {
+            if (typeof window.amplitude === 'undefined') {
+                return;
+            }
+            if (!validateOneTrustPerformanceConsent()) {
+                return;
+            }
+            var eventDetail = event.detail || {};
+            var lot = eventDetail.lot;
+            if (!lot || lot.lotId == null || lot.lotId === '') {
+                return;
+            }
+            var clickType = (eventDetail.clickType && String(eventDetail.clickType).trim()) || 'Title';
+            var props = {
+                'Page Section': 'Items you might like',
+                'Card Type': 'Catalogue Lot',
+                'Lot ID': String(lot.lotId),
+                'Click Type': clickType
+            };
+            addIfNonEmpty(props, 'Auction ID', lot.auctionId);
+            addIfNonEmpty(props, 'Auction House ID', lot.clientId);
+            if (lot.auctionRef) {
+                props['Auction Reference'] = String(lot.auctionRef);
+            }
+            if (window.Gap && Gap.Portal && Gap.Portal.UI && Gap.Portal.UI.Amplitude && typeof Gap.Portal.UI.Amplitude.stripCardDetailClickedProperties === 'function') {
+                props = Gap.Portal.UI.Amplitude.stripCardDetailClickedProperties(props);
+            }
+            if (typeof window.amplitude.track === 'function') {
+                window.amplitude.track('Card Detail Clicked', props);
+            } else if (typeof window.amplitude.logEvent === 'function') {
+                window.amplitude.logEvent('Card Detail Clicked', props);
+            }
+        } catch (e) {
+            console.warn('[Amplitude] Items you might like Card Detail Clicked error:', e);
+        }
+    }
+
+    function setupItemsYouMightLikeCardDetailTracking() {
+        var check = setInterval(function () {
+            var widget = document.getElementById('items-you-might-like-widget');
+            if (widget) {
+                clearInterval(check);
+                widget.addEventListener('lotRecommendationClick', handleItemsYouMightLikeCardDetail);
+            }
+        }, 100);
+        setTimeout(function () { clearInterval(check); }, 10000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupItemsYouMightLikeCardDetailTracking);
+    } else {
+        setupItemsYouMightLikeCardDetailTracking();
+    }
+})();
+</script>
+
+
+    <a href="https://s3-eu-west-1.amazonaws.com/cdn.atgmedia.com/the-saleroom/website/marketing/homepage/live-saleroom-homepage-featured-auctions-config.json">Featured auctions</a>
+
+<section class="section section-gray homepage-auctions"> 
+    <div class="section-container">
+        <a id="reskin_todaysauctions" name="todaysauctions" class="aucAnchor"></a>
+        <div class="homepage-auctions-header">
+            <div class="homepage-auctions-headline">
+                <h1 class="section-heading">Upcoming auctions</h1>
+            </div>
+        </div>
+        <article class="todays-auctions">
+            <div class="ui stackable grid">
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/vonderwarth/catalogue-id-von-de10017" id="reskin_todays_auction_product_von-de10017">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/von-de10017/images/8c4b6a0e-a16a-4b0b-97ef-15c0ed6cac39.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/von-de10017/images/8c4b6a0e-a16a-4b0b-97ef-15c0ed6cac39.jpg?h=1000" alt="Eisenbahn- und Blechspielzeug - Eisenbahnsammlung der Spurweite 0/1 &quot;neu&quot; der Marken LGB, Lemaco, Kiss, M&#228;rklin und seltene Rarit&#228;ten - Von der Warth und Lankes GmbH &amp; Co. KG" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Eisenbahn- und Blechspielzeug - Eisenbahnsammlung der Spurweite 0/1 &quot;neu&quot; der Marken LGB, Lemaco, Kiss, M&#228;rklin und seltene Rarit&#228;ten</h3>
+                                    <p class="auction-house">Von der Warth und Lankes GmbH &amp; Co. KG</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/elstob-and-elstob/catalogue-id-elstob10164" id="reskin_todays_auction_product_elstob10164">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/elstob10164/images/386c6607-8e42-42e9-af07-2f9d937bbcd4.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/elstob10164/images/386c6607-8e42-42e9-af07-2f9d937bbcd4.jpg?h=1000" alt="FINE ART &amp; ANTIQUES - Elstob Auctioneers" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>FINE ART &amp; ANTIQUES</h3>
+                                    <p class="auction-house">Elstob Auctioneers</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/taylors-auction-rooms/catalogue-id-srtay10642" id="reskin_todays_auction_product_srtay10642">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srtay10642/images/a0984803-b2d6-4716-b122-b4ba00e205a9.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srtay10642/images/a0984803-b2d6-4716-b122-b4ba00e205a9.jpg?h=1000" alt="Antiquarian &amp; Collectable Books - Taylors Auction Rooms" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Antiquarian &amp; Collectable Books</h3>
+                                    <p class="auction-house">Taylors Auction Rooms</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/david-lay-f-r-i-c-s/catalogue-id-srdavid10299" id="reskin_todays_auction_product_srdavid10299">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srdavid10299/images/d514adbf-25ba-4f28-a594-9208b0c22300.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srdavid10299/images/d514adbf-25ba-4f28-a594-9208b0c22300.jpg?h=1000" alt="Fine Jewellery - Lay&#39;s Auctioneers" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Fine Jewellery</h3>
+                                    <p class="auction-house">Lay&#39;s Auctioneers</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/gaze-and-son/catalogue-id-srtw10546" id="reskin_todays_auction_product_srtw10546">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srtw10546/images/c8869b0b-3900-4e15-a2c6-b4c200e5c993.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srtw10546/images/c8869b0b-3900-4e15-a2c6-b4c200e5c993.jpg?h=1000" alt="Special Antiques - TW Gaze" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Special Antiques</h3>
+                                    <p class="auction-house">TW Gaze</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/anderson-and-garland-newcastle/catalogue-id-srand10704" id="reskin_todays_auction_product_srand10704">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srand10704/images/9b5d379c-35e9-4049-9a72-225783cfe93b.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srand10704/images/9b5d379c-35e9-4049-9a72-225783cfe93b.jpg?h=1000" alt="The Bob Batey Collection: A Single-Owner Sale of Mining Lamps and Artefacts - Anderson &amp; Garland Ltd. Newcastle" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>The Bob Batey Collection: A Single-Owner Sale of Mining Lamps and Artefacts</h3>
+                                    <p class="auction-house">Anderson &amp; Garland Ltd. Newcastle</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/cheffinsfineart/catalogue-id-srche10367" id="reskin_todays_auction_product_srche10367">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srche10367/images/fd317e6d-496f-4469-a456-598bff889baa.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srche10367/images/fd317e6d-496f-4469-a456-598bff889baa.jpg?h=1000" alt="The Fine Sale - Cheffins" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>The Fine Sale</h3>
+                                    <p class="auction-house">Cheffins</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/noonansmayfair/catalogue-id-dix-no10394" id="reskin_todays_auction_product_dix-no10394">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/dix-no10394/images/4ab5875d-d5cc-43a6-925b-0a9909995a03.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/dix-no10394/images/4ab5875d-d5cc-43a6-925b-0a9909995a03.jpg?h=1000" alt="The Gary Oddie Collection of English Regal Shillings - Noonans Mayfair" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>The Gary Oddie Collection of English Regal Shillings</h3>
+                                    <p class="auction-house">Noonans Mayfair</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/david-duggleby-scarborough/catalogue-id-srda11097" id="reskin_todays_auction_product_srda11097">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srda11097/images/9fd07ded-6752-4949-a4ee-88594c9956c2.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srda11097/images/9fd07ded-6752-4949-a4ee-88594c9956c2.jpg?h=1000" alt="Watches - David Duggleby Auctioneers &amp; Valuers" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Watches</h3>
+                                    <p class="auction-house">David Duggleby Auctioneers &amp; Valuers</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/mitchells/catalogue-id-srmit10340" id="reskin_todays_auction_product_srmit10340">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srmit10340/images/5df5e5ce-799e-4dda-a56b-b4ba00f70dda.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srmit10340/images/5df5e5ce-799e-4dda-a56b-b4ba00f70dda.jpg?h=1000" alt="Antiques &amp; Fine Art Sale - Mitchells" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Antiques &amp; Fine Art Sale</h3>
+                                    <p class="auction-house">Mitchells</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/adampartridge/catalogue-id-adam-p10496" id="reskin_todays_auction_product_adam-p10496">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/adam-p10496/images/05d0a1d7-d4c8-4ffb-be7a-edf3beb62129.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/adam-p10496/images/05d0a1d7-d4c8-4ffb-be7a-edf3beb62129.jpg?h=1000" alt="Antiques &amp; Interiors with Rock &amp; Pop (Liverpool) - Adam Partridge Auctioneers &amp; Valuers" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Antiques &amp; Interiors with Rock &amp; Pop (Liverpool)</h3>
+                                    <p class="auction-house">Adam Partridge Auctioneers &amp; Valuers</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/dukes/catalogue-id-srdu10221" id="reskin_todays_auction_product_srdu10221">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srdu10221/images/77894907-ba70-4377-a4c4-5df5be09e538.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srdu10221/images/77894907-ba70-4377-a4c4-5df5be09e538.jpg?h=1000" alt="Jewellery, Watches, Silver and Currency - Duke&#39;s" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Jewellery, Watches, Silver and Currency</h3>
+                                    <p class="auction-house">Duke&#39;s</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/amersham-auction-rooms/catalogue-id-sram10535" id="reskin_todays_auction_product_sram10535">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/sram10535/images/bd5abf63-1245-4817-82af-b4c500b543f4.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/sram10535/images/bd5abf63-1245-4817-82af-b4c500b543f4.jpg?h=1000" alt="Victorian, &amp; Later Furnishings, Jewellery, Collectables, Pictures and Objets d&#39;Art - Amersham Auction Rooms" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Victorian, &amp; Later Furnishings, Jewellery, Collectables, Pictures and Objets d&#39;Art</h3>
+                                    <p class="auction-house">Amersham Auction Rooms</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/david-duggleby-scarborough/catalogue-id-srda11098" id="reskin_todays_auction_product_srda11098">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srda11098/images/609f05f6-95a7-411f-b763-a39befbd8d17.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srda11098/images/609f05f6-95a7-411f-b763-a39befbd8d17.jpg?h=1000" alt="Jewellery - David Duggleby Auctioneers &amp; Valuers" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Jewellery</h3>
+                                    <p class="auction-house">David Duggleby Auctioneers &amp; Valuers</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/peter-wilson/catalogue-id-srpet10472" id="reskin_todays_auction_product_srpet10472">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srpet10472/images/a827fd8f-9daa-49fa-8f56-a2ca29e6c42d.jpg?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srpet10472/images/a827fd8f-9daa-49fa-8f56-a2ca29e6c42d.jpg?h=1000" alt="Northern Art - Wilson55 Auctioneers &amp; Valuers" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Northern Art</h3>
+                                    <p class="auction-house">Wilson55 Auctioneers &amp; Valuers</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ui twelve wide mobile six wide tablet three wide computer column">
+                        <div class="todays-auctions-item all-transition no-shadow">
+                            <a href="/en-gb/auction-catalogues/candt-auctioneers/catalogue-id-srct10325" id="reskin_todays_auction_product_srct10325">
+                                <div class="todays-auctions-image-content">
+                                            <div class="todays-auctions-image" style="background-image: url(&#39;https://cdn.globalauctionplatform.com/auctions-2026/srct10325/images/657f1681-3209-4881-936c-484d2592b1a9.png?h=1000&#39;)">
+            <img src="https://cdn.globalauctionplatform.com/auctions-2026/srct10325/images/657f1681-3209-4881-936c-484d2592b1a9.png?h=1000" alt="Vintage &amp; Collectible Toys (Inc. Toy Soldiers) - C &amp; T Auctioneers and Valuers Ltd - Live" />
+        </div>
+
+                                </div>
+                                <div class="todays-auctions-details">
+                                    <p class="date">Live today</p>
+                                    <h3>Vintage &amp; Collectible Toys (Inc. Toy Soldiers)</h3>
+                                    <p class="auction-house">C &amp; T Auctioneers and Valuers Ltd - Live</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+            </div>
+        </article>
+        <div class="homepage-auctions-footer">
+            <div class="homepage-auctions-view-all"><a id="reskin_homepage_auctions_view_all" href="/en-gb/auction-catalogues" class="ui button primary">View all upcoming auctions</a></div>
+        </div>
+    </div>
+</section>
+
+
+
+
+            </div>
+
+                <!-- jump to top -->
+                <a href="javascript:" id="jumpToTop"><i class="icon arrow up"></i></a>
+                <!-- /jump to top -->
+                
+
+
+
+
+
+
+
+
+            </div>
+        </main>
+
+
+        
+
+<footer class="primary-footer ui inverted segment">
+    <div class="ui container">
+        <div class="ui stackable divided equal height grid footer-links">
+            <div class="row">
+                <div class="four wide column">
+                    <h2 class="ui inverted header footer-title">the saleroom</h2>
+                    <div class="ui inverted">
+                        <div class="ui stackable grid">
+                            <div class="eight wide column footer-desc">
+                                <p>Millions of unique items are added to The Saleroom each year from 700 expert auction houses worldwide.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="eight wide column">
+                    <div class="ui stackable grid">
+                        <div class="three wide column">
+                            <h4 class="ui inverted header">About Us</h4>
+                            <div class="ui inverted link list">
+                                <a href="https://www.auctiontechnologygroup.com/about-us/" class="item" id="reskin_footer_about_us">About Us</a>
+                                <a href="https://www.auctiontechnologygroup.com/careers.html" class="item" id="reskin_footer_careers">Careers</a>
+                                <a href="https://www.auctiontechnologygroup.com/press-2.html" class="item" id="reskin_footer_press">Press</a>
+                            </div>
+                        </div>
+                        <div class="three wide column">
+                            <h4 class="ui inverted header">Guides</h4>
+                            <div class="ui inverted link list">
+<a href="https://support.the-saleroom.com/hc/en-gb/categories/115000008514-Bidding-Buying" target="_self" id="reskin_nav_help_centre_submenu_how_to_buy" class="item">How to Buy</a>                                <a href="/en-gb/price-guide" class="item" id="reskin_footer_price_guide">Price Guide</a>
+                            </div>
+                        </div>
+                        <div class="five wide column">
+                            <h4 class="ui inverted header">Help</h4>
+                            <div class="ui inverted link list">
+                                <a href="https://support.the-saleroom.com/hc/en-gb" class="item" id="reskin_footer_support_page">Customer Service</a>
+                                <a href="/en-gb/about-us/contact-us" class="item" id="reskin_footer_contact_us">Contact Us</a>
+                                <a id="reskin_supportChat" href="#" target="_blank" class="chat-trigger item">Live Chat</a>
+                                <a href="/en-gb/sitemap" class="item" id="reskin_footer_site_map">Site Map</a>
+                                <a href="/en-gb/new-auctioneer-application" target="_blank" class="item" id="reskin_footer_seller_application">Seller Application</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="ui stackable equal height grid footer-copyright">
+            <div class="twelve wide mobile eight wide tablet eight wide computer column">
+
+                <p>&copy; 2026<span> the saleroom all rights reserved</span></p>
+                <div class="ui inverted horizontal link list">
+                    <a href="/en-gb/directories" class="item" id="reskin_footer_lot_directory">Lot directory</a>
+                    <a href="/en-gb/about-us/legal/website-terms-and-conditions" class="item" id="reskin_footer_terms">Legal</a>
+                    <a href="/en-gb/about-us/legal/cookie-policy" class="item" id="reskin_footer_cookies">Cookies</a>
+                </div>
+            </div>
+            <div class="twelve wide mobile four wide tablet four wide computer column social-links">
+                <div class="ui inverted horizontal list">
+                    <a href="https://www.facebook.com/pages/the-saleroomcom/172133276208352" target="_blank" class="icon item" data-icon="V" title="Facebook" id="reskin_footer_facebook">
+                        <span class="a11y">Facebook</span>
+                    </a>
+                    <a href="https://twitter.com/thesaleroom" target="_blank" class="icon item" data-icon="W" title="Twitter" id="reskin_footer_twitter">
+                        <span class="a11y">Twitter</span>
+                    </a>
+                    <a href="https://www.instagram.com/the_saleroom" target="_blank" class="icon item" data-icon="U" title="Instagram" id="reskin_footer_instagram">
+                        <span class="a11y">Instagram</span>
+                    </a>
+                    <a href="https://www.pinterest.com/thesaleroom/" target="_blank" class="icon item" data-icon="Y" title="Pinterest" id="reskin_footer_pinterest">
+                        <span class="a11y">Pinterest</span>
+                    </a>
+                    <a href="https://www.youtube.com/user/thesaleroom" target="_blank" class="icon item" data-icon="^" title="YouTube" id="reskin_footer_youtube">
+                        <span class="a11y">YouTube</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+    </div>
+
+    
+
+    <!-- JS -->
+    
+    <script src="/js/newuiskin-app?v=hMmbsD9aos568xWV5-I-p1xALNe0LQatJm_fzNmV72Y1"></script>
+
+    <script src="/js/newuiskin-semantic?v=gBVutbJsApkMbfmmg1VHxMFw6Qul1zYH-AVUeg29-co1"></script>
+
+
+    
+<script type="text/javascript" id="loginScript">
+    Gap.Portal.UI.SiteLoginProperties = {
+        anErrorOccured: 'Sorry, an error occurred.',
+        returnURL: ' https://www.the-saleroom.com/en-gb',
+        resendVerificationLink: '/en-gb/my-account/resendverificationemail',
+        registerLink: '/en-gb/my-account/register',
+        portalName: 'the-saleroom.com',
+        platformCode: 'SR'
+    };
+</script>
+
+
+
+
+    <script type="text/javascript" title="Enhanced search opt-out toggle">
+        var instantSearchSwitch = 'false';
+    </script>
+        <script type="text/javascript" title="InstantSearch - Setup model">
+            var config = {
+            indexName: 'lots_sr_en',
+            searchClientId: '2125HT9M59',
+            searchClientKey: 'b1f48e75f522cc67ff7751f1abd75458',
+            platform: 'SR',
+            culture: 'en-gb',
+            facetExcludes: ['privatePlatformCodes'],
+            metaTitle: decodeURIComponent('$SearchTerm$%20Auctions%20Online%20%7C%20Lots%20for%20sale%20at%20the-saleroom'),
+            searchAsYouTypeOn: 'False',
+            showSuggestedSearches: 'True',
+            };
+            var searchbox = {
+            searchInputPlaceholder: 'Search for items',
+            searchForLotsLabel: 'Search for lots',
+            recentLabel: 'Recent searches',
+            suggestedLabel: 'Suggested searches',
+            clearAllLabel: 'Clear all',
+            autocompleteAction: '/en-gb/lot-search-autocomplete',
+            };
+            var overlay = {
+            suggestedSearchesLabel: 'Suggested searches',
+            topLotsLabel: 'Top matches for &#39;$SearchTerm$&#39;',
+            topResultsLabel: 'Top search results',
+            viewAllItemsLabel: 'View all ($nbHits$ items)',
+            noResultsLabel: decodeURIComponent('%3Ch3%3ESorry...%3C/h3%3E%20%3Cp%3Ewe%20could%20not%20find%20what%20you%20were%20looking%20for.%20Please%20try%20a%20different%20search.%3C/p%3E'),
+            searchResultsURL: decodeURIComponent('/en-gb/search-results?searchterm=%24query%24'),
+            };
+            var hitsrendering = {
+            lotDetailsUrl: '/en-gb/auction-catalogues/$clienturl$/catalogue-id-$auctionreference$/lot-$lotid$',
+            auctioneerUrl: '/en-gb/auction-catalogues/$clienturl$',
+            noImageLabel: 'No Image',
+            lotLabel: 'Lot',
+            imageLabel: 'Image',
+            imageThumbnailSize: '?h=210',
+            imageCdnBaseUrl: 'https://cdn.globalauctionplatform.com/',
+            moreDetailsLabel: 'More details',
+            featuredLotLabel: 'Featured lot',
+            featuredLabel: 'Featured',
+            noHitsMsg: decodeURIComponent('%3Ch3%3ESorry...%3C/h3%3E%20%3Cp%3Ewe%20could%20not%20find%20what%20you%20were%20looking%20for.%20Please%20try%20a%20different%20search.%3C/p%3E'),
+            startNewSearchLabel: 'Start a new search',
+            dateLabel: 'Date',
+            estimateLabel: 'Estimate',
+            quantityLabel: 'Quantity',
+            locationLabel: 'Location',
+            endsLabel: 'Ends',
+            hideOffensiveImages: false,
+            offensiveImageUrl: 'https://portal-assets.azureedge.net/assets/lot-tissimo/website/images/offensive-image-info-en.png'
+            };
+            var searchResults = {
+            substituteTitleWithDescription: false,
+            titleMaxLength: 100,
+            };
+            var featureSwitch = {
+            isNewUiSkinSearchResultEnabled: true,
+            showNewUiSkinHeaderFooter: false,
+            isNewUiSkinHomepageEnabled: true,
+            isNewUiSkinAuctionCalendarEnabled: true,
+            isNewUiSkinAuctionCatalogueEnabled: true,
+
+            isNewUiSkinExpiredLotsEnabled: false,
+            isNewUiSkinAuctioneerDirectoryEnabled: false,
+            isNewUiSkinPriceGuideEnabled: false,
+            isNewSkinForEnhanceSearchEnabled: true,
+            isLandingPage: false
+            };
+
+            var saytVM = {
+            config: config,
+            searchbox: searchbox,
+            overlay: overlay,
+            hitsrendering: hitsrendering,
+            searchResults: searchResults,
+            featureSwitch: featureSwitch
+            };
+        </script>
+<script src="/js/lib/3rdparty?v=UC6DZCO-ZG4NMZDTjpTjGpOQCitVYkASpGVBrT94lq81"></script>
+<script src="/js/controls/searchassist?v=U1rG3LQbQ1QAoRYxbC594TLlSVIlq66PVHI5VQP1yTs1"></script>
+<script src="/js/searchasyoutype?v=Fhw2Df435RlHPtNJrt5DnFe-jskdSuFp62ugjUXjN141"></script>
+        <script type="text/javascript" title="InstantSearch - Overlay">
+            setEnhancedSearchSessions(true, true);
+
+            ensureSearchInsightsIsLoaded(function () {
+                runOverlay();
+            });
+        </script>
+
+
+    <script type="text/javascript">
+    $(function () {
+        window.ssoRedirect = true;
+        window.ssoRedirectLoginUrl = "https://www.the-saleroom.com/en-gb/my-account/login";
+    });
+</script>
+
+
+    
+    <script src="/js/filters?v=8VIBSv7uLUzhR6PirXo-BCpNplxEAtN47psWcXEwJQM1"></script>
+
+    <script src="/js/gap.featuredauctions?v=SW9XqW07_d-FZAxLaAAqnd6-58rGHhk9p_kP-xqG3lk1"></script>
+
+    <script src="/js/hero-slider-newuiskin?v=4YiJDIYcWRG5RlsWlqfoq3d0UWP6yt-6iZZxSlM7tPY1"></script>
+
+
+    <script type="text/ng-template" id="homepageFeaturedAuctionsTemplate">
+        <section class="section featured-auctions">
+    <div class="section-container">
+        <h3 class="section-heading">Featured auctions</h3>
+        <ul ng-class="{'auction-column-2' : numberOfColumns == 2 , 'auction-column-3' : numberOfColumns == 3}">
+            <li class="featured-auctions-item" ng-repeat="item in items">
+                <article>
+                    <a href="{{::item.itemLink}}">
+                        <span class="featured-auctions-title" ng-if="::item.heading || item.date">
+                            <div class="featured-auctions-date">{{::item.date}}</div>
+                            <span class="featured-auctions-name">{{::item.heading}}</span>
+                        </span>
+                        <div class="featured-auctions-image">
+                            <div class="featured-auctions-image-content" ng-style="{'background-image':'url({{item.mainImage | image:''}})'}"></div>
+                        </div>
+                    </a>
+                    <div class="featured-auction-view-container">
+                        <a class="featured-auction-view" href="{{::item.itemLink}}">View Items</a>
+                    </div>
+                </article>
+            </li>
+        </ul>
+    </div>
+</section>
+    </script>
+    <script type="text/javascript">
+        var featuredAuctionsConstantModule = angular.module('gap.featuredauctions.constants', []);
+        featuredAuctionsConstantModule.constant('configUrl', 'https://www.the-saleroom.com/en-gb/marketplace-content/featured-auctions');
+        featuredAuctionsConstantModule.constant('staticTemplate', $('script#homepageFeaturedAuctionsTemplate').html());
+    </script>
+
+    <script>
+        var Gap = Gap || {};
+        if (typeof Gap.heroSlider === 'function') {
+            Gap.heroSlider({
+                bannerJsonUrl: 'https://www.the-saleroom.com/en-gb/marketplace-content/banners',
+                container: '#heroBannersCarousel',
+                auctionsDescription: 'Uncover hidden treasures',
+                viewAllAuctionDescription: 'View all auctions',
+                viewThisAuctionDescription: 'View auction',
+                auctionNavigateUrl : '/en-gb/auction-catalogues'
+            });
+        }
+        if (typeof Gap.navigateTo === 'function') {
+            Gap.navigateTo({
+                clickElement: '#reskin_adBanner',
+                targetUrl: '/en-gb/auction-catalogues'
+            });
+        }
+    </script>
+
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var desktopView = window.matchMedia('(min-width: 1200px)');
+            function dropdownInit(e) {
+                if (e.matches) {
+                    $('.ui.dropdown').dropdown();
+                }
+            }
+            desktopView.addListener(dropdownInit);
+            dropdownInit(desktopView);
+        });
+    </script>
+</body>
+
+</html>

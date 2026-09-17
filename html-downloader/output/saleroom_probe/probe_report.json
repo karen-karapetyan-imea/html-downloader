@@ -1,0 +1,241 @@
+{
+  "base": "https://www.the-saleroom.com",
+  "proxy_used": true,
+  "known_live": {
+    "app_id": "2125HT9M59",
+    "index": "lots_sr_en"
+  },
+  "pages": {
+    "en-gb_price-guide": {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide",
+      "status": 405,
+      "size": 2533,
+      "backend": "urllib_http(RuntimeError)",
+      "waf": true,
+      "paywall": false,
+      "hit_count_guess": null
+    },
+    "en-gb_price-guide_fine-art": {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/fine-art",
+      "status": 200,
+      "size": 584863,
+      "backend": "curl_cffi",
+      "waf": true,
+      "paywall": true,
+      "hit_count_guess": 73728
+    },
+    "en-gb_price-guide_decorative-art": {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/decorative-art",
+      "status": 200,
+      "size": 480323,
+      "backend": "curl_cffi",
+      "waf": true,
+      "paywall": true,
+      "hit_count_guess": 14698
+    },
+    "en-gb_price-guide_asian-art": {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/asian-art",
+      "status": 200,
+      "size": 488805,
+      "backend": "curl_cffi",
+      "waf": true,
+      "paywall": true,
+      "hit_count_guess": 8726
+    },
+    "en-gb_price-guide_collectables": {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/collectables",
+      "status": 200,
+      "size": 513738,
+      "backend": "curl_cffi",
+      "waf": true,
+      "paywall": true,
+      "hit_count_guess": 63082
+    },
+    "en-gb_price-guide_antiquities": {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/antiquities",
+      "status": 200,
+      "size": 478370,
+      "backend": "curl_cffi",
+      "waf": true,
+      "paywall": true,
+      "hit_count_guess": 26327
+    }
+  },
+  "robots": {
+    "status": 200,
+    "backend": "curl_cffi",
+    "archivelot_disallow": true,
+    "price_guide_ok": true,
+    "archivelot_ok": false
+  },
+  "algolia_discovered": {
+    "app_ids": [],
+    "api_keys": [],
+    "index_names": [],
+    "pairs": []
+  },
+  "algolia_probes": {
+    "lots_sr_en": {
+      "query": {
+        "status": 200,
+        "nbHits": 50099,
+        "nbPages": 25050,
+        "message": null,
+        "sample_hit": {
+          "objectID": "174f98a8-1d48-4c43-b709-b4b2010d70ec",
+          "keys": [
+            "_geoloc",
+            "_highlightResult",
+            "_snippetResult",
+            "auctionDisplayType",
+            "auctionEndDateTimeUtc",
+            "auctionId",
+            "auctionRef",
+            "auctionStartDateTimeUtc",
+            "auctionType",
+            "auctionTypeRank",
+            "auctioneerId",
+            "auctioneerName",
+            "auctioneerRef",
+            "biddingStatus",
+            "biddingType",
+            "bidsCount",
+            "bulkQuantity",
+            "buyItNowPrice",
+            "categoryCode",
+            "categoryName",
+            "countryCode",
+            "countryName",
+            "currency",
+            "deliveryAvailable",
+            "description",
+            "endDateTimeUtc",
+            "hasConditionReport",
+            "hasHighEstimate",
+            "hasImages",
+            "hasLastBid",
+            "hasLocation",
+            "hasLowEstimate",
+            "hasNextBid",
+            "highEstimate",
+            "imageCount",
+            "imageUrl",
+            "isAvailable",
+            "isBulkLot",
+            "isFeaturedLot",
+            "isPotentiallyOffensive"
+          ],
+          "title": "Jawlensky von, Alexej (1864 - 1941), Stillleben / Blumen in blauer Vase (1936)",
+          "auctioneerRef": "kunst-und-auktionshaus-wiesbaden",
+          "auctionRef": "wiesb10053",
+          "url_hint": null
+        }
+      },
+      "browse": {
+        "status": 403,
+        "error": "{\"message\":\"Method not allowed with this API key\",\"status\":403}"
+      },
+      "query_unfiltered": {
+        "status": 200,
+        "nbHits": 298250,
+        "nbPages": 50000,
+        "message": null,
+        "sample_hit": {
+          "objectID": "a678430c-a768-41c6-9385-b4bb00975915",
+          "keys": [
+            "_highlightResult",
+            "_snippetResult",
+            "auctionDisplayType",
+            "auctionEndDateTimeUtc",
+            "auctionId",
+            "auctionRef",
+            "auctionStartDateTimeUtc",
+            "auctionType",
+            "auctionTypeRank",
+            "auctioneerId",
+            "auctioneerName",
+            "auctioneerRef",
+            "biddingStatus",
+            "biddingType",
+            "bidsCount",
+            "bulkQuantity",
+            "buyItNowPrice",
+            "categoryCode",
+            "categoryName",
+            "countryCode",
+            "countryName",
+            "currency",
+            "deliveryAvailable",
+            "description",
+            "endDateTimeUtc",
+            "hasConditionReport",
+            "hasHighEstimate",
+            "hasImages",
+            "hasLastBid",
+            "hasLocation",
+            "hasLowEstimate",
+            "hasNextBid",
+            "highEstimate",
+            "imageCount",
+            "imageUrl",
+            "isAvailable",
+            "isBulkLot",
+            "isFeaturedLot",
+            "isPotentiallyOffensive",
+            "items"
+          ],
+          "title": "LOUIS VUITTON LIMITED EDITION YAYOI KUSAMA YELLOW & BLACK MONOGRAM LEATHER PUMPKIN BAG",
+          "auctioneerRef": "hotlotz",
+          "auctionRef": "hotzlo10553",
+          "url_hint": null
+        }
+      }
+    }
+  },
+  "paywall_signals": [
+    {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/fine-art",
+      "status": 200
+    },
+    {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/decorative-art",
+      "status": 200
+    },
+    {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/asian-art",
+      "status": 200
+    },
+    {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/collectables",
+      "status": 200
+    },
+    {
+      "url": "https://www.the-saleroom.com/en-gb/price-guide/antiquities",
+      "status": 200
+    }
+  ],
+  "url_samples": {
+    "archivelot": [],
+    "catalogue_lot": [],
+    "price_guide_hrefs": []
+  },
+  "api_hints": [],
+  "allowed_sold_url_samples": [],
+  "decision": {
+    "decision": "no_go",
+    "historical_indexes": [],
+    "blockers": [
+      "no_historical_algolia_index",
+      "no_public_pagination",
+      "subscription_paywall",
+      "robots_archivelot"
+    ],
+    "reasons": [
+      "Only live index 'lots_sr_en' (and/or unrelated names) found; no dedicated Price Guide/archive index.",
+      "Could not paginate a historical index with the public search key.",
+      "Price Guide HTML indicates subscribe/login gating.",
+      "robots.txt disallows */archivelot* — do not enable those URLs."
+    ],
+    "implement_phase_c": false
+  }
+}

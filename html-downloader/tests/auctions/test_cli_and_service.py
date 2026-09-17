@@ -460,5 +460,120 @@ def test_liveauctioneers_download_configures_bot_ua(tmp_path: Path) -> None:
     assert "incapsula" in cfg.block_keywords
 
 
+def test_saleroom_discover_writes_monthly_job(tmp_path: Path) -> None:
+    lot_url = (
+        "https://www.the-saleroom.com/en-gb/auction-catalogues/kew/"
+        "catalogue-id-kew-au10015/lot-003bc9c2-31b8-4bbf-bb91-b4bc01078797"
+    )
+    entries = [
+        _entry(lot_url, "lot", "003bc9c2-31b8-4bbf-bb91-b4bc01078797", "2026-09-17"),
+    ]
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+
+    from html_downloader.auctions.paths import auction_algolia_browse_state_file
+    from html_downloader.auctions.saleroom_algolia import append_lot_cache, lot_cache_path
+
+    algolia_state = auction_algolia_browse_state_file(state_root, "saleroom")
+    algolia_state.parent.mkdir(parents=True, exist_ok=True)
+    algolia_state.write_text('{"partitions": {}}\n', encoding="utf-8")
+    append_lot_cache(
+        lot_cache_path(algolia_state),
+        [
+            SitemapEntry(
+                url=lot_url,
+                lastmod=None,
+                entity_type="lot",
+                entity_id="003bc9c2-31b8-4bbf-bb91-b4bc01078797",
+            ),
+            SitemapEntry(
+                url=(
+                    "https://www.the-saleroom.com/en-gb/auction-catalogues/x/"
+                    "catalogue-id-x1/lot-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+                ),
+                lastmod=None,
+                entity_type="lot",
+                entity_id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            ),
+        ],
+    )
+
+    with patch(
+        "html_downloader.auctions.service.fetch_auction_entries",
+        return_value=entries,
+    ):
+        result = run_auction_discover(
+            auction_house="saleroom",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=False,
+            include_updates=True,
+            update_state=True,
+            proxy_file=None,
+            concurrency=1,
+            dry_run=False,
+        )
+
+    job = result.job
+    assert job == data_root / "auctions" / "saleroom" / "2026-09"
+    urls = (job / "urls.txt").read_text(encoding="utf-8").strip().splitlines()
+    assert lot_url in urls
+    assert (
+        "https://www.the-saleroom.com/en-gb/auction-catalogues/x/"
+        "catalogue-id-x1/lot-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    ) in urls
+    art_urls = set((job / "art_urls.txt").read_text(encoding="utf-8").strip().splitlines())
+    assert lot_url in art_urls
+    assert (
+        "https://www.the-saleroom.com/en-gb/auction-catalogues/x/"
+        "catalogue-id-x1/lot-aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    ) in art_urls
+    meta = json.loads((job / "metadata.json").read_text(encoding="utf-8"))
+    assert meta["auction_house"] == "saleroom"
+    assert meta["art_lots"] == 2
+    assert meta["all_lots"] == 2
+    assert (state_root / "auctions" / "saleroom.json").is_file()
+
+
+def test_saleroom_download_adds_aws_waf_keywords(tmp_path: Path) -> None:
+    from html_downloader.auctions.service import run_auction_download
+
+    data_root = tmp_path / "data"
+    job = data_root / "auctions" / "saleroom" / "2026-09"
+    job.mkdir(parents=True)
+    (job / "urls.txt").write_text(
+        "https://www.the-saleroom.com/en-gb/auction-catalogues/kew/"
+        "catalogue-id-kew-au10015/lot-003bc9c2-31b8-4bbf-bb91-b4bc01078797\n",
+        encoding="utf-8",
+    )
+    proxy_file = tmp_path / "proxy.txt"
+    proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
+
+    captured: dict = {}
+
+    def fake_crawl(urls: list[str], config: object) -> None:
+        captured["config"] = config
+        captured["urls"] = urls
+
+    with patch("html_downloader.auctions.service.run_crawl", side_effect=fake_crawl):
+        result = run_auction_download(
+            auction_house="saleroom",
+            data_root=data_root,
+            job_month="2026-09",
+            proxy_file=str(proxy_file),
+            urls_override=None,
+            max_workers=2,
+            requests_per_second=1.0,
+            skip_existing=True,
+            results_append=True,
+        )
+
+    assert result.status == "completed"
+    cfg = captured["config"]
+    assert "awswaf" in cfg.block_keywords
+    assert "human verification" in cfg.block_keywords
+
+
 def test_main_help_exit_code() -> None:
     assert main([]) == 2

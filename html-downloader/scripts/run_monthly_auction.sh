@@ -29,9 +29,9 @@ PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 auction_house="${1:-}"
 case "${auction_house}" in
-  invaluable|liveauctioneers|artcurial|barnebys) ;;
+  invaluable|liveauctioneers|artcurial|barnebys|saleroom) ;;
   *)
-    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys" >&2
+    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys|saleroom" >&2
     exit 2
     ;;
 esac
@@ -96,12 +96,20 @@ run_discover() {
         --incremental \
         --update-state
       ;;
+    saleroom)
+      "${PYTHON}" -m html_downloader auction discover \
+        --auction-house saleroom \
+        --proxy-file proxy.txt \
+        --concurrency 1 \
+        --incremental \
+        --update-state
+      ;;
   esac
 }
 
 run_download() {
   case "${auction_house}" in
-    invaluable|liveauctioneers|barnebys)
+    invaluable|liveauctioneers|barnebys|saleroom)
       # Large url lists — chunk to avoid OOM loading full urls.txt.
       /bin/bash --noprofile --norc "${SCRIPT_DIR}/download_url_chunks.sh" "${auction_house}"
       ;;

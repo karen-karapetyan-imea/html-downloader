@@ -222,3 +222,48 @@ def test_barnebys_rejects_non_lot_paths() -> None:
     ]
     for url in rejected:
         assert not is_barnebys_auction_url(url), url
+
+
+def test_saleroom_lot_normalize_and_entity() -> None:
+    from html_downloader.auctions.urls import (
+        is_saleroom_auction_url,
+        is_saleroom_lot_url,
+        saleroom_entity_from_url,
+    )
+
+    url = (
+        "https://the-saleroom.com/fr-fr/auction-catalogues/Kew/"
+        "catalogue-id-KEW-AU10015/"
+        "lot-003BC9C2-31B8-4BBF-BB91-B4BC01078797?utm_source=x"
+    )
+    assert (
+        normalize_auction_url(url)
+        == "https://www.the-saleroom.com/en-gb/auction-catalogues/kew/"
+        "catalogue-id-kew-au10015/lot-003bc9c2-31b8-4bbf-bb91-b4bc01078797"
+    )
+    assert saleroom_entity_from_url(url) == (
+        "lot",
+        "003bc9c2-31b8-4bbf-bb91-b4bc01078797",
+    )
+    assert is_saleroom_auction_url(url)
+    assert is_saleroom_lot_url(url)
+
+    catalogue = (
+        "https://www.the-saleroom.com/en-us/auction-catalogues/kew/"
+        "catalogue-id-kew-au10015/"
+    )
+    assert (
+        normalize_auction_url(catalogue)
+        == "https://www.the-saleroom.com/en-gb/auction-catalogues/kew/"
+        "catalogue-id-kew-au10015"
+    )
+    assert saleroom_entity_from_url(catalogue) == ("catalogue", "kew-au10015")
+    assert not is_saleroom_lot_url(catalogue)
+
+    assert not is_saleroom_auction_url(
+        "https://www.the-saleroom.com/en-gb/for-sale/fine-art"
+    )
+    assert not is_auction_url(
+        "https://www.the-saleroom.com/en-gb/auction-catalogues/kew/"
+        "catalogue-id-kew-au10015/lot-003bc9c2-31b8-4bbf-bb91-b4bc01078797"
+    )

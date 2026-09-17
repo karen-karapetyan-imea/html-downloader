@@ -17,6 +17,7 @@ from html_downloader.auctions.liveauctioneers import (
     DEFAULT_MIN_URLS,
 )
 from html_downloader.auctions.paths import AUCTION_HOUSES
+from html_downloader.auctions.saleroom import DEFAULT_SALEROOM_LOTS_INDEX
 from html_downloader.discover.sitemap import SitemapEntry
 
 LOGGER = logging.getLogger(__name__)
@@ -49,6 +50,13 @@ AUCTIONS: dict[str, AuctionSpec] = {
         # Sequential only — Azure WAF + large gzipped lot sitemaps.
         default_concurrency=1,
         uses_stealth_proxy=True,
+    ),
+    "saleroom": AuctionSpec(
+        name="saleroom",
+        default_indexes=(DEFAULT_SALEROOM_LOTS_INDEX,),
+        # Algolia discover needs no proxy; lot HTML download still uses --proxy-file.
+        default_concurrency=1,
+        uses_stealth_proxy=False,
     ),
 }
 
@@ -90,6 +98,9 @@ def fetch_auction_entries(
     sitemap_force: bool = False,
     max_sales: int | None = None,
     sales_progress_path: Path | None = None,
+    expand_art_categories: bool = True,
+    art_progress_path: Path | None = None,
+    art_force: bool = False,
 ) -> list[SitemapEntry]:
     """Dispatch discovery for the given auction house."""
     if spec.name == "invaluable":
@@ -207,5 +218,24 @@ def fetch_auction_entries(
                 LOGGER.warning("barnebys search expansion skipped error=%s", exc)
 
         return entries
+
+    if spec.name == "saleroom":
+        from html_downloader.auctions.saleroom import fetch_saleroom_sitemap_entries
+
+        if expand_algolia and algolia_state_path is None:
+            raise ValueError("expand_algolia requires algolia_state_path for saleroom")
+        kwargs = {
+            "concurrency": concurrency,
+            "expand_algolia": expand_algolia,
+            "algolia_state_path": algolia_state_path,
+            "algolia_delay": algolia_delay,
+            "algolia_force": algolia_force or sitemap_force,
+        }
+        if proxies:
+            kwargs["proxies"] = proxies
+        elif proxy is not None:
+            kwargs["proxy"] = proxy
+            kwargs["proxies"] = [proxy]
+        return fetch_saleroom_sitemap_entries(spec.default_indexes[0], **kwargs)
 
     raise ValueError(f"no discovery implementation for auction house {spec.name!r}")

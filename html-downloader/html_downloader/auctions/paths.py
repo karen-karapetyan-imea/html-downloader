@@ -13,6 +13,7 @@ AUCTION_HOUSES: tuple[str, ...] = (
     "liveauctioneers",
     "artcurial",
     "barnebys",
+    "saleroom",
 )
 
 _MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
@@ -120,6 +121,16 @@ def auction_sales_progress_file(state_root: Path, auction_house: str) -> Path:
     return auction_state_root(state_root) / f"{auction_house}_sales_progress.json"
 
 
+def auction_art_browse_progress_file(state_root: Path, auction_house: str) -> Path:
+    """Category browse resume checkpoint for art/collectables expansion."""
+    return auction_state_root(state_root) / f"{auction_house}_art_browse_progress.json"
+
+
+def auction_art_urls_file(job: Path) -> Path:
+    """Sidecar URL list of art/collectables lots for optional focused download."""
+    return job / "art_urls.txt"
+
+
 def known_auction_result_paths(data_root: Path, auction_house: str) -> list[Path]:
     """Prior auction crawl logs for incremental discovery."""
     house_dir = auction_data_root(data_root) / auction_house
@@ -138,6 +149,8 @@ __all__ = [
     "PROJECT_ROOT",
     "auction_algolia_artworks_browse_state_file",
     "auction_algolia_browse_state_file",
+    "auction_art_browse_progress_file",
+    "auction_art_urls_file",
     "auction_artist_sold_progress_file",
     "auction_data_root",
     "auction_diff_file",
