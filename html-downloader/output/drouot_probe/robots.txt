@@ -1,0 +1,158 @@
+# www.robotstxt.org/
+
+User-agent: *
+
+Disallow: /cdn-cgi
+
+Disallow: /l/*
+Disallow: /v/*
+Disallow: /category/
+Disallow: /*/category
+
+Disallow: /compte/*
+Disallow: /account/*
+Disallow: /fr/account/*
+Disallow: /en/account/*
+Disallow: /es/account/*
+Disallow: /it/account/*
+Disallow: /de/account/*
+Disallow: /zh/account/*
+
+Disallow: /fr/visite/*
+Disallow: /en/visite/*
+Disallow: /es/visite/*
+Disallow: /it/visite/*
+Disallow: /de/visite/*
+Disallow: /zh/visite/*
+
+Disallow: /s?
+Disallow: /s/
+Disallow: /fr/s?
+Disallow: /en/s?
+Disallow: /es/s?
+Disallow: /it/s?
+Disallow: /de/s?
+Disallow: /zh/s?
+
+Disallow: /auctions/past
+
+Disallow: /alert/*
+Disallow: /fr/alert/*
+Disallow: /en/alert/*
+Disallow: /es/alert/*
+Disallow: /it/alert/*
+Disallow: /de/alert/*
+Disallow: /zh/alert/*
+
+Disallow: /fr/live/bidlive/*
+Disallow: /es/live/bidlive/*
+Disallow: /en/live/bidlive/*
+Disallow: /it/live/bidlive/*
+Disallow: /de/live/bidlive/*
+Disallow: /zh/live/bidlive/*
+
+Disallow: /*?*refurl=*
+Disallow: /*?*query=*
+Disallow: /*?*actionParam=*
+Disallow: /*?*controllerParam=*
+Disallow: /*?*authURL=*
+Disallow: /*?*lang=*
+Disallow: /*?*triSearch=*
+Disallow: /*?*mode=*
+Disallow: /*?*from=*
+Disallow: /*?*lotGroupTheme=*
+Disallow: /*?*venteType=*
+Disallow: /*?*lieuxExpo=*
+
+Disallow: /*publicShow
+Disallow: /*publicAjaxUpdate
+Disallow: /lots/
+Disallow: /*/lots/
+
+Disallow: /visite/
+Disallow: /fr/visite/image360/*
+Disallow: /en/visite/image360/*
+Disallow: /it/visite/image360/*
+Disallow: /de/visite/image360/*
+Disallow: /es/visite/image360/*
+Disallow: /zh/visite/image360/*
+
+
+Disallow: /news/index
+
+Disallow: /multiclerk-policy
+Disallow: /lot/sendDetailStayEvent
+
+Disallow: /cdn-cgi/
+Disallow: /*/cdn-cgi/
+
+Disallow: /app-fiendly/
+
+
+User-agent: Amazonbot
+User-agent: Applebot
+User-agent: Applebot-Extended
+User-agent: Bytespider
+User-agent: CCBot
+User-agent: ChatGPT-User
+User-agent: Claude-Web
+User-agent: ClaudeBot
+User-agent: Diffbot
+User-agent: FacebookBot
+User-agent: FriendlyCrawler
+User-agent: GPTBot
+User-agent: Google-Extended
+User-agent: GoogleOther
+User-agent: GoogleOther-Image
+User-agent: GoogleOther-Video
+User-agent: ICC-Crawler
+User-agent: ImagesiftBot
+User-agent: Meta-ExternalAgent
+User-agent: Meta-ExternalFetcher
+User-agent: OAI-SearchBot
+User-agent: PerplexityBot
+User-agent: PetalBot
+User-agent: Scrapy
+User-agent: Timpibot
+User-agent: VelenPublicWebCrawler
+User-agent: YouBot
+User-agent: anthropic-ai
+User-agent: cohere-ai
+User-agent: facebookexternalhit
+User-agent: img2dataset
+User-agent: omgili
+User-agent: omgilibot
+User-agent: MauiBot
+Disallow: /
+
+
+Sitemap: https://drouot.com/sitemap-fr-lot.xml
+Sitemap: https://drouot.com/sitemap-fr-sale.xml
+Sitemap: https://drouot.com/sitemap-fr-category.xml
+Sitemap: https://drouot.com/sitemap-fr-news.xml
+
+Sitemap: https://drouot.com/sitemap-en-lot.xml
+Sitemap: https://drouot.com/sitemap-en-sale.xml
+Sitemap: https://drouot.com/sitemap-en-category.xml
+Sitemap: https://drouot.com/sitemap-en-news.xml
+
+Sitemap: https://drouot.com/sitemap-de-lot.xml
+Sitemap: https://drouot.com/sitemap-de-sale.xml
+Sitemap: https://drouot.com/sitemap-de-category.xml
+Sitemap: https://drouot.com/sitemap-de-news.xml
+
+Sitemap: https://drouot.com/sitemap-zh-lot.xml
+Sitemap: https://drouot.com/sitemap-zh-sale.xml
+Sitemap: https://drouot.com/sitemap-zh-category.xml
+Sitemap: https://drouot.com/sitemap-zh-news.xml
+
+Sitemap: https://drouot.com/sitemap-es-lot.xml
+Sitemap: https://drouot.com/sitemap-es-sale.xml
+Sitemap: https://drouot.com/sitemap-es-category.xml
+Sitemap: https://drouot.com/sitemap-es-news.xml
+
+Sitemap: https://drouot.com/sitemap-it-lot.xml
+Sitemap: https://drouot.com/sitemap-it-sale.xml
+Sitemap: https://drouot.com/sitemap-it-category.xml
+Sitemap: https://drouot.com/sitemap-it-news.xml
+

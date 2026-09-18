@@ -2,10 +2,11 @@
 # Start monthly auction crawl tmux sessions.
 #
 # Sessions: crawl-auction-invaluable, crawl-auction-liveauctioneers,
-#           crawl-auction-artcurial, crawl-auction-barnebys, crawl-auction-saleroom
-# Attach:   tmux attach -t crawl-auction-saleroom
+#           crawl-auction-artcurial, crawl-auction-barnebys, crawl-auction-saleroom,
+#           crawl-auction-drouot
+# Attach:   tmux attach -t crawl-auction-drouot
 # List:     tmux ls
-# Stop one: tmux kill-session -t crawl-auction-saleroom
+# Stop one: tmux kill-session -t crawl-auction-drouot
 # Stop all: ./scripts/stop_monthly_auction_tmux.sh
 
 set -euo pipefail
@@ -13,7 +14,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PYTHON="${PROJECT_ROOT}/.venv/bin/python"
-AUCTION_HOUSES=(invaluable liveauctioneers artcurial barnebys saleroom)
+AUCTION_HOUSES=(invaluable liveauctioneers artcurial barnebys saleroom drouot)
 
 if ! command -v tmux >/dev/null 2>&1; then
   echo "error: tmux is not installed" >&2

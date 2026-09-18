@@ -267,3 +267,44 @@ def test_saleroom_lot_normalize_and_entity() -> None:
         "https://www.the-saleroom.com/en-gb/auction-catalogues/kew/"
         "catalogue-id-kew-au10015/lot-003bc9c2-31b8-4bbf-bb91-b4bc01078797"
     )
+
+
+def test_drouot_lot_and_sale_normalize_and_entity() -> None:
+    from html_downloader.auctions.urls import (
+        build_drouot_lot_url,
+        drouot_entity_from_url,
+        is_drouot_auction_url,
+        is_drouot_lot_url,
+    )
+
+    url = (
+        "https://www.drouot.com/fr/l/34624465-Tiffany-Heart-Tag"
+        "/__data.json?utm_source=x"
+    )
+    assert (
+        normalize_auction_url(url)
+        == "https://drouot.com/en/l/34624465-tiffany-heart-tag"
+    )
+    assert drouot_entity_from_url(url) == ("lot", "34624465")
+    assert is_drouot_auction_url(url)
+    assert is_drouot_lot_url(url)
+
+    sale = "https://drouot.com/de/v/184832-Japanese-Crafts/"
+    assert (
+        normalize_auction_url(sale)
+        == "https://drouot.com/en/v/184832-japanese-crafts"
+    )
+    assert drouot_entity_from_url(sale) == ("sale", "184832")
+    assert not is_drouot_lot_url(sale)
+
+    assert build_drouot_lot_url(100, "Silver Coin") == (
+        "https://drouot.com/en/l/100-silver-coin"
+    )
+    rejected = [
+        "https://drouot.com/en/s?query=painting",
+        "https://drouot.com/en/c/626/paintings",
+        "https://drouot.com/en/account/profile",
+        "https://www.example.com/en/l/1-x",
+    ]
+    for bad in rejected:
+        assert not is_drouot_auction_url(bad), bad

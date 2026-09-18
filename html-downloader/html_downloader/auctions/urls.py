@@ -80,6 +80,8 @@ _ARTCURIAL_HOSTS = frozenset({"www.artcurial.com", "artcurial.com"})
 _BARNEBYS_HOSTS = frozenset({"www.barnebys.com", "barnebys.com"})
 _SALEROOM_HOSTS = frozenset({"www.the-saleroom.com", "the-saleroom.com"})
 _SALEROOM_PREFERRED_LOCALE = "en-gb"
+_DROUOT_HOSTS = frozenset({"drouot.com", "www.drouot.com"})
+_DROUOT_PREFERRED_LOCALE = "en"
 
 # SEO sold-lot page: /price-result/{slug}/
 LIVEAUCTIONEERS_PRICE_RESULT_RE = re.compile(
@@ -145,6 +147,18 @@ SALEROOM_FOR_SALE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Lot: /{locale}/l/{id}-{slug}
+DROUOT_LOT_RE = re.compile(
+    r"^https://drouot\.com/(en|fr|de|es|it|zh)/l/(\d+)-([A-Za-z0-9_-]+)/?$",
+    re.IGNORECASE,
+)
+
+# Sale catalogue: /{locale}/v/{id}-{slug}
+DROUOT_SALE_RE = re.compile(
+    r"^https://drouot\.com/(en|fr|de|es|it|zh)/v/(\d+)-([A-Za-z0-9_-]+)/?$",
+    re.IGNORECASE,
+)
+
 
 def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | None:
     """
@@ -155,11 +169,12 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     - Drop fragments
     - Strip common tracking / Algolia query params
     - Lowercase scheme/host; force www.invaluable.com / www.liveauctioneers.com /
-      www.artcurial.com / www.barnebys.com / www.the-saleroom.com
+      www.artcurial.com / www.barnebys.com / www.the-saleroom.com / drouot.com
     - Catalog / lot / house / artist / category / price-result ids lowercased
     - Artcurial lot paths force /en/ locale
     - Barnebys lot slug paths lowercased (token/id preserved as in sitemap)
     - Saleroom lot/catalogue/for-sale paths force /en-gb/ locale; lot UUID lowercased
+    - Drouot lot/sale paths force /en/ locale; drop /__data.json suffix
     - Strip trailing slash (except bare `/`)
     """
     text = (url or "").strip()
@@ -193,12 +208,17 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     elif host == "the-saleroom.com":
         host = "www.the-saleroom.com"
         netloc = host
+    elif host == "www.drouot.com":
+        host = "drouot.com"
+        netloc = host
     else:
         netloc = host
         if parts.port and parts.port not in (80, 443):
             netloc = f"{host}:{parts.port}"
 
     path = unquote(parts.path or "/")
+    if host in _DROUOT_HOSTS and path.lower().endswith("/__data.json"):
+        path = path[: -len("/__data.json")]
 
     catalog_match = re.match(r"^(/catalog/)([A-Za-z0-9]{6,})(/?)$", path, re.IGNORECASE)
     lot_match = re.match(
@@ -272,6 +292,16 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         path,
         re.IGNORECASE,
     )
+    drouot_lot = re.match(
+        r"^/(en|fr|de|es|it|zh)/l/(\d+)-([A-Za-z0-9_-]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
+    drouot_sale = re.match(
+        r"^/(en|fr|de|es|it|zh)/v/(\d+)-([A-Za-z0-9_-]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
 
     if catalog_match and host in _INVALUABLE_HOSTS:
         path = f"/catalog/{catalog_match.group(2).lower()}"
@@ -341,6 +371,14 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     elif saleroom_for_sale and host in _SALEROOM_HOSTS:
         rest = saleroom_for_sale.group(2).strip("/").lower()
         path = f"/{_SALEROOM_PREFERRED_LOCALE}/for-sale/{rest}"
+    elif drouot_lot and host in _DROUOT_HOSTS:
+        lot_id = drouot_lot.group(2)
+        slug = drouot_lot.group(3).lower()
+        path = f"/{_DROUOT_PREFERRED_LOCALE}/l/{lot_id}-{slug}"
+    elif drouot_sale and host in _DROUOT_HOSTS:
+        sale_id = drouot_sale.group(2)
+        slug = drouot_sale.group(3).lower()
+        path = f"/{_DROUOT_PREFERRED_LOCALE}/v/{sale_id}-{slug}"
     else:
         path = path.rstrip("/") or "/"
 
@@ -380,6 +418,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         if saleroom_entity_from_url_path(candidate) is not None:
             query = ""
         out_netloc = "www.the-saleroom.com"
+    elif host in _DROUOT_HOSTS:
+        candidate = urlunsplit(("https", "drouot.com", path, "", ""))
+        if drouot_entity_from_url_path(candidate) is not None:
+            query = ""
+        out_netloc = "drouot.com"
     else:
         out_netloc = netloc
 
@@ -656,4 +699,59 @@ def is_saleroom_auction_url(url: str) -> bool:
 def is_saleroom_lot_url(url: str) -> bool:
     """True only for Saleroom lot pages (not catalogue hubs)."""
     key = saleroom_entity_from_url(url)
+    return key is not None and key[0] == "lot"
+
+
+def build_drouot_lot_url(lot_id: int | str, slug: str) -> str:
+    """Build a canonical EN Drouot lot URL."""
+    clean_slug = re.sub(r"[^a-z0-9]+", "-", (slug or "lot").lower()).strip("-") or "lot"
+    return f"https://drouot.com/{_DROUOT_PREFERRED_LOCALE}/l/{lot_id}-{clean_slug}"
+
+
+def build_drouot_sale_url(sale_id: int | str, slug: str) -> str:
+    """Build a canonical EN Drouot sale URL."""
+    clean_slug = re.sub(r"[^a-z0-9]+", "-", (slug or "sale").lower()).strip("-") or "sale"
+    return f"https://drouot.com/{_DROUOT_PREFERRED_LOCALE}/v/{sale_id}-{clean_slug}"
+
+
+def drouot_entity_from_url_path(url: str) -> tuple[str, str] | None:
+    """Classify a normalized Drouot absolute URL without re-entering normalize."""
+    lot = DROUOT_LOT_RE.match(url)
+    if lot:
+        return "lot", lot.group(2)
+
+    sale = DROUOT_SALE_RE.match(url)
+    if sale:
+        return "sale", sale.group(2)
+
+    return None
+
+
+def drouot_entity_from_url(url: str) -> tuple[str, str] | None:
+    """
+    Return (entity_type, entity_id) for Drouot crawl targets.
+
+    Accepted:
+      /en/l/{id}-{slug}  → ("lot", id)
+      /en/v/{id}-{slug}  → ("sale", id)
+
+    Rejected: /en/s search, /en/c categories, account, news, past auctions, etc.
+    """
+    normalized = normalize_auction_url(url)
+    if not normalized:
+        return None
+    host = (urlsplit(normalized).hostname or "").lower()
+    if host not in _DROUOT_HOSTS:
+        return None
+    return drouot_entity_from_url_path(normalized)
+
+
+def is_drouot_auction_url(url: str) -> bool:
+    """True for Drouot lot or sale crawl targets."""
+    return drouot_entity_from_url(url) is not None
+
+
+def is_drouot_lot_url(url: str) -> bool:
+    """True only for Drouot lot pages (not sale catalogues)."""
+    key = drouot_entity_from_url(url)
     return key is not None and key[0] == "lot"

@@ -7,16 +7,19 @@
 #   ./scripts/run_monthly_auction.sh liveauctioneers
 #   ./scripts/run_monthly_auction.sh artcurial
 #   ./scripts/run_monthly_auction.sh barnebys
+#   ./scripts/run_monthly_auction.sh saleroom
+#   ./scripts/run_monthly_auction.sh drouot
 #
 # Optional:
 #   AUCTION_RUN_DAY=1   # fixed day-of-month for next runs (1–31, clamped)
 #   MIN_URLS=1000000    # liveauctioneers only (default 1M)
 #   MAX_SITEMAPS=5000   # liveauctioneers only (default 5000)
-#   MIN_URLS=0          # barnebys: 0 = all pending lot shards in one discover (default)
+#   MIN_URLS=0          # barnebys/drouot: 0 = all pending shards in one discover (default)
 #   MAX_SITEMAPS=100    # barnebys (default 100; index has 8 lot shards)
+#   MAX_SITEMAPS=50     # drouot (default 50; EN lot+sale children)
 #   MAX_SALES=          # artcurial only (default: all pending sales)
-#   CHUNK_LINES=1000000 # invaluable / liveauctioneers / barnebys chunked download
-#   WORKERS=8           # invaluable / liveauctioneers / barnebys chunked download workers
+#   CHUNK_LINES=1000000 # invaluable / liveauctioneers / barnebys / saleroom / drouot
+#   WORKERS=8           # chunked download workers
 #
 # Prefer starting via:
 #   ./scripts/start_monthly_auction_tmux.sh
@@ -29,9 +32,9 @@ PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 auction_house="${1:-}"
 case "${auction_house}" in
-  invaluable|liveauctioneers|artcurial|barnebys|saleroom) ;;
+  invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot) ;;
   *)
-    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys|saleroom" >&2
+    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot" >&2
     exit 2
     ;;
 esac
@@ -104,12 +107,22 @@ run_discover() {
         --incremental \
         --update-state
       ;;
+    drouot)
+      "${PYTHON}" -m html_downloader auction discover \
+        --auction-house drouot \
+        --proxy-file proxy.txt \
+        --concurrency 1 \
+        --min-urls "${MIN_URLS:-0}" \
+        --max-sitemaps "${MAX_SITEMAPS:-50}" \
+        --incremental \
+        --update-state
+      ;;
   esac
 }
 
 run_download() {
   case "${auction_house}" in
-    invaluable|liveauctioneers|barnebys|saleroom)
+    invaluable|liveauctioneers|barnebys|saleroom|drouot)
       # Large url lists — chunk to avoid OOM loading full urls.txt.
       /bin/bash --noprofile --norc "${SCRIPT_DIR}/download_url_chunks.sh" "${auction_house}"
       ;;

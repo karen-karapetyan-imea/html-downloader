@@ -575,5 +575,109 @@ def test_saleroom_download_adds_aws_waf_keywords(tmp_path: Path) -> None:
     assert "human verification" in cfg.block_keywords
 
 
+def test_drouot_discover_writes_monthly_job(tmp_path: Path) -> None:
+    lot_url = "https://drouot.com/en/l/34624465-tiffany-heart"
+    sale_url = "https://drouot.com/en/v/184832-japanese-crafts"
+    entries = [
+        _entry(lot_url, "lot", "34624465", "2026-09-17"),
+        _entry(sale_url, "sale", "184832", "2026-09-17"),
+    ]
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+
+    from html_downloader.auctions.drouot import append_lot_cache, lot_cache_path
+    from html_downloader.auctions.paths import auction_sitemap_progress_file
+
+    progress_path = auction_sitemap_progress_file(state_root, "drouot")
+    progress_path.parent.mkdir(parents=True, exist_ok=True)
+    append_lot_cache(
+        lot_cache_path(progress_path),
+        [
+            SitemapEntry(
+                url=lot_url,
+                lastmod=None,
+                entity_type="lot",
+                entity_id="34624465",
+            ),
+            SitemapEntry(
+                url="https://drouot.com/en/l/999-cached-lot",
+                lastmod=None,
+                entity_type="lot",
+                entity_id="999",
+            ),
+            SitemapEntry(
+                url=sale_url,
+                lastmod=None,
+                entity_type="sale",
+                entity_id="184832",
+            ),
+        ],
+    )
+
+    with patch(
+        "html_downloader.auctions.service.fetch_auction_entries",
+        return_value=entries,
+    ):
+        result = run_auction_discover(
+            auction_house="drouot",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=False,
+            include_updates=True,
+            update_state=True,
+            proxy_file=None,
+            concurrency=1,
+            dry_run=False,
+            expand_algolia=False,
+        )
+
+    job = result.job
+    assert job == data_root / "auctions" / "drouot" / "2026-09"
+    urls = set((job / "urls.txt").read_text(encoding="utf-8").strip().splitlines())
+    assert lot_url in urls
+    assert sale_url in urls
+    assert "https://drouot.com/en/l/999-cached-lot" in urls
+    meta = json.loads((job / "metadata.json").read_text(encoding="utf-8"))
+    assert meta["auction_house"] == "drouot"
+    assert (state_root / "auctions" / "drouot.json").is_file()
+
+
+def test_drouot_download_adds_cloudflare_keywords(tmp_path: Path) -> None:
+    from html_downloader.auctions.service import run_auction_download
+
+    data_root = tmp_path / "data"
+    job = data_root / "auctions" / "drouot" / "2026-09"
+    job.mkdir(parents=True)
+    (job / "urls.txt").write_text(
+        "https://drouot.com/en/l/34624465-tiffany-heart\n",
+        encoding="utf-8",
+    )
+    proxy_file = tmp_path / "proxy.txt"
+    proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
+
+    captured: dict = {}
+
+    def fake_crawl(urls: list[str], config: object) -> None:
+        captured["config"] = config
+
+    with patch("html_downloader.auctions.service.run_crawl", side_effect=fake_crawl):
+        result = run_auction_download(
+            auction_house="drouot",
+            data_root=data_root,
+            job_month="2026-09",
+            proxy_file=str(proxy_file),
+            urls_override=None,
+            max_workers=2,
+            requests_per_second=1.0,
+            skip_existing=True,
+            results_append=True,
+        )
+
+    assert result.status == "completed"
+    cfg = captured["config"]
+    assert "challenge-platform" in cfg.block_keywords
+
+
 def test_main_help_exit_code() -> None:
     assert main([]) == 2

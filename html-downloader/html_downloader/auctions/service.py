@@ -87,6 +87,10 @@ def _known_keys_for_house(data_root: Path, auction_house: str) -> set[tuple[str,
         from html_downloader.auctions.saleroom import known_saleroom_keys_from_paths
 
         return known_saleroom_keys_from_paths(paths)
+    if auction_house == "drouot":
+        from html_downloader.auctions.drouot import known_drouot_keys_from_paths
+
+        return known_drouot_keys_from_paths(paths)
     keys: set[tuple[str, str]] = set()
     for path in paths:
         # Generic fallback: parse as invaluable-style if possible
@@ -145,6 +149,59 @@ def _stream_barnebys_cache_into_job_files(
 
     LOGGER.info(
         "barnebys cache stream complete scanned=%s added_all=%s added_crawl=%s",
+        scanned,
+        added_all,
+        added_crawl,
+    )
+    return added_all, added_crawl
+
+
+def _stream_drouot_cache_into_job_files(
+    cache_path: Path,
+    *,
+    sitemap_all_path: Path,
+    urls_path: Path,
+    already_written_keys: set[tuple[str, str]],
+    known_keys: set[tuple[str, str]],
+    incremental: bool,
+) -> tuple[int, int]:
+    """Append Drouot lot/sale URLs from typed JSONL into job files."""
+    from html_downloader.auctions.drouot import iter_lot_cache_rows
+
+    if not cache_path.exists():
+        return 0, 0
+
+    seen = already_written_keys
+    added_all = 0
+    added_crawl = 0
+    scanned = 0
+
+    with (
+        sitemap_all_path.open("a", encoding="utf-8") as all_fh,
+        urls_path.open("a", encoding="utf-8") as crawl_fh,
+    ):
+        for entity_type, entity_id, url, _lastmod in iter_lot_cache_rows(cache_path):
+            scanned += 1
+            if scanned % 500_000 == 0:
+                LOGGER.info(
+                    "drouot cache stream progress scanned=%s added_all=%s added_crawl=%s",
+                    scanned,
+                    added_all,
+                    added_crawl,
+                )
+            key = (entity_type, entity_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            all_fh.write(url + "\n")
+            added_all += 1
+            if incremental and key in known_keys:
+                continue
+            crawl_fh.write(url + "\n")
+            added_crawl += 1
+
+    LOGGER.info(
+        "drouot cache stream complete scanned=%s added_all=%s added_crawl=%s",
         scanned,
         added_all,
         added_crawl,
@@ -301,12 +358,21 @@ def run_auction_discover(
         DEFAULT_MAX_SITEMAPS as BM_DEFAULT_MAX_SITEMAPS,
         DEFAULT_MIN_URLS as BM_DEFAULT_MIN_URLS,
     )
+    from html_downloader.auctions.drouot import (
+        DEFAULT_MAX_SITEMAPS as DROUOT_DEFAULT_MAX_SITEMAPS,
+        DEFAULT_MIN_URLS as DROUOT_DEFAULT_MIN_URLS,
+    )
 
     if spec.name == "barnebys":
         sitemap_limit = (
             max_sitemaps if max_sitemaps is not None else BM_DEFAULT_MAX_SITEMAPS
         )
         url_target = min_urls if min_urls is not None else BM_DEFAULT_MIN_URLS
+    elif spec.name == "drouot":
+        sitemap_limit = (
+            max_sitemaps if max_sitemaps is not None else DROUOT_DEFAULT_MAX_SITEMAPS
+        )
+        url_target = min_urls if min_urls is not None else DROUOT_DEFAULT_MIN_URLS
     else:
         sitemap_limit = (
             max_sitemaps if max_sitemaps is not None else LA_DEFAULT_MAX_SITEMAPS
@@ -341,9 +407,9 @@ def run_auction_discover(
         include_hubs,
         expand_auctions_list,
         expand_houses,
-        sitemap_limit if spec.name in {"liveauctioneers", "barnebys"} else None,
-        url_target if spec.name in {"liveauctioneers", "barnebys"} else None,
-        sitemap_force if spec.name in {"liveauctioneers", "barnebys"} else None,
+        sitemap_limit if spec.name in {"liveauctioneers", "barnebys", "drouot"} else None,
+        url_target if spec.name in {"liveauctioneers", "barnebys", "drouot"} else None,
+        sitemap_force if spec.name in {"liveauctioneers", "barnebys", "drouot"} else None,
         max_sales if spec.name == "artcurial" else None,
         cats or None,
     )
@@ -376,11 +442,14 @@ def run_auction_discover(
     elif expand_algolia and spec.name == "saleroom":
         # Art/collectables master categories only (Algolia-first discovery).
         algolia_state = auction_algolia_browse_state_file(state_root, spec.name)
+    elif expand_algolia and spec.name == "drouot":
+        # First-party search backfill when sitemap lot count < totalItems.
+        algolia_state = auction_algolia_browse_state_file(state_root, spec.name)
     else:
         algolia_state = None
     sitemap_progress = (
         auction_sitemap_progress_file(state_root, spec.name)
-        if spec.name in {"liveauctioneers", "barnebys"}
+        if spec.name in {"liveauctioneers", "barnebys", "drouot"}
         else None
     )
     sales_progress = (
@@ -504,7 +573,7 @@ def run_auction_discover(
         already_keys: set[tuple[str, str]] = {
             (e.entity_type, e.entity_id)
             for e in entries
-            if e.entity_type in {"lot", "result_lot"} and e.entity_id
+            if e.entity_type in {"lot", "result_lot", "sale"} and e.entity_id
         }
 
         if expand_algolia and algolia_state is not None and spec.name == "barnebys":
@@ -565,6 +634,24 @@ def run_auction_discover(
             all_count += added_all
             crawl_count += added_crawl
 
+        if spec.name == "drouot" and sitemap_progress is not None:
+            from html_downloader.auctions.drouot import (
+                iter_lot_cache_rows as drouot_iter_rows,
+                lot_cache_path as drouot_lot_cache_path,
+            )
+
+            cache_path = drouot_lot_cache_path(sitemap_progress)
+            added_all, added_crawl = _stream_drouot_cache_into_job_files(
+                cache_path,
+                sitemap_all_path=sitemap_all_path,
+                urls_path=urls_path,
+                already_written_keys=already_keys,
+                known_keys=known_keys,
+                incremental=incremental,
+            )
+            all_count += added_all
+            crawl_count += added_crawl
+
         art_lot_count = 0
         if spec.name == "saleroom" and expand_algolia and algolia_state is not None:
             from html_downloader.auctions.saleroom_algolia import (
@@ -614,6 +701,8 @@ def run_auction_discover(
                 from html_downloader.auctions.barnebys import save_auction_lastmod_state
             elif spec.name == "saleroom":
                 from html_downloader.auctions.saleroom import save_auction_lastmod_state
+            elif spec.name == "drouot":
+                from html_downloader.auctions.drouot import save_auction_lastmod_state
             else:
                 from html_downloader.auctions.invaluable import save_auction_lastmod_state
 
@@ -688,6 +777,13 @@ def run_auction_download(
 
         config.block_keywords = tuple(
             dict.fromkeys((*config.block_keywords, *AWS_WAF_KEYWORDS))
+        )
+
+    if spec.name == "drouot":
+        from html_downloader.auctions.drouot import CLOUDFLARE_KEYWORDS
+
+        config.block_keywords = tuple(
+            dict.fromkeys((*config.block_keywords, *CLOUDFLARE_KEYWORDS))
         )
 
     # Reuse marketplace Manifest shape; marketplace field stores auction house name.

@@ -17,6 +17,10 @@ from html_downloader.auctions.liveauctioneers import (
     DEFAULT_MIN_URLS,
 )
 from html_downloader.auctions.paths import AUCTION_HOUSES
+from html_downloader.auctions.drouot import (
+    DEFAULT_DROUOT_LOT_INDEX,
+    DEFAULT_DROUOT_SALE_INDEX,
+)
 from html_downloader.auctions.saleroom import DEFAULT_SALEROOM_LOTS_INDEX
 from html_downloader.discover.sitemap import SitemapEntry
 
@@ -55,6 +59,13 @@ AUCTIONS: dict[str, AuctionSpec] = {
         name="saleroom",
         default_indexes=(DEFAULT_SALEROOM_LOTS_INDEX,),
         # Algolia discover needs no proxy; lot HTML download still uses --proxy-file.
+        default_concurrency=1,
+        uses_stealth_proxy=False,
+    ),
+    "drouot": AuctionSpec(
+        name="drouot",
+        default_indexes=(DEFAULT_DROUOT_LOT_INDEX, DEFAULT_DROUOT_SALE_INDEX),
+        # Sitemap/search discover needs no proxy; lot HTML may hit Cloudflare.
         default_concurrency=1,
         uses_stealth_proxy=False,
     ),
@@ -237,5 +248,34 @@ def fetch_auction_entries(
             kwargs["proxy"] = proxy
             kwargs["proxies"] = [proxy]
         return fetch_saleroom_sitemap_entries(spec.default_indexes[0], **kwargs)
+
+    if spec.name == "drouot":
+        from html_downloader.auctions.drouot import fetch_drouot_sitemap_entries
+
+        sale_index = (
+            spec.default_indexes[1]
+            if len(spec.default_indexes) > 1
+            else DEFAULT_DROUOT_SALE_INDEX
+        )
+        if expand_algolia and algolia_state_path is None:
+            raise ValueError("expand_algolia requires algolia_state_path for drouot")
+        kwargs = {
+            "concurrency": concurrency,
+            "sale_index_url": sale_index,
+            "max_sitemaps": max_sitemaps,
+            "min_urls": min_urls,
+            "sitemap_progress_path": sitemap_progress_path,
+            "sitemap_force": sitemap_force,
+            "expand_algolia": expand_algolia,
+            "algolia_state_path": algolia_state_path,
+            "algolia_delay": algolia_delay,
+            "algolia_force": algolia_force or sitemap_force,
+        }
+        if proxies:
+            kwargs["proxies"] = proxies
+        elif proxy is not None:
+            kwargs["proxy"] = proxy
+            kwargs["proxies"] = [proxy]
+        return fetch_drouot_sitemap_entries(spec.default_indexes[0], **kwargs)
 
     raise ValueError(f"no discovery implementation for auction house {spec.name!r}")
