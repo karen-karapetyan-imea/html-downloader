@@ -163,6 +163,13 @@ def test_cli_marketplace_commands_still_parse() -> None:
     args = parser.parse_args(["discover", "--marketplace", "saatchi"])
     assert args.command == "discover"
     assert args.marketplace == "saatchi"
+    assert args.expand_search is True
+
+    args = parser.parse_args(
+        ["discover", "--marketplace", "saatchi", "--no-expand-search", "--search-force"]
+    )
+    assert args.expand_search is False
+    assert args.search_force is True
 
     args = parser.parse_args(
         ["download", "--marketplace", "artsper", "--proxy-file", "proxy.txt"]

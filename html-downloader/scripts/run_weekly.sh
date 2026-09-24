@@ -48,7 +48,7 @@ run_cycle() {
     --update-state
   )
 
-  if [[ "${marketplace}" == "artsy" || "${marketplace}" == "artmajeur" || "${marketplace}" == "mutualart" ]]; then
+  if [[ "${marketplace}" == "saatchi" || "${marketplace}" == "artsy" || "${marketplace}" == "artmajeur" || "${marketplace}" == "mutualart" ]]; then
     discover_args+=(--proxy-file proxy.txt)
   fi
 

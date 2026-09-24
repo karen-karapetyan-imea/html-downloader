@@ -48,7 +48,7 @@ SPECS: dict[str, MarketplaceSpec] = {
         name="saatchi",
         default_indexes=(DEFAULT_SAATCHI_INDEX,),
         default_concurrency=3,
-        uses_stealth_proxy=False,
+        uses_stealth_proxy=True,
     ),
     "artsper": MarketplaceSpec(
         name="artsper",
@@ -129,7 +129,10 @@ def fetch_entries(
 ) -> list[SitemapEntry]:
     index_list = tuple(indexes) if indexes else spec.default_indexes
     if spec.name == "saatchi":
-        return fetch_saatchi_sitemap_entries(index_list[0], concurrency=concurrency)
+        kwargs: dict[str, Any] = {"concurrency": concurrency}
+        if proxy is not None:
+            kwargs["proxy"] = proxy
+        return fetch_saatchi_sitemap_entries(index_list[0], **kwargs)
     if spec.name == "artsper":
         return fetch_artsper_sitemap_entries(index_list[0], concurrency=concurrency)
     if spec.name == "artmajeur":

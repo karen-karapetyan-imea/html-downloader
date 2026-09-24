@@ -66,6 +66,11 @@ def lastmod_state_file(state_root: Path, marketplace: str) -> Path:
     return state_root / f"{marketplace}_lastmod.json"
 
 
+def saatchi_search_browse_state_file(state_root: Path) -> Path:
+    """Resume state for Saatchi Constructor browse discovery."""
+    return state_root / "saatchi_search_browse_state.json"
+
+
 def known_result_paths(data_root: Path, marketplace: str) -> list[Path]:
     """Prior crawl logs for incremental discovery."""
     market_dir = data_root / marketplace

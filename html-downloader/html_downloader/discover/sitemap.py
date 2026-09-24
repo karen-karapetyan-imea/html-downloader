@@ -430,18 +430,17 @@ def _entries_from_saatchi_urlset(xml_bytes: bytes) -> list[SitemapEntry]:
 
 
 def _fetch_saatchi_child_batch(
-    http: httpx.Client,
+    fetch_bytes: FetchBytesFn,
     child_urls: list[str],
     *,
     concurrency: int,
-    max_retries: int = 5,
 ) -> tuple[list[SitemapEntry], list[str]]:
     entries: list[SitemapEntry] = []
     failed: list[str] = []
 
     def fetch_one(child_url: str) -> tuple[str, bytes | None]:
         try:
-            return child_url, fetch_sitemap_bytes(http, child_url, max_retries=max_retries)
+            return child_url, fetch_bytes(child_url)
         except Exception as exc:
             LOGGER.warning("child sitemap failed url=%s error=%s", child_url, exc)
             return child_url, None
@@ -461,34 +460,41 @@ def fetch_saatchi_sitemap_entries(
     index_url: str = DEFAULT_SAATCHI_INDEX,
     *,
     concurrency: int = 3,
+    proxy: dict[str, str] | None = None,
+    fetch_bytes: FetchBytesFn | None = None,
     client: httpx.Client | None = None,
 ) -> list[SitemapEntry]:
-    own_client = client is None
-    http = client or httpx.Client(
-        http2=False,
-        headers={
-            "User-Agent": (
-                "Mozilla/5.0 (compatible; SaatchiSitemapFetcher/1.0; "
-                "+https://www.saatchiart.com/sitemap.xml)"
-            ),
-            "Accept": "application/xml,text/xml,*/*",
-        },
-    )
+    """Fetch Saatchi artwork/profile URLs (stealth; site returns 403 to plain httpx)."""
+    del client  # legacy test/injection hook; stealth path does not use httpx
+    session: Any | None = None
+    owned_session = False
+    active_fetch = fetch_bytes
+
+    if active_fetch is None:
+        from curl_cffi import Session
+
+        session = Session(impersonate="chrome")
+        owned_session = True
+
+        def active_fetch(url: str, _session: Any = session, _proxy: dict[str, str] | None = proxy) -> bytes:
+            return fetch_sitemap_bytes_stealth(url, session=_session, proxy=_proxy)
+
     try:
-        index_xml = fetch_sitemap_bytes(http, index_url)
+        index_xml = active_fetch(index_url)
         child_urls = filter_saatchi_child_sitemaps(parse_child_sitemap_locs(index_xml))
         if not child_urls:
             child_urls = [index_url]
         LOGGER.info("saatchi sitemap child maps=%s concurrency=%s", len(child_urls), concurrency)
 
-        entries, failed = _fetch_saatchi_child_batch(http, child_urls, concurrency=concurrency)
+        entries, failed = _fetch_saatchi_child_batch(
+            active_fetch, child_urls, concurrency=concurrency
+        )
         if failed:
             LOGGER.info("saatchi sitemap retrying failed child maps=%s (serial)", len(failed))
             retry_entries, still_failed = _fetch_saatchi_child_batch(
-                http,
+                active_fetch,
                 failed,
                 concurrency=1,
-                max_retries=8,
             )
             entries.extend(retry_entries)
             if still_failed:
@@ -499,8 +505,8 @@ def fetch_saatchi_sitemap_entries(
                 )
         return entries
     finally:
-        if own_client:
-            http.close()
+        if owned_session and session is not None and hasattr(session, "close"):
+            session.close()
 
 
 def _collect_artsy_urlset_xml(

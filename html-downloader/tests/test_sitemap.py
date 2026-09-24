@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-
 from html_downloader.discover.sitemap import (
     DEFAULT_ARTFINDER_INDEX,
     DEFAULT_ARTMAJEUR_INDEX,
@@ -260,11 +258,10 @@ def test_fetch_saatchi_sitemap_entries() -> None:
         "https://www.saatchiart.com/sitemap-profiles-1.xml": SAATCHI_PROFILES_URLSET,
     }
 
-    def fake_fetch(_client: object, url: str, **kwargs: object) -> bytes:
+    def fake_fetch(url: str) -> bytes:
         return fixtures[url]
 
-    with patch("html_downloader.discover.sitemap.fetch_sitemap_bytes", side_effect=fake_fetch):
-        entries = fetch_saatchi_sitemap_entries(concurrency=2, client=MagicMock())
+    entries = fetch_saatchi_sitemap_entries(concurrency=2, fetch_bytes=fake_fetch)
 
     by_key = {(e.entity_type, e.entity_id): e for e in entries}
     assert ("artwork", "9336593") in by_key

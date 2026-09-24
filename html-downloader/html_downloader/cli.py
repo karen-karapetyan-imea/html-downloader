@@ -48,10 +48,36 @@ def build_parser() -> argparse.ArgumentParser:
     discover.add_argument(
         "--proxy-file",
         default=None,
-        help="Proxy list (required for Artsy). Format: host:port:user:pass",
+        help="Proxy list (required for Saatchi, Artsy, ArtMajeur, MutualArt). Format: host:port:user:pass",
     )
     discover.add_argument("--concurrency", type=int, default=None, help="Parallel sitemap fetches")
     discover.add_argument("--dry-run", action="store_true", help="Fetch + log only; do not write job files")
+    discover.add_argument(
+        "--expand-search",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "For Saatchi: expand artwork URLs via Constructor.io browse "
+            "(default: on). Use --no-expand-search for sitemap-only."
+        ),
+    )
+    discover.add_argument(
+        "--search-force",
+        action="store_true",
+        help="For Saatchi: clear Constructor browse state + JSONL cache before expand",
+    )
+    discover.add_argument(
+        "--search-delay",
+        type=float,
+        default=0.2,
+        help="For Saatchi: delay between Constructor browse pages (seconds)",
+    )
+    discover.add_argument(
+        "--search-workers",
+        type=int,
+        default=1,
+        help="For Saatchi: reserved worker count (partition walks are sequential)",
+    )
     discover.set_defaults(func=_cmd_discover)
 
     download = sub.add_parser("download", help="Download HTML for a dated job folder")
@@ -345,6 +371,10 @@ def _cmd_discover(args: argparse.Namespace) -> int:
             proxy_file=args.proxy_file,
             concurrency=args.concurrency,
             dry_run=args.dry_run,
+            expand_search=args.expand_search,
+            search_force=args.search_force,
+            search_delay=args.search_delay,
+            search_workers=args.search_workers,
         )
     except ValueError as exc:
         LOGGER.error("%s", exc)

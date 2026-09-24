@@ -33,6 +33,8 @@ def test_discover_writes_dated_job_files(tmp_path: Path) -> None:
     ]
     data_root = tmp_path / "data"
     state_root = tmp_path / "state"
+    proxy_file = tmp_path / "proxy.txt"
+    proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
 
     with patch("html_downloader.discover.service.fetch_entries", return_value=entries):
         result = run_discover(
@@ -43,9 +45,10 @@ def test_discover_writes_dated_job_files(tmp_path: Path) -> None:
             incremental=False,
             include_updates=True,
             update_state=False,
-            proxy_file=None,
+            proxy_file=str(proxy_file),
             concurrency=1,
             dry_run=False,
+            expand_search=False,
         )
 
     job = result.job
@@ -81,6 +84,8 @@ def test_discover_incremental_uses_prior_results(tmp_path: Path) -> None:
         '{"url": "https://www.saatchiart.com/art/Painting-Test/735695/9336593/view"}\n',
         encoding="utf-8",
     )
+    proxy_file = tmp_path / "proxy.txt"
+    proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
 
     with patch("html_downloader.discover.service.fetch_entries", return_value=entries):
         result = run_discover(
@@ -91,9 +96,10 @@ def test_discover_incremental_uses_prior_results(tmp_path: Path) -> None:
             incremental=True,
             include_updates=True,
             update_state=False,
-            proxy_file=None,
+            proxy_file=str(proxy_file),
             concurrency=1,
             dry_run=False,
+            expand_search=False,
         )
 
     crawl_urls = urls_file(result.job).read_text(encoding="utf-8").strip().splitlines()
