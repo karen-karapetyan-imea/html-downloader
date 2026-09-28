@@ -108,6 +108,20 @@ def parse_child_sitemap_locs(xml_bytes: bytes) -> list[str]:
     return [url for url, _ in parse_url_entries(xml_bytes)]
 
 
+def parse_child_sitemap_entries(xml_bytes: bytes) -> list[tuple[str, str | None]]:
+    """Return (loc, lastmod) pairs from a <sitemapindex>."""
+    root = ET.fromstring(xml_bytes)
+    entries: list[tuple[str, str | None]] = []
+    for sm_el in root.findall(f".//{_tag('sitemap')}"):
+        loc_el = sm_el.find(_tag("loc"))
+        if loc_el is None or not loc_el.text:
+            continue
+        lastmod_el = sm_el.find(_tag("lastmod"))
+        lastmod = lastmod_el.text.strip() if lastmod_el is not None and lastmod_el.text else None
+        entries.append((loc_el.text.strip(), lastmod))
+    return entries
+
+
 def is_sitemap_index(xml_bytes: bytes) -> bool:
     """True when the document is a <sitemapindex>, not a <urlset>."""
     try:

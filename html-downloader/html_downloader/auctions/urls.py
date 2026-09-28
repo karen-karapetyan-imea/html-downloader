@@ -82,6 +82,9 @@ _SALEROOM_HOSTS = frozenset({"www.the-saleroom.com", "the-saleroom.com"})
 _SALEROOM_PREFERRED_LOCALE = "en-gb"
 _DROUOT_HOSTS = frozenset({"drouot.com", "www.drouot.com"})
 _DROUOT_PREFERRED_LOCALE = "en"
+_CHRISTIES_HOSTS = frozenset({"www.christies.com", "christies.com"})
+_CHRISTIES_PREFERRED_LOCALE = "en"
+_CHRISTIES_LOCALE_PREFIX = r"(?:/(?:en|zh|zh-cn|zh-tw|fr|de|it|es|ja|ko|ru))?"
 
 # SEO sold-lot page: /price-result/{slug}/
 LIVEAUCTIONEERS_PRICE_RESULT_RE = re.compile(
@@ -159,6 +162,18 @@ DROUOT_SALE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Lot: /en/lot/lot-{objectId}
+CHRISTIES_LOT_RE = re.compile(
+    r"^https://www\.christies\.com/en/lot/lot-(\d+)/?$",
+    re.IGNORECASE,
+)
+
+# Auction (sale) landing: /en/auction/auction-{saleNumber}-{saleRoomCode}
+CHRISTIES_SALE_RE = re.compile(
+    r"^https://www\.christies\.com/en/auction/auction-(\d+)-([a-z]+)/?$",
+    re.IGNORECASE,
+)
+
 
 def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | None:
     """
@@ -175,6 +190,7 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     - Barnebys lot slug paths lowercased (token/id preserved as in sitemap)
     - Saleroom lot/catalogue/for-sale paths force /en-gb/ locale; lot UUID lowercased
     - Drouot lot/sale paths force /en/ locale; drop /__data.json suffix
+    - Christie's lot/auction paths force www host + /en/ locale; room code lowercased
     - Strip trailing slash (except bare `/`)
     """
     text = (url or "").strip()
@@ -210,6 +226,9 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         netloc = host
     elif host == "www.drouot.com":
         host = "drouot.com"
+        netloc = host
+    elif host == "christies.com":
+        host = "www.christies.com"
         netloc = host
     else:
         netloc = host
@@ -302,6 +321,16 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         path,
         re.IGNORECASE,
     )
+    christies_lot = re.match(
+        rf"^{_CHRISTIES_LOCALE_PREFIX}/lot/lot-(\d+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
+    christies_sale = re.match(
+        rf"^{_CHRISTIES_LOCALE_PREFIX}/auction/auction-(\d+)-([A-Za-z]+)(/?)$",
+        path,
+        re.IGNORECASE,
+    )
 
     if catalog_match and host in _INVALUABLE_HOSTS:
         path = f"/catalog/{catalog_match.group(2).lower()}"
@@ -379,6 +408,12 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         sale_id = drouot_sale.group(2)
         slug = drouot_sale.group(3).lower()
         path = f"/{_DROUOT_PREFERRED_LOCALE}/v/{sale_id}-{slug}"
+    elif christies_lot and host in _CHRISTIES_HOSTS:
+        path = f"/{_CHRISTIES_PREFERRED_LOCALE}/lot/lot-{christies_lot.group(1)}"
+    elif christies_sale and host in _CHRISTIES_HOSTS:
+        sale_number = christies_sale.group(1)
+        room = christies_sale.group(2).lower()
+        path = f"/{_CHRISTIES_PREFERRED_LOCALE}/auction/auction-{sale_number}-{room}"
     else:
         path = path.rstrip("/") or "/"
 
@@ -423,6 +458,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         if drouot_entity_from_url_path(candidate) is not None:
             query = ""
         out_netloc = "drouot.com"
+    elif host in _CHRISTIES_HOSTS:
+        candidate = urlunsplit(("https", "www.christies.com", path, "", ""))
+        if christies_entity_from_url_path(candidate) is not None:
+            query = ""
+        out_netloc = "www.christies.com"
     else:
         out_netloc = netloc
 
@@ -754,4 +794,61 @@ def is_drouot_auction_url(url: str) -> bool:
 def is_drouot_lot_url(url: str) -> bool:
     """True only for Drouot lot pages (not sale catalogues)."""
     key = drouot_entity_from_url(url)
+    return key is not None and key[0] == "lot"
+
+
+def build_christies_lot_url(object_id: int | str) -> str:
+    """Build the canonical EN Christie's lot URL from a numeric object id."""
+    return f"https://www.christies.com/{_CHRISTIES_PREFERRED_LOCALE}/lot/lot-{object_id}"
+
+
+def build_christies_sale_url(sale_number: int | str, sale_room_code: str) -> str:
+    """Build the canonical EN Christie's auction URL (sitemap form)."""
+    return (
+        f"https://www.christies.com/{_CHRISTIES_PREFERRED_LOCALE}/auction/"
+        f"auction-{sale_number}-{sale_room_code.lower()}"
+    )
+
+
+def christies_entity_from_url_path(url: str) -> tuple[str, str] | None:
+    """Classify a normalized Christie's absolute URL without re-entering normalize."""
+    lot = CHRISTIES_LOT_RE.match(url)
+    if lot:
+        return "lot", lot.group(1)
+
+    sale = CHRISTIES_SALE_RE.match(url)
+    if sale:
+        return "sale", f"{sale.group(1)}-{sale.group(2).lower()}"
+
+    return None
+
+
+def christies_entity_from_url(url: str) -> tuple[str, str] | None:
+    """
+    Return (entity_type, entity_id) for Christie's crawl targets.
+
+    Accepted:
+      /en/lot/lot-{objectId}                 → ("lot", objectId)
+      /en/auction/auction-{saleNumber}-{room} → ("sale", "{saleNumber}-{room}")
+      (zh / zh-cn / bare-path variants normalize to /en/)
+
+    Rejected: /en/sso online redirects, stories, departments, search, etc.
+    """
+    normalized = normalize_auction_url(url)
+    if not normalized:
+        return None
+    host = (urlsplit(normalized).hostname or "").lower()
+    if host not in _CHRISTIES_HOSTS:
+        return None
+    return christies_entity_from_url_path(normalized)
+
+
+def is_christies_auction_url(url: str) -> bool:
+    """True for Christie's lot or sale crawl targets."""
+    return christies_entity_from_url(url) is not None
+
+
+def is_christies_lot_url(url: str) -> bool:
+    """True only for Christie's lot pages (not sale landings)."""
+    key = christies_entity_from_url(url)
     return key is not None and key[0] == "lot"

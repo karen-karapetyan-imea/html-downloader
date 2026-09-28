@@ -15,6 +15,7 @@ AUCTION_HOUSES: tuple[str, ...] = (
     "barnebys",
     "saleroom",
     "drouot",
+    "christies",
 )
 
 _MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")

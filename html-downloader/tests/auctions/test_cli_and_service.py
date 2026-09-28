@@ -686,5 +686,156 @@ def test_drouot_download_adds_cloudflare_keywords(tmp_path: Path) -> None:
     assert "challenge-platform" in cfg.block_keywords
 
 
+def _christies_lot(object_id: str) -> SitemapEntry:
+    return SitemapEntry(
+        url=f"https://www.christies.com/en/lot/lot-{object_id}",
+        lastmod="2026-09-01",
+        entity_type="lot",
+        entity_id=object_id,
+    )
+
+
+def test_christies_full_discover_streams_sitemap_cache(tmp_path: Path) -> None:
+    from html_downloader.auctions.christies import append_lot_cache, lot_cache_path
+    from html_downloader.auctions.paths import auction_sitemap_progress_file
+
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+    progress_path = auction_sitemap_progress_file(state_root, "christies")
+    sale = SitemapEntry(
+        url="https://www.christies.com/en/auction/auction-24211-par",
+        lastmod="2025-11-19",
+        entity_type="sale",
+        entity_id="24211-par",
+    )
+    append_lot_cache(
+        lot_cache_path(progress_path),
+        [_christies_lot("1"), _christies_lot("2"), sale],
+    )
+    captured: dict = {}
+
+    def fake_fetch(spec: object, **kwargs: object) -> list[SitemapEntry]:
+        captured.update(kwargs)
+        return [_christies_lot("1")]
+
+    with patch("html_downloader.auctions.service.fetch_auction_entries", side_effect=fake_fetch):
+        result = run_auction_discover(
+            auction_house="christies",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=False,
+            include_updates=True,
+            update_state=True,
+            proxy_file=None,
+            concurrency=None,
+            dry_run=False,
+        )
+
+    assert captured["sitemap_progress_path"] == progress_path
+    assert captured["algolia_state_path"] is None
+    assert captured["max_sitemaps"] == 200
+    assert captured["min_urls"] == 0
+    lines = (result.job / "urls.txt").read_text(encoding="utf-8").strip().splitlines()
+    assert sorted(lines) == sorted(
+        [
+            "https://www.christies.com/en/lot/lot-1",
+            "https://www.christies.com/en/lot/lot-2",
+            "https://www.christies.com/en/auction/auction-24211-par",
+        ]
+    )
+    assert result.all_count == 3
+    assert (state_root / "auctions" / "christies.json").is_file()
+
+
+def test_christies_art_only_uses_separate_state_and_facets(tmp_path: Path) -> None:
+    from html_downloader.auctions.christies import append_lot_cache, lot_cache_path
+    from html_downloader.auctions.christies_search import ART_CATEGORY_FACETS
+    from html_downloader.auctions.paths import (
+        auction_algolia_artworks_browse_state_file,
+        auction_sitemap_progress_file,
+    )
+
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+    art_state = auction_algolia_artworks_browse_state_file(state_root, "christies")
+    append_lot_cache(lot_cache_path(art_state), [_christies_lot("10"), _christies_lot("11")])
+    # Full-archive cache must be ignored in art-only mode.
+    full_state = auction_sitemap_progress_file(state_root, "christies")
+    append_lot_cache(lot_cache_path(full_state), [_christies_lot("99")])
+
+    prior = data_root / "auctions" / "christies" / "2026-08"
+    prior.mkdir(parents=True)
+    (prior / "results.jsonl").write_text(
+        json.dumps({"url": "https://www.christies.com/en/lot/lot-10", "status": "ok"}) + "\n",
+        encoding="utf-8",
+    )
+    captured: dict = {}
+
+    def fake_fetch(spec: object, **kwargs: object) -> list[SitemapEntry]:
+        captured.update(kwargs)
+        return []
+
+    with patch("html_downloader.auctions.service.fetch_auction_entries", side_effect=fake_fetch):
+        result = run_auction_discover(
+            auction_house="christies",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=True,
+            include_updates=False,
+            update_state=False,
+            proxy_file=None,
+            concurrency=None,
+            dry_run=False,
+            algolia_artworks_only=True,
+        )
+
+    assert captured["algolia_state_path"] == art_state
+    assert captured["sitemap_progress_path"] is None
+    assert captured["algolia_supercategories"] == list(ART_CATEGORY_FACETS)
+    all_urls = (result.job / "sitemap_all.txt").read_text(encoding="utf-8").split()
+    crawl = (result.job / "urls.txt").read_text(encoding="utf-8").split()
+    assert sorted(all_urls) == [
+        "https://www.christies.com/en/lot/lot-10",
+        "https://www.christies.com/en/lot/lot-11",
+    ]
+    assert crawl == ["https://www.christies.com/en/lot/lot-11"]
+
+
+def test_christies_download_replaces_block_keywords(tmp_path: Path) -> None:
+    from html_downloader.auctions.christies import AKAMAI_KEYWORDS
+    from html_downloader.auctions.service import run_auction_download
+
+    data_root = tmp_path / "data"
+    job = data_root / "auctions" / "christies" / "2026-09"
+    job.mkdir(parents=True)
+    (job / "urls.txt").write_text("https://www.christies.com/en/lot/lot-1\n", encoding="utf-8")
+    proxy_file = tmp_path / "proxy.txt"
+    proxy_file.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
+    captured: dict = {}
+
+    def fake_crawl(urls: list[str], config: object) -> None:
+        captured["config"] = config
+
+    with patch("html_downloader.auctions.service.run_crawl", side_effect=fake_crawl):
+        run_auction_download(
+            auction_house="christies",
+            data_root=data_root,
+            job_month="2026-09",
+            proxy_file=str(proxy_file),
+            urls_override=None,
+            max_workers=2,
+            requests_per_second=1.0,
+            skip_existing=True,
+            results_append=True,
+        )
+
+    keywords = captured["config"].block_keywords
+    assert keywords == AKAMAI_KEYWORDS
+    assert "challenge" not in keywords
+    assert "blocked" not in keywords
+
+
 def test_main_help_exit_code() -> None:
     assert main([]) == 2

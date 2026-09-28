@@ -9,6 +9,7 @@
 #   ./scripts/run_monthly_auction.sh barnebys
 #   ./scripts/run_monthly_auction.sh saleroom
 #   ./scripts/run_monthly_auction.sh drouot
+#   ./scripts/run_monthly_auction.sh christies
 #
 # Optional:
 #   AUCTION_RUN_DAY=1   # fixed day-of-month for next runs (1–31, clamped)
@@ -17,8 +18,9 @@
 #   MIN_URLS=0          # barnebys/drouot: 0 = all pending shards in one discover (default)
 #   MAX_SITEMAPS=100    # barnebys (default 100; index has 8 lot shards)
 #   MAX_SITEMAPS=50     # drouot (default 50; EN lot+sale children)
-#   MAX_SALES=          # artcurial only (default: all pending sales)
-#   CHUNK_LINES=1000000 # invaluable / liveauctioneers / barnebys / saleroom / drouot
+#   MAX_SALES=          # artcurial / christies (default: all pending sales)
+#   CHRISTIES_FULL=1    # christies: full sitemap archive instead of art-only lotsearch
+#   CHUNK_LINES=1000000 # invaluable / liveauctioneers / barnebys / saleroom / drouot / christies
 #   WORKERS=8           # chunked download workers
 #
 # Prefer starting via:
@@ -32,9 +34,9 @@ PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 auction_house="${1:-}"
 case "${auction_house}" in
-  invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot) ;;
+  invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot|christies) ;;
   *)
-    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot" >&2
+    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot|christies" >&2
     exit 2
     ;;
 esac
@@ -117,12 +119,29 @@ run_discover() {
         --incremental \
         --update-state
       ;;
+    christies)
+      # Default: art lots only (per-sale lotsearch, separate artworks state).
+      discover_args=(
+        --auction-house christies
+        --proxy-file proxy.txt
+        --concurrency 1
+        --incremental
+        --update-state
+      )
+      if [[ -z "${CHRISTIES_FULL:-}" ]]; then
+        discover_args+=(--algolia-artworks-only)
+      fi
+      if [[ -n "${MAX_SALES:-}" ]]; then
+        discover_args+=(--max-sales "${MAX_SALES}")
+      fi
+      "${PYTHON}" -m html_downloader auction discover "${discover_args[@]}"
+      ;;
   esac
 }
 
 run_download() {
   case "${auction_house}" in
-    invaluable|liveauctioneers|barnebys|saleroom|drouot)
+    invaluable|liveauctioneers|barnebys|saleroom|drouot|christies)
       # Large url lists — chunk to avoid OOM loading full urls.txt.
       /bin/bash --noprofile --norc "${SCRIPT_DIR}/download_url_chunks.sh" "${auction_house}"
       ;;

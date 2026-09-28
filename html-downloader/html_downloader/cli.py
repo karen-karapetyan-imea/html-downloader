@@ -185,7 +185,9 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help=(
             "Fine Art lots only via Algolia supercategoryName filter; "
-            "uses separate artworks browse state; skips XML lot/catalog hubs"
+            "uses separate artworks browse state; skips XML lot/catalog hubs. "
+            "Christie's: per-sale lotsearch with art Item Category facets "
+            "(paintings, drawings, prints, photographs, sculpture) instead of sitemaps"
         ),
     )
     auction_discover.add_argument(
@@ -195,7 +197,8 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="NAME",
         help=(
             "Restrict Algolia browse to supercategoryName values "
-            "(repeatable; e.g. 'Fine Art'). Uses artworks state path when set."
+            "(repeatable; e.g. 'Fine Art'). Uses artworks state path when set. "
+            "Christie's: Item Category facet names (e.g. 'Prints & Multiples')."
         ),
     )
     auction_discover.add_argument(
@@ -257,8 +260,9 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help=(
-            "LiveAuctioneers / Barnebys: max pending child sitemaps per run "
-            "(defaults: liveauctioneers 5000, barnebys 100)"
+            "LiveAuctioneers / Barnebys / Drouot / Christie's: max pending child "
+            "sitemaps per run (defaults: liveauctioneers 5000, barnebys 100, "
+            "drouot 50, christies 200)"
         ),
     )
     auction_discover.add_argument(
@@ -266,16 +270,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help=(
-            "LiveAuctioneers / Barnebys: stop after this many new URLs per run "
-            "(defaults: liveauctioneers 1000000, barnebys 0 = all pending shards)"
+            "LiveAuctioneers / Barnebys / Drouot / Christie's: stop after this many "
+            "new URLs per run (defaults: liveauctioneers 1000000, others 0 = all "
+            "pending shards)"
         ),
     )
     auction_discover.add_argument(
         "--sitemap-force",
         action="store_true",
         help=(
-            "LiveAuctioneers / Barnebys: reset sitemap progress and lot JSONL "
-            "cache, then re-walk pending children"
+            "LiveAuctioneers / Barnebys / Drouot / Christie's: reset sitemap "
+            "progress and lot JSONL cache, then re-walk pending children"
         ),
     )
     auction_discover.add_argument(
@@ -283,8 +288,8 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help=(
-            "Artcurial: max pending finished sales to expand into lot URLs "
-            "per run (default: all)"
+            "Artcurial / Christie's art-only: max pending finished sales to "
+            "expand into lot URLs per run (default: all)"
         ),
     )
     auction_discover.add_argument(
@@ -472,6 +477,8 @@ def _cmd_auction_download(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    # Per-request lines would flood logs on multi-thousand-call API backfills.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     parser = build_parser()
     args = parser.parse_args(argv)
     if not getattr(args, "command", None):

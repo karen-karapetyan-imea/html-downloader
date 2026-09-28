@@ -10,6 +10,7 @@ from typing import Any
 from html_downloader.auctions.artcurial import DEFAULT_ARTCURIAL_INDEX
 from html_downloader.auctions.base import AuctionSpec
 from html_downloader.auctions.barnebys import DEFAULT_BARNEBYS_INDEX
+from html_downloader.auctions.christies import DEFAULT_CHRISTIES_INDEX
 from html_downloader.auctions.invaluable import DEFAULT_INVALUABLE_INDEX
 from html_downloader.auctions.liveauctioneers import (
     DEFAULT_LIVEAUCTIONEERS_INDEX,
@@ -66,6 +67,13 @@ AUCTIONS: dict[str, AuctionSpec] = {
         name="drouot",
         default_indexes=(DEFAULT_DROUOT_LOT_INDEX, DEFAULT_DROUOT_SALE_INDEX),
         # Sitemap/search discover needs no proxy; lot HTML may hit Cloudflare.
+        default_concurrency=1,
+        uses_stealth_proxy=False,
+    ),
+    "christies": AuctionSpec(
+        name="christies",
+        default_indexes=(DEFAULT_CHRISTIES_INDEX,),
+        # Sequential sitemap walk (Akamai); proxies are fallback-only for XML.
         default_concurrency=1,
         uses_stealth_proxy=False,
     ),
@@ -277,5 +285,27 @@ def fetch_auction_entries(
             kwargs["proxy"] = proxy
             kwargs["proxies"] = [proxy]
         return fetch_drouot_sitemap_entries(spec.default_indexes[0], **kwargs)
+
+    if spec.name == "christies":
+        from html_downloader.auctions.christies import fetch_christies_entries
+
+        art_mode = bool(algolia_supercategories)
+        if art_mode and algolia_state_path is None:
+            raise ValueError("christies art-only discovery requires algolia_state_path")
+        return fetch_christies_entries(
+            spec.default_indexes[0],
+            concurrency=concurrency,
+            proxies=proxies or ([proxy] if proxy is not None else None),
+            max_sitemaps=max_sitemaps,
+            min_urls=min_urls,
+            sitemap_progress_path=sitemap_progress_path,
+            sitemap_force=sitemap_force,
+            art_categories=algolia_supercategories if art_mode else None,
+            art_state_path=algolia_state_path,
+            art_workers=algolia_workers if algolia_workers > 0 else 1,
+            art_delay=algolia_delay if algolia_delay > 0 else 0.4,
+            art_force=algolia_force,
+            max_sales=max_sales,
+        )
 
     raise ValueError(f"no discovery implementation for auction house {spec.name!r}")

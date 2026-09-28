@@ -308,3 +308,47 @@ def test_drouot_lot_and_sale_normalize_and_entity() -> None:
     ]
     for bad in rejected:
         assert not is_drouot_auction_url(bad), bad
+
+
+def test_christies_lot_and_sale_normalize_and_entity() -> None:
+    from html_downloader.auctions.urls import (
+        build_christies_lot_url,
+        build_christies_sale_url,
+        christies_entity_from_url,
+        is_christies_auction_url,
+        is_christies_lot_url,
+    )
+
+    lot = "https://christies.com/zh-cn/lot/lot-6557734/?ldp_breadcrumb=back"
+    assert normalize_auction_url(lot) == "https://www.christies.com/en/lot/lot-6557734"
+    assert christies_entity_from_url(lot) == ("lot", "6557734")
+    assert is_christies_lot_url(lot)
+    assert christies_entity_from_url("https://www.christies.com/lot/lot-42") == (
+        "lot",
+        "42",
+    )
+
+    sale = "https://www.christies.com/zh/auction/auction-22252-NYR"
+    assert (
+        normalize_auction_url(sale)
+        == "https://www.christies.com/en/auction/auction-22252-nyr"
+    )
+    assert christies_entity_from_url(sale) == ("sale", "22252-nyr")
+    assert is_christies_auction_url(sale)
+    assert not is_christies_lot_url(sale)
+
+    assert build_christies_lot_url(6599499) == (
+        "https://www.christies.com/en/lot/lot-6599499"
+    )
+    assert build_christies_sale_url(24211, "PAR") == (
+        "https://www.christies.com/en/auction/auction-24211-par"
+    )
+    rejected = [
+        "https://www.christies.com/en/sso?ObjectID=24496.1&LotNumber=1",
+        "https://www.christies.com/en/stories/some-story",
+        "https://www.christies.com/en/auction/de-la-collection-l-on-parc-31009/",
+        "https://www.christies.com/en/search?entry=picasso",
+        "https://www.example.com/en/lot/lot-1",
+    ]
+    for bad in rejected:
+        assert not is_christies_auction_url(bad), bad
