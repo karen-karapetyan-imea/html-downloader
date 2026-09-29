@@ -8,7 +8,11 @@ import sys
 from pathlib import Path
 
 from html_downloader.auctions.paths import AUCTION_HOUSES
-from html_downloader.auctions.service import run_auction_discover, run_auction_download
+from html_downloader.auctions.service import (
+    run_auction_audit,
+    run_auction_discover,
+    run_auction_download,
+)
 from html_downloader.discover.service import run_discover
 from html_downloader.download.service import ProxyRequiredError, run_download
 from html_downloader.paths import DEFAULT_DATA_ROOT, DEFAULT_STATE_ROOT, MARKETPLACES, parse_crawl_date
@@ -178,7 +182,10 @@ def build_parser() -> argparse.ArgumentParser:
     auction_discover.add_argument(
         "--algolia-force",
         action="store_true",
-        help="Reset Algolia browse state and lot cache, then re-walk all years",
+        help=(
+            "Reset Algolia browse state and lot cache, then re-walk all years "
+            "(Christie's / Sotheby's: all sales)"
+        ),
     )
     auction_discover.add_argument(
         "--algolia-artworks-only",
@@ -187,7 +194,8 @@ def build_parser() -> argparse.ArgumentParser:
             "Fine Art lots only via Algolia supercategoryName filter; "
             "uses separate artworks browse state; skips XML lot/catalog hubs. "
             "Christie's: per-sale lotsearch with art Item Category facets "
-            "(paintings, drawings, prints, photographs, sculpture) instead of sitemaps"
+            "(paintings, drawings, prints, photographs, sculpture) instead of sitemaps. "
+            "Sotheby's: art departments / objectTypes facets on the Algolia lot index"
         ),
     )
     auction_discover.add_argument(
@@ -198,7 +206,9 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Restrict Algolia browse to supercategoryName values "
             "(repeatable; e.g. 'Fine Art'). Uses artworks state path when set. "
-            "Christie's: Item Category facet names (e.g. 'Prints & Multiples')."
+            "Christie's: Item Category facet names (e.g. 'Prints & Multiples'). "
+            "Sotheby's: department or objectType names (e.g. 'Contemporary Art', "
+            "'Painting')."
         ),
     )
     auction_discover.add_argument(
@@ -288,9 +298,57 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help=(
-            "Artcurial / Christie's art-only: max pending finished sales to "
-            "expand into lot URLs per run (default: all)"
+            "Artcurial / Christie's art-only / Sotheby's: max pending sales to "
+            "expand into lot URLs per run (default: all; Sotheby's: per source)"
         ),
+    )
+    auction_discover.add_argument(
+        "--legacy-archive",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Sotheby's: also crawl pre-2019 sales from the /en/results listing "
+            "(HTML; first run takes hours, later runs only retry pending sales; "
+            "default: on)"
+        ),
+    )
+    auction_discover.add_argument(
+        "--legacy-workers",
+        type=int,
+        default=2,
+        help="Sotheby's legacy archive: parallel sale workers (default: 2)",
+    )
+    auction_discover.add_argument(
+        "--legacy-delay",
+        type=float,
+        default=0.5,
+        help="Sotheby's legacy archive: seconds between page fetches per worker (default: 0.5)",
+    )
+    auction_discover.add_argument(
+        "--legacy-force",
+        action="store_true",
+        help="Sotheby's legacy archive: reset legacy state and cache, then re-list all sales",
+    )
+    auction_discover.add_argument(
+        "--site-search",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Sotheby's: also enumerate the public site-search index (1999 onward; adds "
+            "lots the Algolia and legacy passes miss; later runs only re-query the last "
+            "~90 days and upcoming months; default: on)"
+        ),
+    )
+    auction_discover.add_argument(
+        "--site-search-workers",
+        type=int,
+        default=4,
+        help="Sotheby's site search: parallel month-window workers (default: 4)",
+    )
+    auction_discover.add_argument(
+        "--site-search-force",
+        action="store_true",
+        help="Sotheby's site search: reset its state and cache, then re-enumerate every month",
     )
     auction_discover.add_argument(
         "--dry-run",
@@ -298,6 +356,63 @@ def build_parser() -> argparse.ArgumentParser:
         help="Fetch + log only; do not write job files",
     )
     auction_discover.set_defaults(func=_cmd_auction_discover)
+
+    auction_audit = auction_sub.add_parser(
+        "audit",
+        help="Sotheby's: discovery coverage / completeness / overlap audit (JSON under state/)",
+    )
+    _add_auction_job_flags(auction_audit)
+    auction_audit.add_argument(
+        "--state-root",
+        type=Path,
+        default=DEFAULT_STATE_ROOT,
+        help="Root for auction state (uses state/auctions/; default: ./state)",
+    )
+    auction_audit.add_argument(
+        "--algolia-artworks-only",
+        action="store_true",
+        help="Audit the art-only state files instead of the full archive",
+    )
+    auction_audit.add_argument(
+        "--algolia-supercategories",
+        action="append",
+        default=None,
+        metavar="NAME",
+        help="Art facet names used for the audited art-only run (repeatable)",
+    )
+    auction_audit.add_argument(
+        "--recount",
+        action="store_true",
+        help=(
+            "Re-enumerate the platform and site-search indexes read-only (~45 min) for "
+            "exact cross-source overlap and live keys missing from every cache"
+        ),
+    )
+    auction_audit.add_argument(
+        "--test-lot-sample",
+        type=int,
+        default=0,
+        metavar="N",
+        help="Exact total / isTestLot:true / isTestLot:false counts for N sampled auctions",
+    )
+    auction_audit.add_argument(
+        "--workers", type=int, default=2, help="Parallel recount windows (default: 2)"
+    )
+    auction_audit.add_argument(
+        "--delay",
+        type=float,
+        default=0.4,
+        help="Seconds between Algolia queries per worker (default: 0.4)",
+    )
+    auction_audit.add_argument(
+        "--offline",
+        action="store_true",
+        help="Only read state files and caches (no Algolia queries)",
+    )
+    auction_audit.add_argument(
+        "--output", type=Path, default=None, help="Audit JSON path override"
+    )
+    auction_audit.set_defaults(func=_cmd_auction_audit)
 
     auction_download = auction_sub.add_parser(
         "download",
@@ -441,6 +556,13 @@ def _cmd_auction_discover(args: argparse.Namespace) -> int:
             min_urls=args.min_urls,
             sitemap_force=args.sitemap_force,
             max_sales=args.max_sales,
+            legacy_archive=args.legacy_archive,
+            legacy_workers=args.legacy_workers,
+            legacy_delay=args.legacy_delay,
+            legacy_force=args.legacy_force,
+            site_search=args.site_search,
+            site_search_workers=args.site_search_workers,
+            site_search_force=args.site_search_force,
         )
     except (ValueError, RuntimeError) as exc:
         LOGGER.error("%s", exc)
@@ -449,6 +571,30 @@ def _cmd_auction_discover(args: argparse.Namespace) -> int:
         f"Auction discover finished job={result.job} month={result.job_month} "
         f"all={result.all_count} to_crawl={result.crawl_count}"
     )
+    return 0
+
+
+def _cmd_auction_audit(args: argparse.Namespace) -> int:
+    try:
+        result = run_auction_audit(
+            auction_house=args.auction_house,
+            data_root=args.data_root,
+            state_root=args.state_root,
+            job_month=args.month,
+            artworks_only=args.algolia_artworks_only,
+            supercategories=args.algolia_supercategories,
+            recount=args.recount,
+            test_lot_sample=args.test_lot_sample,
+            workers=args.workers,
+            delay=args.delay,
+            offline=args.offline,
+            output=args.output,
+        )
+    except (ValueError, RuntimeError) as exc:
+        LOGGER.error("%s", exc)
+        return 1
+    print(result.summary)
+    print(f"Audit written: {result.path}")
     return 0
 
 

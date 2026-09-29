@@ -17,9 +17,7 @@ No lot parsing here — download saves HTML only.
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 import re
 import time
 from collections.abc import Iterable, Iterator, Sequence
@@ -42,6 +40,7 @@ from html_downloader.auctions.sitemap_cache import (
     load_typed_cache_keys,
     make_rotating_fetcher,
     proxy_url,
+    save_auction_lastmod_state,
     save_sitemap_progress,
     typed_cache_path,
 )
@@ -497,18 +496,6 @@ def known_christies_keys_from_paths(paths: Iterable[Path]) -> set[tuple[str, str
         if key is not None:
             keys.add(key)
     return keys
-
-
-def save_auction_lastmod_state(path: Path, entities: dict[str, str]) -> None:
-    """Atomic write of auction lastmod state (temp file + replace)."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "entities": dict(sorted(entities.items())),
-        "last_fetch_at": datetime.now().astimezone().isoformat(),
-    }
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    os.replace(tmp, path)
 
 
 __all__ = [

@@ -16,7 +16,6 @@ Past sales are immutable: a sale marked ``done`` is never re-queried unless
 
 from __future__ import annotations
 
-import json
 import logging
 import random
 import threading
@@ -30,6 +29,7 @@ from urllib.parse import quote_plus
 import httpx
 
 from html_downloader.auctions.christies import ChristiesSale
+from html_downloader.auctions.search_state import SaleSearchState
 from html_downloader.auctions.sitemap_cache import (
     append_typed_cache,
     load_typed_cache_keys,
@@ -103,59 +103,6 @@ def lot_to_entry(lot: dict[str, Any], sale: ChristiesSale) -> SitemapEntry | Non
         entity_type="lot",
         entity_id=object_id,
     )
-
-
-class SaleSearchState:
-    """Per-sale checkpoint (``done`` / ``failed``) with batched atomic saves."""
-
-    _SAVE_EVERY = 100
-
-    def __init__(self, path: Path) -> None:
-        self.path = path
-        self._lock = threading.Lock()
-        self._dirty = 0
-        self._sales: dict[str, dict[str, Any]] = {}
-        if path.exists():
-            try:
-                loaded = json.loads(path.read_text(encoding="utf-8"))
-                if isinstance(loaded, dict) and isinstance(loaded.get("sales"), dict):
-                    self._sales = loaded["sales"]
-            except (OSError, json.JSONDecodeError) as exc:
-                LOGGER.warning("could not load christies search state: %s", exc)
-
-    def status(self, key: str) -> str | None:
-        entry = self._sales.get(key)
-        return entry.get("status") if entry else None
-
-    def mark(self, key: str, status: str, *, hits: int = 0, written: int = 0) -> None:
-        with self._lock:
-            self._sales[key] = {"status": status, "hits": hits, "written": written}
-            self._dirty += 1
-            if self._dirty >= self._SAVE_EVERY:
-                self._save_unlocked()
-
-    def reset(self) -> None:
-        with self._lock:
-            self._sales = {}
-            self._save_unlocked()
-
-    def flush(self) -> None:
-        with self._lock:
-            self._save_unlocked()
-
-    def counts(self) -> dict[str, int]:
-        out: dict[str, int] = {}
-        for entry in self._sales.values():
-            status = str(entry.get("status"))
-            out[status] = out.get(status, 0) + 1
-        return out
-
-    def _save_unlocked(self) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self.path.with_suffix(self.path.suffix + ".tmp")
-        tmp.write_text(json.dumps({"sales": self._sales}, indent=1) + "\n", encoding="utf-8")
-        tmp.replace(self.path)
-        self._dirty = 0
 
 
 class LotSearchClient:

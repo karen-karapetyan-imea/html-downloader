@@ -837,5 +837,234 @@ def test_christies_download_replaces_block_keywords(tmp_path: Path) -> None:
     assert "blocked" not in keywords
 
 
+def _sothebys_entry(entity_type: str, entity_id: str) -> SitemapEntry:
+    return SitemapEntry(
+        url=f"https://www.sothebys.com/en/buy/auction/{entity_id}",
+        lastmod="2026-09-01",
+        entity_type=entity_type,
+        entity_id=entity_id,
+    )
+
+
+def test_sothebys_full_discover_streams_algolia_cache(tmp_path: Path) -> None:
+    from html_downloader.auctions.paths import (
+        auction_algolia_browse_state_file,
+        auction_legacy_state_file,
+        auction_site_search_state_file,
+    )
+    from html_downloader.auctions.sitemap_cache import append_typed_cache
+    from html_downloader.auctions.sothebys import lot_cache_path
+
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+    site_search_state = auction_site_search_state_file(state_root, "sothebys")
+    old_lot = "https://www.sothebys.com/en/auctions/ecatalogue/2003/prints-n07888/lot.513.html"
+    append_typed_cache(
+        lot_cache_path(site_search_state),
+        [
+            SitemapEntry(
+                url=old_lot,
+                lastmod="2003-11-01",
+                entity_type="lot",
+                entity_id="legacy/2003/prints-n07888/513",
+            )
+        ],
+    )
+    browse_state = auction_algolia_browse_state_file(state_root, "sothebys")
+    append_typed_cache(
+        lot_cache_path(browse_state),
+        [
+            _sothebys_entry("sale", "2026/fine-jewelry"),
+            _sothebys_entry("lot", "2026/fine-jewelry/ring"),
+            _sothebys_entry("lot", "2026/fine-jewelry/brooch"),
+        ],
+    )
+    legacy_state = auction_legacy_state_file(state_root, "sothebys")
+    legacy_lot = "https://www.sothebys.com/en/auctions/ecatalogue/2008/indian-art-n08417/lot.1.html"
+    append_typed_cache(
+        lot_cache_path(legacy_state),
+        [
+            SitemapEntry(
+                url=legacy_lot,
+                lastmod=None,
+                entity_type="lot",
+                entity_id="legacy/2008/indian-art-n08417/1",
+            )
+        ],
+    )
+    captured: dict = {}
+
+    def fake_fetch(spec: object, **kwargs: object) -> list[SitemapEntry]:
+        captured.update(kwargs)
+        return [_sothebys_entry("lot", "2026/fine-jewelry/ring")]
+
+    with patch("html_downloader.auctions.service.fetch_auction_entries", side_effect=fake_fetch):
+        result = run_auction_discover(
+            auction_house="sothebys",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=False,
+            include_updates=True,
+            update_state=True,
+            proxy_file=None,
+            concurrency=None,
+            dry_run=False,
+            max_sales=5,
+        )
+
+    assert captured["algolia_state_path"] == browse_state
+    assert captured["legacy_state_path"] == legacy_state
+    assert captured["site_search_state_path"] == site_search_state
+    assert captured["sitemap_progress_path"] is None
+    assert captured["algolia_supercategories"] is None
+    assert captured["max_sales"] == 5
+    lines = (result.job / "urls.txt").read_text(encoding="utf-8").split()
+    assert sorted(lines) == sorted(
+        [
+            "https://www.sothebys.com/en/buy/auction/2026/fine-jewelry",
+            "https://www.sothebys.com/en/buy/auction/2026/fine-jewelry/ring",
+            "https://www.sothebys.com/en/buy/auction/2026/fine-jewelry/brooch",
+            legacy_lot,
+            old_lot,
+        ]
+    )
+    assert result.all_count == 5
+    assert (state_root / "auctions" / "sothebys.json").is_file()
+
+
+def test_sothebys_art_only_uses_separate_state_and_facets(tmp_path: Path) -> None:
+    from html_downloader.auctions.paths import (
+        auction_algolia_artworks_browse_state_file,
+        auction_algolia_browse_state_file,
+        auction_legacy_state_file,
+        auction_site_search_state_file,
+    )
+    from html_downloader.auctions.sitemap_cache import append_typed_cache
+    from html_downloader.auctions.sothebys import lot_cache_path
+    from html_downloader.auctions.sothebys_algolia import ART_FACETS
+
+    data_root = tmp_path / "data"
+    state_root = tmp_path / "state"
+    art_state = auction_algolia_artworks_browse_state_file(state_root, "sothebys")
+    append_typed_cache(
+        lot_cache_path(art_state),
+        [_sothebys_entry("lot", "2026/a/one"), _sothebys_entry("lot", "2026/a/two")],
+    )
+    # Full-archive cache must be ignored in art-only mode.
+    full_state = auction_algolia_browse_state_file(state_root, "sothebys")
+    append_typed_cache(lot_cache_path(full_state), [_sothebys_entry("lot", "2026/a/wine")])
+
+    prior = data_root / "auctions" / "sothebys" / "2026-08"
+    prior.mkdir(parents=True)
+    (prior / "results.jsonl").write_text(
+        json.dumps(
+            {"url": "https://www.sothebys.com/en/buy/auction/2026/a/one", "status": "ok"}
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    captured: dict = {}
+
+    def fake_fetch(spec: object, **kwargs: object) -> list[SitemapEntry]:
+        captured.update(kwargs)
+        return []
+
+    with patch("html_downloader.auctions.service.fetch_auction_entries", side_effect=fake_fetch):
+        result = run_auction_discover(
+            auction_house="sothebys",
+            data_root=data_root,
+            state_root=state_root,
+            job_month="2026-09",
+            incremental=True,
+            include_updates=False,
+            update_state=False,
+            proxy_file=None,
+            concurrency=None,
+            dry_run=False,
+            algolia_artworks_only=True,
+        )
+
+    assert captured["algolia_state_path"] == art_state
+    assert captured["legacy_state_path"] == auction_legacy_state_file(
+        state_root, "sothebys", artworks_only=True
+    )
+    assert captured["site_search_state_path"] == auction_site_search_state_file(
+        state_root, "sothebys", artworks_only=True
+    )
+    assert captured["algolia_supercategories"] == list(ART_FACETS)
+    all_urls = (result.job / "sitemap_all.txt").read_text(encoding="utf-8").split()
+    crawl = (result.job / "urls.txt").read_text(encoding="utf-8").split()
+    assert sorted(all_urls) == [
+        "https://www.sothebys.com/en/buy/auction/2026/a/one",
+        "https://www.sothebys.com/en/buy/auction/2026/a/two",
+    ]
+    assert crawl == ["https://www.sothebys.com/en/buy/auction/2026/a/two"]
+
+
+def test_sothebys_no_legacy_archive_skips_legacy_state(tmp_path: Path) -> None:
+    captured: dict = {}
+
+    def fake_fetch(spec: object, **kwargs: object) -> list[SitemapEntry]:
+        captured.update(kwargs)
+        return []
+
+    with patch("html_downloader.auctions.service.fetch_auction_entries", side_effect=fake_fetch):
+        run_auction_discover(
+            auction_house="sothebys",
+            data_root=tmp_path / "data",
+            state_root=tmp_path / "state",
+            job_month="2026-09",
+            incremental=False,
+            include_updates=True,
+            update_state=False,
+            proxy_file=None,
+            concurrency=None,
+            dry_run=True,
+            legacy_archive=False,
+            legacy_workers=4,
+            site_search=False,
+            site_search_workers=6,
+        )
+
+    assert captured["legacy_state_path"] is None
+    assert captured["legacy_workers"] == 4
+    assert captured["site_search_state_path"] is None
+    assert captured["site_search_workers"] == 6
+
+
+def test_cli_sothebys_audit_offline_writes_json(tmp_path: Path, capsys) -> None:  # type: ignore[no-untyped-def]
+    state = tmp_path / "state" / "auctions"
+    state.mkdir(parents=True)
+    (state / "sothebys_algolia_browse_state_lots.jsonl").write_text(
+        json.dumps(
+            {
+                "entity_type": "lot",
+                "entity_id": "2026/a/one",
+                "url": "https://www.sothebys.com/en/buy/auction/2026/a/one",
+                "lastmod": None,
+            }
+        )
+        + "\n"
+    )
+    parser = build_parser()
+    args = parser.parse_args(
+        ["auction", "audit", "--auction-house", "sothebys", "--offline", "--recount",
+         "--test-lot-sample", "5"]
+    )
+    assert (args.recount, args.test_lot_sample, args.offline) == (True, 5, True)
+    code = main(
+        ["auction", "audit", "--auction-house", "sothebys", "--offline",
+         "--state-root", str(tmp_path / "state"), "--data-root", str(tmp_path / "data"),
+         "--month", "2026-09"]
+    )
+    assert code == 0
+    report = json.loads((state / "sothebys_discovery_audit.json").read_text())
+    assert report["caches"]["total_unique"] == 1
+    assert report["caches"]["disjoint"] is True
+    assert "Sotheby's discovery audit" in capsys.readouterr().out
+    assert main(["auction", "audit", "--auction-house", "christies", "--offline"]) == 1
+
+
 def test_main_help_exit_code() -> None:
     assert main([]) == 2

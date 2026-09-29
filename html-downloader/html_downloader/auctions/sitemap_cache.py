@@ -10,7 +10,7 @@ import json
 import logging
 import os
 import time
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -102,9 +102,11 @@ def iter_typed_cache_rows(
         LOGGER.warning("could not read %s lot cache %s: %s", label, path, exc)
 
 
-def load_typed_cache_keys(path: Path, *, label: str = "auction") -> TypedKeySet:
-    """Stream keys from a typed JSONL cache (no SitemapEntry objects)."""
-    keys = TypedKeySet()
+def load_typed_cache_keys(
+    path: Path, *, label: str = "auction", into: TypedKeySet | None = None
+) -> TypedKeySet:
+    """Stream keys from a typed JSONL cache (no SitemapEntry objects), optionally into ``into``."""
+    keys = into if into is not None else TypedKeySet()
     if not path.exists():
         return keys
     lines = 0
@@ -114,6 +116,14 @@ def load_typed_cache_keys(path: Path, *, label: str = "auction") -> TypedKeySet:
         if lines % 1_000_000 == 0:
             LOGGER.info("%s lot-cache key load progress lines=%s unique=%s", label, lines, len(keys))
     LOGGER.info("%s lot-cache key load complete lines=%s unique=%s", label, lines, len(keys))
+    return keys
+
+
+def load_typed_cache_key_union(paths: Iterable[Path], *, label: str = "auction") -> TypedKeySet:
+    """One key set across several typed JSONL caches (missing files are skipped)."""
+    keys = TypedKeySet()
+    for path in paths:
+        load_typed_cache_keys(path, label=label, into=keys)
     return keys
 
 
@@ -161,6 +171,18 @@ def save_sitemap_progress(path: Path, sitemaps: dict[str, dict[str, Any]]) -> No
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "sitemaps": dict(sorted(sitemaps.items())),
+        "last_fetch_at": datetime.now().astimezone().isoformat(),
+    }
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def save_auction_lastmod_state(path: Path, entities: dict[str, str]) -> None:
+    """Atomic write of auction lastmod state (temp file + replace)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "entities": dict(sorted(entities.items())),
         "last_fetch_at": datetime.now().astimezone().isoformat(),
     }
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -258,9 +280,11 @@ __all__ = [
     "is_permanent_miss",
     "iter_typed_cache_rows",
     "load_sitemap_progress",
+    "load_typed_cache_key_union",
     "load_typed_cache_keys",
     "make_rotating_fetcher",
     "proxy_url",
+    "save_auction_lastmod_state",
     "save_sitemap_progress",
     "typed_cache_path",
 ]

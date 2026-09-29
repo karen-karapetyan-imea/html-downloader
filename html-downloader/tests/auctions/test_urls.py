@@ -352,3 +352,96 @@ def test_christies_lot_and_sale_normalize_and_entity() -> None:
     ]
     for bad in rejected:
         assert not is_christies_auction_url(bad), bad
+
+
+def test_sothebys_lot_and_sale_normalize_and_entity() -> None:
+    from html_downloader.auctions.urls import (
+        build_sothebys_lot_url,
+        build_sothebys_sale_url,
+        is_sothebys_auction_url,
+        is_sothebys_lot_url,
+        sothebys_entity_from_url,
+    )
+
+    canonical = (
+        "https://www.sothebys.com/en/buy/auction/2026/modern-day-auction-3/"
+        "zao-wou-ki-zhao-wu-ji-untitled-wu-ti"
+    )
+    variants = [
+        canonical,
+        canonical + "/",
+        canonical + "?locale=en&utm_source=x",
+        canonical.replace("https://www.", "https://"),
+        canonical.replace("/en/", "/zh-hant/"),
+        canonical.replace("/en/buy/", "/buy/"),
+        canonical.replace("modern-day-auction-3", "Modern-Day-Auction-3"),
+    ]
+    for url in variants:
+        assert normalize_auction_url(url) == canonical, url
+        assert sothebys_entity_from_url(url) == (
+            "lot",
+            "2026/modern-day-auction-3/zao-wou-ki-zhao-wu-ji-untitled-wu-ti",
+        )
+    assert is_sothebys_lot_url(canonical)
+
+    sale = "https://www.sothebys.com/fr/buy/auction/2026/modern-day-auction-3/"
+    assert normalize_auction_url(sale) == (
+        "https://www.sothebys.com/en/buy/auction/2026/modern-day-auction-3"
+    )
+    assert sothebys_entity_from_url(sale) == ("sale", "2026/modern-day-auction-3")
+    assert is_sothebys_auction_url(sale)
+    assert not is_sothebys_lot_url(sale)
+
+    assert build_sothebys_lot_url(2021, "old-masters-prints", "the-whore-of-babylon") == (
+        "https://www.sothebys.com/en/buy/auction/2021/old-masters-prints/the-whore-of-babylon"
+    )
+    assert build_sothebys_sale_url("2026", "fine-jewelry") == (
+        "https://www.sothebys.com/en/buy/auction/2026/fine-jewelry"
+    )
+    encoded = build_sothebys_lot_url(2024, "x", "caf\u00e9-table")
+    assert encoded.endswith("/x/caf%C3%A9-table")
+    assert normalize_auction_url(encoded) == encoded
+    assert sothebys_entity_from_url(encoded) == ("lot", "2024/x/caf%C3%A9-table")
+
+    rejected = [
+        "https://www.sothebys.com/en/articles/some-story",
+        "https://www.sothebys.com/en/buy-sell/private-sales/some-work",
+        "https://www.sothebys.com/en/digital-catalogues/yayoi-kusama",
+        "https://www.sothebys.com/en/auctions/ecatalogue/2018/sale-n09911/lot.10",
+        "https://www.sothebys.com/en/auctions/2018/sale-n09911/lot.10.html",
+        "https://www.sothebys.com/en/buy/auction/2026/a/b/c",
+        "https://www.sothebys.com/en/results",
+        "https://www.example.com/en/buy/auction/2026/a/b",
+        "https://www.example.com/en/auctions/2008/indian-art-n08417.html",
+    ]
+    for bad in rejected:
+        assert not is_sothebys_auction_url(bad), bad
+
+
+def test_sothebys_legacy_lot_and_sale_normalize_and_entity() -> None:
+    from html_downloader.auctions.urls import (
+        build_sothebys_legacy_lot_url,
+        build_sothebys_legacy_sale_url,
+        is_sothebys_lot_url,
+        sothebys_entity_from_url,
+    )
+
+    lot = "https://www.sothebys.com/en/auctions/ecatalogue/2005/marine-paintings-l05135/lot.60a.html"
+    for url in (
+        lot,
+        lot.replace("https://www.", "http://"),
+        lot.replace("/en/", "/fr/"),
+        lot.replace("/en/auctions/", "/auctions/"),
+        lot.replace("marine-paintings-l05135/lot.60a", "Marine-Paintings-L05135/lot.60A"),
+        lot + "?locale=en",
+    ):
+        assert normalize_auction_url(url) == lot, url
+        assert sothebys_entity_from_url(url) == ("lot", "legacy/2005/marine-paintings-l05135/60a")
+    assert is_sothebys_lot_url(lot)
+    assert build_sothebys_legacy_lot_url(2005, "Marine-Paintings-L05135", "60A") == lot
+
+    sale = "https://www.sothebys.com/en/auctions/2008/indian-art-n08417.html"
+    assert normalize_auction_url(sale.replace("/en/", "/zh-hans/") + "?p=3") == sale
+    assert sothebys_entity_from_url(sale + "?p=3") == ("sale", "legacy/2008/indian-art-n08417")
+    assert not is_sothebys_lot_url(sale)
+    assert build_sothebys_legacy_sale_url("2008", "indian-art-n08417") == sale

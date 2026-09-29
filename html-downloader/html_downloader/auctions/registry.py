@@ -23,6 +23,7 @@ from html_downloader.auctions.drouot import (
     DEFAULT_DROUOT_SALE_INDEX,
 )
 from html_downloader.auctions.saleroom import DEFAULT_SALEROOM_LOTS_INDEX
+from html_downloader.auctions.sothebys import DEFAULT_SOTHEBYS_INDEX
 from html_downloader.discover.sitemap import SitemapEntry
 
 LOGGER = logging.getLogger(__name__)
@@ -77,6 +78,13 @@ AUCTIONS: dict[str, AuctionSpec] = {
         default_concurrency=1,
         uses_stealth_proxy=False,
     ),
+    "sothebys": AuctionSpec(
+        name="sothebys",
+        default_indexes=(DEFAULT_SOTHEBYS_INDEX,),
+        # Algolia + legacy /en/results + site-search discovery (no proxy); download uses --proxy-file.
+        default_concurrency=1,
+        uses_stealth_proxy=False,
+    ),
 }
 
 
@@ -120,6 +128,13 @@ def fetch_auction_entries(
     expand_art_categories: bool = True,
     art_progress_path: Path | None = None,
     art_force: bool = False,
+    legacy_state_path: Path | None = None,
+    legacy_workers: int = 2,
+    legacy_delay: float = 0.5,
+    legacy_force: bool = False,
+    site_search_state_path: Path | None = None,
+    site_search_workers: int = 4,
+    site_search_force: bool = False,
 ) -> list[SitemapEntry]:
     """Dispatch discovery for the given auction house."""
     if spec.name == "invaluable":
@@ -306,6 +321,27 @@ def fetch_auction_entries(
             art_delay=algolia_delay if algolia_delay > 0 else 0.4,
             art_force=algolia_force,
             max_sales=max_sales,
+        )
+
+    if spec.name == "sothebys":
+        from html_downloader.auctions.sothebys import fetch_sothebys_entries
+
+        if algolia_state_path is None:
+            raise ValueError("sothebys discovery requires algolia_state_path")
+        return fetch_sothebys_entries(
+            state_path=algolia_state_path,
+            art_categories=algolia_supercategories or None,
+            workers=algolia_workers if algolia_workers > 0 else 1,
+            delay=algolia_delay if algolia_delay > 0 else 0.4,
+            force=algolia_force,
+            max_sales=max_sales,
+            legacy_state_path=legacy_state_path,
+            legacy_workers=legacy_workers if legacy_workers > 0 else 1,
+            legacy_delay=max(0.0, legacy_delay),
+            legacy_force=legacy_force,
+            site_search_state_path=site_search_state_path,
+            site_search_workers=site_search_workers if site_search_workers > 0 else 1,
+            site_search_force=site_search_force,
         )
 
     raise ValueError(f"no discovery implementation for auction house {spec.name!r}")

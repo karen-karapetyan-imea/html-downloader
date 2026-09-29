@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,6 +20,8 @@ from html_downloader.auctions.paths import (
     auction_html_dir,
     auction_job_dir,
     auction_lastmod_state_file,
+    auction_legacy_state_file,
+    auction_site_search_state_file,
     auction_manifest_file,
     auction_metadata_file,
     auction_results_file,
@@ -98,6 +100,10 @@ def _known_keys_for_house(data_root: Path, auction_house: str) -> set[tuple[str,
         from html_downloader.auctions.christies import known_christies_keys_from_paths
 
         return known_christies_keys_from_paths(paths)
+    if auction_house == "sothebys":
+        from html_downloader.auctions.sothebys import known_sothebys_keys_from_paths
+
+        return known_sothebys_keys_from_paths(paths)
     keys: set[tuple[str, str]] = set()
     for path in paths:
         # Generic fallback: parse as invaluable-style if possible
@@ -311,6 +317,13 @@ def run_auction_discover(
     min_urls: int | None = None,
     sitemap_force: bool = False,
     max_sales: int | None = None,
+    legacy_archive: bool = True,
+    legacy_workers: int = 2,
+    legacy_delay: float = 0.5,
+    legacy_force: bool = False,
+    site_search: bool = True,
+    site_search_workers: int = 4,
+    site_search_force: bool = False,
 ) -> AuctionDiscoverResult:
     spec = get_auction(auction_house)
     month = parse_job_month(job_month)
@@ -332,6 +345,7 @@ def run_auction_discover(
         DEFAULT_MIN_URLS as CHRISTIES_DEFAULT_MIN_URLS,
     )
     from html_downloader.auctions.christies_search import ART_CATEGORY_FACETS
+    from html_downloader.auctions.sothebys_algolia import ART_FACETS as SOTHEBYS_ART_FACETS
     from html_downloader.auctions.drouot import (
         DEFAULT_MAX_SITEMAPS as DROUOT_DEFAULT_MAX_SITEMAPS,
         DEFAULT_MIN_URLS as DROUOT_DEFAULT_MIN_URLS,
@@ -362,13 +376,14 @@ def run_auction_discover(
     if algolia_supercategories:
         cats.extend(name.strip() for name in algolia_supercategories if name and name.strip())
     if algolia_artworks_only:
-        art_defaults = (
-            ART_CATEGORY_FACETS if spec.name == "christies" else ARTWORKS_SUPERCATEGORIES
-        )
-        for name in art_defaults:
+        art_defaults_by_house: dict[str, Sequence[str]] = {
+            "christies": ART_CATEGORY_FACETS,
+            "sothebys": SOTHEBYS_ART_FACETS,
+        }
+        for name in art_defaults_by_house.get(spec.name, ARTWORKS_SUPERCATEGORIES):
             if name not in cats:
                 cats.append(name)
-    filtered_algolia = bool(cats) and spec.name in {"invaluable", "christies"}
+    filtered_algolia = bool(cats) and spec.name in {"invaluable", "christies", "sothebys"}
     if filtered_algolia:
         expand_algolia = True
         include_hubs = False
@@ -379,8 +394,8 @@ def run_auction_discover(
     LOGGER.info(
         "auction discover house=%s month=%s concurrency=%s expand_algolia=%s "
         "expand_artist_sold=%s include_hubs=%s expand_auctions_list=%s expand_houses=%s "
-        "max_sitemaps=%s min_urls=%s sitemap_force=%s max_sales=%s "
-        "algolia_supercategories=%s",
+        "max_sitemaps=%s min_urls=%s sitemap_force=%s max_sales=%s legacy_archive=%s "
+        "site_search=%s algolia_supercategories=%s",
         spec.name,
         month,
         workers,
@@ -392,7 +407,9 @@ def run_auction_discover(
         sitemap_limit if spec.name in _SITEMAP_PROGRESS_HOUSES else None,
         url_target if spec.name in _SITEMAP_PROGRESS_HOUSES else None,
         sitemap_force if spec.name in _SITEMAP_PROGRESS_HOUSES else None,
-        max_sales if spec.name in {"artcurial", "christies"} else None,
+        max_sales if spec.name in {"artcurial", "christies", "sothebys"} else None,
+        legacy_archive if spec.name == "sothebys" else None,
+        site_search if spec.name == "sothebys" else None,
         cats or None,
     )
 
@@ -430,8 +447,25 @@ def run_auction_discover(
     elif filtered_algolia and spec.name == "christies":
         # Art-only lotsearch; never mixes with the full-archive sitemap cache.
         algolia_state = auction_algolia_artworks_browse_state_file(state_root, spec.name)
+    elif spec.name == "sothebys":
+        # Algolia is the only source; art-only and full archive never share state.
+        algolia_state = (
+            auction_algolia_artworks_browse_state_file(state_root, spec.name)
+            if filtered_algolia
+            else auction_algolia_browse_state_file(state_root, spec.name)
+        )
     else:
         algolia_state = None
+    legacy_state = (
+        auction_legacy_state_file(state_root, spec.name, artworks_only=filtered_algolia)
+        if spec.name == "sothebys" and legacy_archive
+        else None
+    )
+    site_search_state = (
+        auction_site_search_state_file(state_root, spec.name, artworks_only=filtered_algolia)
+        if spec.name == "sothebys" and site_search
+        else None
+    )
     christies_art_mode = spec.name == "christies" and algolia_state is not None
     sitemap_progress = (
         auction_sitemap_progress_file(state_root, spec.name)
@@ -474,6 +508,13 @@ def run_auction_discover(
         sitemap_force=sitemap_force,
         max_sales=max_sales,
         sales_progress_path=sales_progress,
+        legacy_state_path=legacy_state,
+        legacy_workers=legacy_workers,
+        legacy_delay=legacy_delay,
+        legacy_force=legacy_force,
+        site_search_state_path=site_search_state,
+        site_search_workers=site_search_workers,
+        site_search_force=site_search_force,
     )
     LOGGER.info("fetched auction entries=%s", len(entries))
 
@@ -671,6 +712,36 @@ def run_auction_discover(
                 all_count += added_all
                 crawl_count += added_crawl
 
+        if spec.name == "sothebys" and algolia_state is not None:
+            from html_downloader.auctions.sothebys import (
+                iter_lot_cache_rows as sothebys_iter_rows,
+                lot_cache_path as sothebys_cache_path,
+            )
+
+            label = "sothebys art" if filtered_algolia else "sothebys"
+            # Each JSONL is unique and every pass skips the other caches' keys,
+            # so the caches are disjoint — skip per-row seen tracking.
+            for state_file, source in (
+                (algolia_state, "algolia"),
+                (legacy_state, "legacy"),
+                (site_search_state, "site search"),
+            ):
+                if state_file is None:
+                    continue
+                added_all, added_crawl = _stream_typed_cache_into_job_files(
+                    sothebys_cache_path(state_file),
+                    iter_rows=sothebys_iter_rows,
+                    label=f"{label} {source}",
+                    sitemap_all_path=sitemap_all_path,
+                    urls_path=urls_path,
+                    already_written_keys=already_keys,
+                    known_keys=known_keys,
+                    incremental=incremental,
+                    track_seen=False,
+                )
+                all_count += added_all
+                crawl_count += added_crawl
+
         art_lot_count = 0
         if spec.name == "saleroom" and expand_algolia and algolia_state is not None:
             from html_downloader.auctions.saleroom_algolia import (
@@ -724,6 +795,8 @@ def run_auction_discover(
                 from html_downloader.auctions.drouot import save_auction_lastmod_state
             elif spec.name == "christies":
                 from html_downloader.auctions.christies import save_auction_lastmod_state
+            elif spec.name == "sothebys":
+                from html_downloader.auctions.sothebys import save_auction_lastmod_state
             else:
                 from html_downloader.auctions.invaluable import save_auction_lastmod_state
 
@@ -743,6 +816,91 @@ def run_auction_discover(
         all_count=all_count,
         crawl_count=crawl_count,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class AuctionAuditResult:
+    path: Path
+    summary: str
+
+
+def run_auction_audit(
+    *,
+    auction_house: str,
+    data_root: Path,
+    state_root: Path,
+    job_month: str | None,
+    artworks_only: bool = False,
+    supercategories: list[str] | None = None,
+    recount: bool = False,
+    test_lot_sample: int = 0,
+    workers: int = 2,
+    delay: float = 0.4,
+    offline: bool = False,
+    output: Path | None = None,
+) -> AuctionAuditResult:
+    """Write the discovery coverage audit JSON (Sotheby's only) and return its summary."""
+    spec = get_auction(auction_house)
+    if spec.name != "sothebys":
+        raise ValueError(f"auction audit is only implemented for sothebys, not {spec.name}")
+    from html_downloader.auctions.paths import auction_discovery_audit_file
+    from html_downloader.auctions.sothebys import site_search_departments_for
+    from html_downloader.auctions.sothebys_algolia import (
+        ART_FACETS,
+        SothebysAlgoliaClient,
+        build_art_filter,
+    )
+    from html_downloader.auctions.sothebys_audit import AuditSources, build_report, format_report
+    from html_downloader.auctions.sothebys_legacy import LegacyHtmlClient
+    from html_downloader.auctions.sothebys_search import make_site_search_client
+
+    cats = [name.strip() for name in supercategories or () if name and name.strip()]
+    if artworks_only:
+        cats.extend(name for name in ART_FACETS if name not in cats)
+    art = bool(cats)
+    sources = AuditSources(
+        platform_state=(
+            auction_algolia_artworks_browse_state_file(state_root, spec.name)
+            if art
+            else auction_algolia_browse_state_file(state_root, spec.name)
+        ),
+        legacy_state=auction_legacy_state_file(state_root, spec.name, artworks_only=art),
+        site_search_state=auction_site_search_state_file(
+            state_root, spec.name, artworks_only=art
+        ),
+        art_filter=build_art_filter(cats) if art else None,
+        site_departments=site_search_departments_for(cats) if art else None,
+    )
+    urls_path = auction_urls_file(auction_job_dir(data_root, spec.name, parse_job_month(job_month)))
+
+    platform = site = None
+    site_index: str | None = None
+    try:
+        if not offline:
+            platform = SothebysAlgoliaClient(delay=delay)
+            site, site_index = make_site_search_client(LegacyHtmlClient(delay=delay).get, delay=delay)
+        report = build_report(
+            sources,
+            urls_path=urls_path,
+            platform_query=platform.query if platform else None,
+            site_query=site.query if site else None,
+            site_index=site_index,
+            do_recount=recount,
+            sample_size=test_lot_sample,
+            workers=max(1, workers),
+        )
+    finally:
+        for client in (platform, site):
+            if client is not None:
+                client.close()
+
+    path = output or auction_discovery_audit_file(state_root, spec.name, artworks_only=art)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+    LOGGER.info("auction audit written house=%s path=%s", spec.name, path)
+    return AuctionAuditResult(path=path, summary=format_report(report))
 
 
 def run_auction_download(

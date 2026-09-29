@@ -3,7 +3,15 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import parse_qsl, unquote, urlencode, urljoin, urlsplit, urlunsplit
+from urllib.parse import (
+    parse_qsl,
+    quote,
+    unquote,
+    urlencode,
+    urljoin,
+    urlsplit,
+    urlunsplit,
+)
 
 _TRACKING_PARAMS = frozenset(
     {
@@ -85,6 +93,10 @@ _DROUOT_PREFERRED_LOCALE = "en"
 _CHRISTIES_HOSTS = frozenset({"www.christies.com", "christies.com"})
 _CHRISTIES_PREFERRED_LOCALE = "en"
 _CHRISTIES_LOCALE_PREFIX = r"(?:/(?:en|zh|zh-cn|zh-tw|fr|de|it|es|ja|ko|ru))?"
+_SOTHEBYS_HOSTS = frozenset({"www.sothebys.com", "sothebys.com"})
+_SOTHEBYS_PREFERRED_LOCALE = "en"
+_SOTHEBYS_LOCALE_PREFIX = r"(?:/(?:en|fr|de|it|zh-hans|zh-hant))?"
+_SOTHEBYS_SAFE_PATH_CHARS = "/-_.~"
 
 # SEO sold-lot page: /price-result/{slug}/
 LIVEAUCTIONEERS_PRICE_RESULT_RE = re.compile(
@@ -174,6 +186,26 @@ CHRISTIES_SALE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Lot: /en/buy/auction/{year}/{auctionSlug}/{lotSlug}
+SOTHEBYS_LOT_RE = re.compile(
+    r"^https://www\.sothebys\.com/en/buy/auction/(\d{4})/([a-z0-9-]+)/([^/?#\s]+)/?$",
+)
+
+# Auction landing: /en/buy/auction/{year}/{auctionSlug}
+SOTHEBYS_SALE_RE = re.compile(
+    r"^https://www\.sothebys\.com/en/buy/auction/(\d{4})/([a-z0-9-]+)/?$",
+)
+
+# Legacy (pre-2019) lot: /en/auctions/ecatalogue/{year}/{saleSlug}/lot.{lotNr}.html
+SOTHEBYS_LEGACY_LOT_RE = re.compile(
+    r"^https://www\.sothebys\.com/en/auctions/ecatalogue/(\d{4})/([a-z0-9-]+)/lot\.([0-9a-z]+)\.html$",
+)
+
+# Legacy (pre-2019) sale: /en/auctions/{year}/{saleSlug}.html
+SOTHEBYS_LEGACY_SALE_RE = re.compile(
+    r"^https://www\.sothebys\.com/en/auctions/(\d{4})/([a-z0-9-]+)\.html$",
+)
+
 
 def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | None:
     """
@@ -191,6 +223,8 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
     - Saleroom lot/catalogue/for-sale paths force /en-gb/ locale; lot UUID lowercased
     - Drouot lot/sale paths force /en/ locale; drop /__data.json suffix
     - Christie's lot/auction paths force www host + /en/ locale; room code lowercased
+    - Sotheby's /buy/auction lot/auction paths force www host + /en/ locale; slugs
+      lowercased and percent-encoded
     - Strip trailing slash (except bare `/`)
     """
     text = (url or "").strip()
@@ -229,6 +263,9 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         netloc = host
     elif host == "christies.com":
         host = "www.christies.com"
+        netloc = host
+    elif host == "sothebys.com":
+        host = "www.sothebys.com"
         netloc = host
     else:
         netloc = host
@@ -331,6 +368,23 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         path,
         re.IGNORECASE,
     )
+    sothebys_auction = re.match(
+        rf"^{_SOTHEBYS_LOCALE_PREFIX}/buy/auction/(\d{{4}})/([A-Za-z0-9-]+)"
+        r"(?:/([^/?#\s]+))?/?$",
+        path,
+        re.IGNORECASE,
+    )
+    sothebys_legacy_lot = re.match(
+        rf"^{_SOTHEBYS_LOCALE_PREFIX}/auctions/ecatalogue/(\d{{4}})/([A-Za-z0-9-]+)"
+        r"/lot\.([0-9A-Za-z]+)\.html$",
+        path,
+        re.IGNORECASE,
+    )
+    sothebys_legacy_sale = re.match(
+        rf"^{_SOTHEBYS_LOCALE_PREFIX}/auctions/(\d{{4}})/([A-Za-z0-9-]+)\.html$",
+        path,
+        re.IGNORECASE,
+    )
 
     if catalog_match and host in _INVALUABLE_HOSTS:
         path = f"/catalog/{catalog_match.group(2).lower()}"
@@ -414,6 +468,15 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         sale_number = christies_sale.group(1)
         room = christies_sale.group(2).lower()
         path = f"/{_CHRISTIES_PREFERRED_LOCALE}/auction/auction-{sale_number}-{room}"
+    elif sothebys_auction and host in _SOTHEBYS_HOSTS:
+        year, auction_slug, lot_slug = sothebys_auction.groups()
+        path = _sothebys_path(year, auction_slug, lot_slug)
+    elif sothebys_legacy_lot and host in _SOTHEBYS_HOSTS:
+        year, sale_slug, lot_nr = sothebys_legacy_lot.groups()
+        path = _sothebys_legacy_lot_path(year, sale_slug, lot_nr)
+    elif sothebys_legacy_sale and host in _SOTHEBYS_HOSTS:
+        year, sale_slug = sothebys_legacy_sale.groups()
+        path = _sothebys_legacy_sale_path(year, sale_slug)
     else:
         path = path.rstrip("/") or "/"
 
@@ -463,6 +526,11 @@ def normalize_auction_url(url: str, *, base_url: str | None = None) -> str | Non
         if christies_entity_from_url_path(candidate) is not None:
             query = ""
         out_netloc = "www.christies.com"
+    elif host in _SOTHEBYS_HOSTS:
+        candidate = urlunsplit(("https", "www.sothebys.com", path, "", ""))
+        if sothebys_entity_from_url_path(candidate) is not None:
+            query = ""
+        out_netloc = "www.sothebys.com"
     else:
         out_netloc = netloc
 
@@ -851,4 +919,99 @@ def is_christies_auction_url(url: str) -> bool:
 def is_christies_lot_url(url: str) -> bool:
     """True only for Christie's lot pages (not sale landings)."""
     key = christies_entity_from_url(url)
+    return key is not None and key[0] == "lot"
+
+
+def _sothebys_path(year: str, auction_slug: str, lot_slug: str | None = None) -> str:
+    parts = [f"/{_SOTHEBYS_PREFERRED_LOCALE}/buy/auction", year, auction_slug.lower()]
+    if lot_slug:
+        parts.append(lot_slug.lower())
+    return quote("/".join(parts), safe=_SOTHEBYS_SAFE_PATH_CHARS)
+
+
+def build_sothebys_lot_url(year: int | str, auction_slug: str, lot_slug: str) -> str:
+    """Build the canonical EN Sotheby's lot URL."""
+    return "https://www.sothebys.com" + _sothebys_path(str(year), auction_slug, unquote(lot_slug))
+
+
+def build_sothebys_sale_url(year: int | str, auction_slug: str) -> str:
+    """Build the canonical EN Sotheby's auction landing URL."""
+    return "https://www.sothebys.com" + _sothebys_path(str(year), auction_slug)
+
+
+def _sothebys_legacy_sale_path(year: str, sale_slug: str) -> str:
+    return f"/{_SOTHEBYS_PREFERRED_LOCALE}/auctions/{year}/{sale_slug.lower()}.html"
+
+
+def _sothebys_legacy_lot_path(year: str, sale_slug: str, lot_nr: str) -> str:
+    return (
+        f"/{_SOTHEBYS_PREFERRED_LOCALE}/auctions/ecatalogue/{year}/"
+        f"{sale_slug.lower()}/lot.{lot_nr.lower()}.html"
+    )
+
+
+def build_sothebys_legacy_sale_url(year: int | str, sale_slug: str) -> str:
+    """Build the canonical EN legacy (pre-2019) Sotheby's sale URL."""
+    return "https://www.sothebys.com" + _sothebys_legacy_sale_path(str(year), sale_slug)
+
+
+def build_sothebys_legacy_lot_url(year: int | str, sale_slug: str, lot_nr: str) -> str:
+    """Build the canonical EN legacy (pre-2019) Sotheby's lot URL."""
+    return "https://www.sothebys.com" + _sothebys_legacy_lot_path(str(year), sale_slug, lot_nr)
+
+
+def sothebys_entity_from_url_path(url: str) -> tuple[str, str] | None:
+    """Classify a normalized Sotheby's absolute URL without re-entering normalize."""
+    lot = SOTHEBYS_LOT_RE.match(url)
+    if lot:
+        return "lot", f"{lot.group(1)}/{lot.group(2)}/{lot.group(3)}"
+
+    sale = SOTHEBYS_SALE_RE.match(url)
+    if sale:
+        return "sale", f"{sale.group(1)}/{sale.group(2)}"
+
+    legacy_lot = SOTHEBYS_LEGACY_LOT_RE.match(url)
+    if legacy_lot:
+        year, sale_slug, lot_nr = legacy_lot.groups()
+        return "lot", f"legacy/{year}/{sale_slug}/{lot_nr}"
+
+    legacy_sale = SOTHEBYS_LEGACY_SALE_RE.match(url)
+    if legacy_sale:
+        return "sale", f"legacy/{legacy_sale.group(1)}/{legacy_sale.group(2)}"
+
+    return None
+
+
+def sothebys_entity_from_url(url: str) -> tuple[str, str] | None:
+    """
+    Return (entity_type, entity_id) for Sotheby's crawl targets.
+
+    Accepted:
+      /en/buy/auction/{year}/{auction}/{lot}  → ("lot", "{year}/{auction}/{lot}")
+      /en/buy/auction/{year}/{auction}        → ("sale", "{year}/{auction}")
+      /en/auctions/ecatalogue/{year}/{sale}/lot.{n}.html
+                                              → ("lot", "legacy/{year}/{sale}/{n}")
+      /en/auctions/{year}/{sale}.html         → ("sale", "legacy/{year}/{sale}")
+      (fr / de / it / zh-hans / zh-hant / bare-path variants normalize to /en/)
+
+    The ``legacy/`` prefix keeps pre-2019 ids disjoint from current-platform ids.
+    Rejected: articles, private sales, digital catalogues, etc.
+    """
+    normalized = normalize_auction_url(url)
+    if not normalized:
+        return None
+    host = (urlsplit(normalized).hostname or "").lower()
+    if host not in _SOTHEBYS_HOSTS:
+        return None
+    return sothebys_entity_from_url_path(normalized)
+
+
+def is_sothebys_auction_url(url: str) -> bool:
+    """True for Sotheby's lot or auction crawl targets."""
+    return sothebys_entity_from_url(url) is not None
+
+
+def is_sothebys_lot_url(url: str) -> bool:
+    """True only for Sotheby's lot pages (not auction landings)."""
+    key = sothebys_entity_from_url(url)
     return key is not None and key[0] == "lot"

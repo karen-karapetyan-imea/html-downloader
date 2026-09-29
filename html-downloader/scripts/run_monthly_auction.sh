@@ -10,6 +10,7 @@
 #   ./scripts/run_monthly_auction.sh saleroom
 #   ./scripts/run_monthly_auction.sh drouot
 #   ./scripts/run_monthly_auction.sh christies
+#   ./scripts/run_monthly_auction.sh sothebys
 #
 # Optional:
 #   AUCTION_RUN_DAY=1   # fixed day-of-month for next runs (1–31, clamped)
@@ -18,9 +19,13 @@
 #   MIN_URLS=0          # barnebys/drouot: 0 = all pending shards in one discover (default)
 #   MAX_SITEMAPS=100    # barnebys (default 100; index has 8 lot shards)
 #   MAX_SITEMAPS=50     # drouot (default 50; EN lot+sale children)
-#   MAX_SALES=          # artcurial / christies (default: all pending sales)
+#   MAX_SALES=          # artcurial / christies / sothebys (default: all pending sales)
 #   CHRISTIES_FULL=1    # christies: full sitemap archive instead of art-only lotsearch
-#   CHUNK_LINES=1000000 # invaluable / liveauctioneers / barnebys / saleroom / drouot / christies
+#   SOTHEBYS_ART_ONLY=1 # sothebys: art facets / art departments only (default: full archive)
+#   SOTHEBYS_NO_LEGACY=1 # sothebys: skip the pre-2019 /en/results legacy archive
+#   LEGACY_WORKERS=4    # sothebys: legacy archive sale workers (default 2)
+#   SOTHEBYS_NO_SITE_SEARCH=1 # sothebys: skip the public site-search index pass
+#   CHUNK_LINES=1000000 # invaluable / liveauctioneers / barnebys / saleroom / drouot / christies / sothebys
 #   WORKERS=8           # chunked download workers
 #
 # Prefer starting via:
@@ -34,9 +39,9 @@ PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 auction_house="${1:-}"
 case "${auction_house}" in
-  invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot|christies) ;;
+  invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot|christies|sothebys) ;;
   *)
-    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot|christies" >&2
+    echo "usage: $0 invaluable|liveauctioneers|artcurial|barnebys|saleroom|drouot|christies|sothebys" >&2
     exit 2
     ;;
 esac
@@ -136,12 +141,36 @@ run_discover() {
       fi
       "${PYTHON}" -m html_downloader auction discover "${discover_args[@]}"
       ;;
+    sothebys)
+      # Default: full archive (Algolia lots + legacy sales + site-search index).
+      discover_args=(
+        --auction-house sothebys
+        --incremental
+        --update-state
+      )
+      if [[ -n "${SOTHEBYS_ART_ONLY:-}" ]]; then
+        discover_args+=(--algolia-artworks-only)
+      fi
+      if [[ -n "${SOTHEBYS_NO_LEGACY:-}" ]]; then
+        discover_args+=(--no-legacy-archive)
+      fi
+      if [[ -n "${LEGACY_WORKERS:-}" ]]; then
+        discover_args+=(--legacy-workers "${LEGACY_WORKERS}")
+      fi
+      if [[ -n "${SOTHEBYS_NO_SITE_SEARCH:-}" ]]; then
+        discover_args+=(--no-site-search)
+      fi
+      if [[ -n "${MAX_SALES:-}" ]]; then
+        discover_args+=(--max-sales "${MAX_SALES}")
+      fi
+      "${PYTHON}" -m html_downloader auction discover "${discover_args[@]}"
+      ;;
   esac
 }
 
 run_download() {
   case "${auction_house}" in
-    invaluable|liveauctioneers|barnebys|saleroom|drouot|christies)
+    invaluable|liveauctioneers|barnebys|saleroom|drouot|christies|sothebys)
       # Large url lists — chunk to avoid OOM loading full urls.txt.
       /bin/bash --noprofile --norc "${SCRIPT_DIR}/download_url_chunks.sh" "${auction_house}"
       ;;

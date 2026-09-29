@@ -16,6 +16,7 @@ AUCTION_HOUSES: tuple[str, ...] = (
     "saleroom",
     "drouot",
     "christies",
+    "sothebys",
 )
 
 _MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
@@ -113,6 +114,30 @@ def auction_algolia_artworks_browse_state_file(
     )
 
 
+def auction_legacy_state_file(
+    state_root: Path, auction_house: str, *, artworks_only: bool = False
+) -> Path:
+    """Per-sale checkpoint for a house's legacy (pre-API) HTML archive."""
+    suffix = "_legacy_artworks_state.json" if artworks_only else "_legacy_state.json"
+    return auction_state_root(state_root) / f"{auction_house}{suffix}"
+
+
+def auction_site_search_state_file(
+    state_root: Path, auction_house: str, *, artworks_only: bool = False
+) -> Path:
+    """Per-window checkpoint for a house's public site-search index enumeration."""
+    suffix = "_site_search_artworks_state.json" if artworks_only else "_site_search_state.json"
+    return auction_state_root(state_root) / f"{auction_house}{suffix}"
+
+
+def auction_discovery_audit_file(
+    state_root: Path, auction_house: str, *, artworks_only: bool = False
+) -> Path:
+    """Coverage / completeness audit written by ``auction audit``."""
+    suffix = "_discovery_audit_artworks.json" if artworks_only else "_discovery_audit.json"
+    return auction_state_root(state_root) / f"{auction_house}{suffix}"
+
+
 def auction_sitemap_progress_file(state_root: Path, auction_house: str) -> Path:
     """Child-sitemap resume checkpoint for houses with large gzipped indexes."""
     return auction_state_root(state_root) / f"{auction_house}_sitemap_progress.json"
@@ -156,14 +181,17 @@ __all__ = [
     "auction_artist_sold_progress_file",
     "auction_data_root",
     "auction_diff_file",
+    "auction_discovery_audit_file",
     "auction_house_expand_progress_file",
     "auction_html_dir",
     "auction_job_dir",
     "auction_lastmod_state_file",
+    "auction_legacy_state_file",
     "auction_manifest_file",
     "auction_metadata_file",
     "auction_results_file",
     "auction_sales_progress_file",
+    "auction_site_search_state_file",
     "auction_sitemap_all_file",
     "auction_sitemap_progress_file",
     "auction_state_root",
