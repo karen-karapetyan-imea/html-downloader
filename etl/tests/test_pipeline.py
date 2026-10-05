@@ -134,6 +134,16 @@ def test_compact_skips_unfinished_snapshot(tmp_path):
     assert compact("saatchi", out).snapshots == 1
 
 
+def test_compact_without_artist_rows_writes_empty_current(tmp_path):
+    out = tmp_path / "out"
+    data = make_crawl(tmp_path, "2026-09-23", {"c.html": builders.saatchi_artwork()})
+    run_snapshot(config(data, out))
+    assert compact("saatchi", out).current_rows == 0
+    part = current_dir(out, "saatchi") / "part-00000.parquet"
+    assert pq.read_metadata(part).num_rows == 0
+    assert count_rows(current_dir(out, "saatchi")) == 0
+
+
 def test_compact_without_snapshots_fails(tmp_path):
     with pytest.raises(FileNotFoundError):
         compact("saatchi", tmp_path / "out")

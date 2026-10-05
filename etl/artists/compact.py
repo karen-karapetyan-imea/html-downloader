@@ -18,6 +18,7 @@ import pyarrow.parquet as pq
 from artists.layout import (
     MANIFEST_NAME,
     PARQUET_COMPRESSION,
+    atomic_write_table,
     atomic_write_text,
     current_dir,
     part_name,
@@ -25,7 +26,7 @@ from artists.layout import (
     scratch_dir,
     swap_dir,
 )
-from artists.schema import COLUMNS, CRAWL_DATE_COLUMN
+from artists.schema import COLUMNS, CRAWL_DATE_COLUMN, to_table
 from artists.sources import get_source
 
 log = logging.getLogger(__name__)
@@ -99,7 +100,11 @@ def _rebuild_current(
     parts = [p for s in snapshots for p in sorted(s.glob("part-*.parquet"))]
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
-    rows = _write_latest(con, parts, work / part_name(0), CURRENT_ORDER, hive=True) if parts else 0
+    if parts:
+        rows = _write_latest(con, parts, work / part_name(0), CURRENT_ORDER, hive=True)
+    else:
+        atomic_write_table(work / part_name(0), to_table([]))
+        rows = 0
     atomic_write_text(
         work / MANIFEST_NAME,
         json.dumps(
