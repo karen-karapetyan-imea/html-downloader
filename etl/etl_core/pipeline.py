@@ -30,6 +30,10 @@ from etl_core.writer import ChunkStats, completed_chunks, finalize_snapshot, pro
 log = logging.getLogger(__name__)
 
 
+class ResumeMismatchError(ValueError):
+    """An interrupted snapshot was started with other run settings, so it cannot be resumed."""
+
+
 @dataclass(frozen=True, slots=True)
 class RunConfig:
     dataset: DatasetSpec[Any]
@@ -121,7 +125,9 @@ def _prepare_snapshot(snapshot: Path, run_identity: dict[str, Any], resume: bool
     if resume and run_file.is_file():
         previous = json.loads(run_file.read_text(encoding="utf-8"))
         if previous != run_identity:
-            raise ValueError(f"cannot resume {snapshot}: it was started with {previous}, now {run_identity}")
+            raise ResumeMismatchError(
+                f"cannot resume {snapshot}: it was started with {previous}, now {run_identity}"
+            )
         (snapshot / MANIFEST_NAME).unlink(missing_ok=True)  # marks the snapshot unfinished for `compact`
         remove_tmp_files(snapshot)
         return completed_chunks(snapshot)

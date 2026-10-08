@@ -1,6 +1,43 @@
-"""Minimal synthetic HTML pages in the shape each platform parser expects."""
+"""Minimal synthetic HTML pages in the shape each platform parser expects, and crawl folders of them."""
 
 import json
+from pathlib import Path
+
+
+def make_crawl(root: Path, crawl_date: str, pages: dict[str, str], log: list[dict] | None = None) -> Path:
+    data = root / crawl_date
+    for name, html in pages.items():
+        path = data / "html" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(html, encoding="utf-8")
+    if log:
+        (data / "results.jsonl").write_text("\n".join(json.dumps(r) for r in log) + "\nnot json\n")
+    return data
+
+
+def write_crawl_manifest(
+    data: Path, *, status: str = "completed", finished_at: str | None = "2026-09-23T12:00:00Z"
+) -> None:
+    """The downloader's manifest.json next to html/ (only the fields `sync` reads matter)."""
+    manifest = {
+        "marketplace": data.parent.name,
+        "crawl_date": data.name,
+        "started_at": "2026-09-23T08:00:00Z",
+        "finished_at": finished_at,
+        "status": status,
+    }
+    data.mkdir(parents=True, exist_ok=True)
+    (data / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+
+def saatchi_pages(city: str = "Berlin") -> dict[str, str]:
+    return {
+        "a.html": saatchi_artist(1, city=city),
+        "b.html": saatchi_artist(2, city=city),
+        "x/c.html": saatchi_artwork(),
+        "x/d.html": saatchi_broken(),
+        "x/e.html": saatchi_artist(1, city=city),
+    }
 
 
 def _next_data(payload: dict) -> str:

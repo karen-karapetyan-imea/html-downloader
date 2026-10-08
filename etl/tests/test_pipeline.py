@@ -18,27 +18,7 @@ from etl_core.crawl import detect_crawl_date, load_crawl_log
 from etl_core.layout import CHUNKS_DIR, ERRORS_NAME, MANIFEST_NAME, current_dir, snapshot_dir
 from etl_core.pipeline import RunConfig, run_snapshot
 from tests import builders
-
-
-def make_crawl(root: Path, crawl_date: str, pages: dict[str, str], log: list[dict] | None = None) -> Path:
-    data = root / crawl_date
-    for name, html in pages.items():
-        path = data / "html" / name
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(html, encoding="utf-8")
-    if log:
-        (data / "results.jsonl").write_text("\n".join(json.dumps(r) for r in log) + "\nnot json\n")
-    return data
-
-
-def saatchi_pages(city: str = "Berlin") -> dict[str, str]:
-    return {
-        "a.html": builders.saatchi_artist(1, city=city),
-        "b.html": builders.saatchi_artist(2, city=city),
-        "x/c.html": builders.saatchi_artwork(),
-        "x/d.html": builders.saatchi_broken(),
-        "x/e.html": builders.saatchi_artist(1, city=city),
-    }
+from tests.builders import make_crawl, saatchi_pages
 
 
 def count_rows(path: Path) -> int:
