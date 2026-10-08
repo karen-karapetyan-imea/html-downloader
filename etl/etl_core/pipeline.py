@@ -13,9 +13,10 @@ from itertools import batched
 from pathlib import Path
 from typing import Any
 
-from artists import __version__
-from artists.crawl import CrawlFile, html_root, iter_crawl_files, load_crawl_log
-from artists.layout import (
+from etl_core import __version__
+from etl_core.crawl import CrawlFile, html_root, iter_crawl_files, load_crawl_log
+from etl_core.dataset import DatasetSpec
+from etl_core.layout import (
     CHUNKS_DIR,
     MANIFEST_NAME,
     RUN_NAME,
@@ -23,14 +24,15 @@ from artists.layout import (
     remove_tmp_files,
     snapshot_dir,
 )
-from artists.sources import get_source, parser_fingerprint
-from artists.writer import ChunkStats, completed_chunks, finalize_snapshot, process_chunk
+from etl_core.sources import get_source, parser_fingerprint
+from etl_core.writer import ChunkStats, completed_chunks, finalize_snapshot, process_chunk
 
 log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
 class RunConfig:
+    dataset: DatasetSpec[Any]
     platform: str
     data_dir: Path
     out: Path
@@ -41,6 +43,8 @@ class RunConfig:
 
 
 def run_snapshot(config: RunConfig) -> dict[str, Any]:
+    dataset = config.dataset
+    dataset.mapper(config.platform)
     source = get_source(config.platform)
     if config.chunk_size < 1:
         raise ValueError("chunk_size must be >= 1")
@@ -49,6 +53,7 @@ def run_snapshot(config: RunConfig) -> dict[str, Any]:
 
     snapshot = snapshot_dir(config.out, config.platform, config.crawl_date)
     run_identity = {
+        "dataset": dataset.name,
         "platform": config.platform,
         "data_dir": str(config.data_dir.resolve()),
         "chunk_size": config.chunk_size,
@@ -73,12 +78,12 @@ def run_snapshot(config: RunConfig) -> dict[str, Any]:
         )
         if index not in done
     )
-    progress = _Progress()
+    progress = _Progress(dataset.name)
     if config.workers <= 1:
         for index, files in chunks:
-            progress(process_chunk(config.platform, index, files, str(snapshot)))
+            progress(process_chunk(dataset, config.platform, index, files, str(snapshot)))
     else:
-        _run_pool(config.platform, chunks, str(snapshot), config.workers, progress)
+        _run_pool(dataset, config.platform, chunks, str(snapshot), config.workers, progress)
 
     finished = datetime.now(UTC)
     manifest = finalize_snapshot(
@@ -97,11 +102,12 @@ def run_snapshot(config: RunConfig) -> dict[str, Any]:
         },
     )
     log.info(
-        "%s %s done: %d files, %d artist rows, %d skipped, %d without id, %d errors",
+        "%s %s done: %d files, %d %s rows, %d skipped, %d without id, %d errors",
         config.platform,
         config.crawl_date,
         manifest["files_total"],
-        manifest["artist_rows"],
+        manifest["rows"],
+        dataset.name,
         manifest["skipped"],
         manifest["no_id"],
         manifest["errors"],
@@ -126,6 +132,7 @@ def _prepare_snapshot(snapshot: Path, run_identity: dict[str, Any], resume: bool
 
 
 def _run_pool(
+    dataset: DatasetSpec[Any],
     platform: str,
     chunks: Iterable[tuple[int, list[CrawlFile]]],
     snapshot: str,
@@ -136,7 +143,7 @@ def _run_pool(
     with ProcessPoolExecutor(max_workers=workers, mp_context=_mp_context()) as pool:
         in_flight: set[Future[ChunkStats]] = set()
         for index, files in chunks:
-            in_flight.add(pool.submit(process_chunk, platform, index, files, snapshot))
+            in_flight.add(pool.submit(process_chunk, dataset, platform, index, files, snapshot))
             if len(in_flight) >= workers * 2:
                 in_flight = _drain(in_flight, on_done, FIRST_COMPLETED)
         _drain(in_flight, on_done)
@@ -160,20 +167,22 @@ def _drain(
 
 
 class _Progress:
-    def __init__(self) -> None:
+    def __init__(self, dataset_name: str) -> None:
+        self.dataset_name = dataset_name
         self.t0 = time.monotonic()
         self.files = self.rows = self.errors = 0
 
     def __call__(self, stats: ChunkStats) -> None:
         self.files += stats.files
-        self.rows += stats.artist_rows
+        self.rows += stats.rows
         self.errors += len(stats.errors)
         rate = self.files / max(time.monotonic() - self.t0, 1e-9)
         log.info(
-            "chunk %05d done: %d files this run, %d artist rows, %d errors, %.0f files/s",
+            "chunk %05d done: %d files this run, %d %s rows, %d errors, %.0f files/s",
             stats.index,
             self.files,
             self.rows,
+            self.dataset_name,
             self.errors,
             rate,
         )

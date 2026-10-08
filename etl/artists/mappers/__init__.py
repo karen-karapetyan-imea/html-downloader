@@ -14,7 +14,7 @@ from artists.mappers import artfinder, artmajeur, artsper, artsy, saatchi
 from artists.schema import ArtistRow
 
 
-class Mapper(Protocol):
+class ArtistMapper(Protocol):
     def is_artist_page(self, parsed: Mapping[str, Any]) -> bool: ...
 
     def to_artist(
@@ -31,8 +31,8 @@ _MODULES: dict[str, ModuleType] = {
 }
 
 
-def get_mapper(platform: str) -> Mapper:
+def get_mapper(platform: str) -> ArtistMapper:
     try:
-        return cast(Mapper, _MODULES[platform])
+        return cast(ArtistMapper, _MODULES[platform])
     except KeyError:
         raise ValueError(f"no mapper for platform {platform!r}") from None

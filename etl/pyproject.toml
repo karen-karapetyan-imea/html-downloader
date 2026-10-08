@@ -1,7 +1,7 @@
 [project]
 name = "artist-etl"
-version = "0.1.0"
-description = "Raw marketplace artist HTML pages -> unified artist Parquet dataset"
+version = "0.2.0"
+description = "Raw marketplace HTML pages -> unified artist and artwork Parquet datasets"
 requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=4.12",
@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 artist-etl = "artists.__main__:main"
+artwork-etl = "artworks.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -25,7 +26,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["artists"]
+packages = ["etl_core", "artists", "artworks"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

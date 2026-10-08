@@ -46,7 +46,7 @@ def get_source(platform: str) -> Source:
 @cache
 def load_parser(platform: str) -> ModuleType:
     source = get_source(platform)
-    name = f"_artist_etl_parser_{platform}"
+    name = f"_etl_parser_{platform}"
     spec = importlib.util.spec_from_file_location(name, source.parser_path)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot load parser for {platform} from {source.parser_path}")

@@ -1,11 +1,14 @@
 """Value normalizers shared by all platform mappers."""
 
 import html
+import math
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass, fields
 from datetime import date
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from functools import cache
+from typing import Any
 from urllib.parse import urlsplit
 
 import pycountry
@@ -20,7 +23,10 @@ _SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
 _BARE_SCHEME_RE = re.compile(r"^[a-z][a-z0-9+-]*:(?!\d)", re.I)  # mailto:, tel:, javascript: (not host:port)
 _YEAR_RE = re.compile(r"\b(\d{4})\b")
 _HANDLE_RE = re.compile(r"^[A-Za-z0-9_.\-]+$")
+_CURRENCY_RE = re.compile(r"^[A-Z]{3}$")
 MIN_YEAR = 1000
+CENT = Decimal("0.01")
+MAX_PRICE = Decimal("999999999999.99")  # fits the decimal128(14, 2) price columns
 
 SOCIAL_DOMAINS: dict[str, tuple[str, ...]] = {
     "facebook": ("facebook.com", "fb.com", "fb.me"),
@@ -79,6 +85,56 @@ def clean_text(value: object, *, multiline: bool = False) -> str | None:
     if not text or text.lower() in _PLACEHOLDERS:
         return None
     return text
+
+
+def platform_id(value: object) -> str | None:
+    return clean_text(value)
+
+
+def as_list(value: object) -> list[Any]:
+    if value is None:
+        return []
+    return list(value) if isinstance(value, list | tuple) else [value]
+
+
+def str_list(*values: object) -> list[str] | None:
+    """Clean, de-duplicated (order kept) strings from scalars and/or lists; None when empty."""
+    items = (clean_text(v) for value in values for v in as_list(value))
+    return list(dict.fromkeys(i for i in items if i is not None)) or None
+
+
+def to_float(value: object) -> float | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        number = float(value if not isinstance(value, str) else value.replace(",", "").strip())
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def to_price(value: object) -> Decimal | None:
+    """Non-negative amount rounded to cents; None for anything else (text, NaN, overflow)."""
+    number = to_float(value)
+    if number is None or number < 0:
+        return None
+    try:
+        price = Decimal(str(number)).quantize(CENT, rounding=ROUND_HALF_UP)
+    except InvalidOperation:
+        return None
+    return price if price <= MAX_PRICE else None
+
+
+def currency_code(value: object) -> str | None:
+    text = clean_text(value)
+    if text is None:
+        return None
+    text = text.upper()
+    return text if _CURRENCY_RE.fullmatch(text) else None
+
+
+def to_bool(value: object) -> bool | None:
+    return value if isinstance(value, bool) else None
 
 
 def plain_text(value: object) -> str | None:

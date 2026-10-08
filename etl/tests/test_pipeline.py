@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import duckdb
@@ -7,11 +8,15 @@ import pyarrow.parquet as pq
 import pytest
 
 from artists.__main__ import main
-from artists.compact import compact
-from artists.crawl import detect_crawl_date, load_crawl_log
-from artists.layout import CHUNKS_DIR, ERRORS_NAME, MANIFEST_NAME, current_dir, snapshot_dir
-from artists.pipeline import RunConfig, run_snapshot
 from artists.schema import ARTIST_SCHEMA
+from artists.spec import ARTISTS
+from artworks.__main__ import main as artwork_main
+from artworks.schema import ARTWORK_SCHEMA
+from artworks.spec import ARTWORKS
+from etl_core.compact import compact as compact_dataset
+from etl_core.crawl import detect_crawl_date, load_crawl_log
+from etl_core.layout import CHUNKS_DIR, ERRORS_NAME, MANIFEST_NAME, current_dir, snapshot_dir
+from etl_core.pipeline import RunConfig, run_snapshot
 from tests import builders
 
 
@@ -41,7 +46,13 @@ def count_rows(path: Path) -> int:
 
 
 def config(data: Path, out: Path, **kw) -> RunConfig:
-    return RunConfig(platform="saatchi", data_dir=data, out=out, crawl_date=detect_crawl_date(data), **kw)
+    return RunConfig(
+        dataset=ARTISTS, platform="saatchi", data_dir=data, out=out, crawl_date=detect_crawl_date(data), **kw
+    )
+
+
+def compact(platform: str, out: Path):
+    return compact_dataset(ARTISTS, platform, out)
 
 
 @pytest.mark.parametrize("workers", [1, 2])
@@ -49,7 +60,7 @@ def test_run_writes_snapshot(tmp_path, workers):
     data = make_crawl(tmp_path, "2026-09-23", saatchi_pages())
     manifest = run_snapshot(config(data, tmp_path / "out", workers=workers, chunk_size=2))
 
-    assert manifest | {"files_total": 5, "artist_rows": 3, "skipped": 1, "no_id": 0, "errors": 1} == manifest
+    assert manifest | {"files_total": 5, "rows": 3, "skipped": 1, "no_id": 0, "errors": 1} == manifest
     snap = snapshot_dir(tmp_path / "out", "saatchi", date(2026, 9, 23))
     assert json.loads((snap / MANIFEST_NAME).read_text())["chunks"] == 3
     errors = pq.read_table(snap / ERRORS_NAME).to_pylist()
@@ -71,7 +82,7 @@ def test_resume_redoes_only_missing_chunks(tmp_path):
     second = run_snapshot(config(data, out, chunk_size=2, resume=True))
 
     assert second["resumed_chunks"] == 2
-    assert second["artist_rows"] == first["artist_rows"]
+    assert second["rows"] == first["rows"]
     assert (snap / "part-00002.parquet").exists()
     assert not (snap / "part-00000.parquet.tmp").exists()
 
@@ -147,6 +158,75 @@ def test_compact_without_artist_rows_writes_empty_current(tmp_path):
 def test_compact_without_snapshots_fails(tmp_path):
     with pytest.raises(FileNotFoundError):
         compact("saatchi", tmp_path / "out")
+
+
+OLDER_THAN_ARTIST_PAGES_MS = 1700000000000  # 2023; builders.saatchi_artist is stamped 2025
+
+
+def artwork_config(data: Path, out: Path, **kw) -> RunConfig:
+    return RunConfig(
+        dataset=ARTWORKS, platform="saatchi", data_dir=data, out=out, crawl_date=detect_crawl_date(data), **kw
+    )
+
+
+def current_artworks(out: Path) -> list[tuple]:
+    return duckdb.sql(
+        f"SELECT platform_artwork_id, price, has_detail, mediums "
+        f"FROM read_parquet('{current_dir(out, 'saatchi')}/part-*.parquet') ORDER BY 1"
+    ).fetchall()
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+def test_artworks_detail_page_beats_newer_card_within_a_crawl(tmp_path, workers):
+    out = tmp_path / "out"
+    data = make_crawl(
+        tmp_path,
+        "2026-09-23",
+        {
+            "a.html": builders.saatchi_artist(artworks=[builders.saatchi_card(5), builders.saatchi_card(6)]),
+            "b.html": builders.saatchi_artwork(server_ms=OLDER_THAN_ARTIST_PAGES_MS),
+            "c.html": builders.saatchi_artist(2),
+        },
+    )
+    manifest = run_snapshot(artwork_config(data, out, workers=workers, chunk_size=1))
+    assert manifest | {"files_total": 3, "rows": 3, "skipped": 0, "no_id": 1, "errors": 0} == manifest
+
+    assert compact_dataset(ARTWORKS, "saatchi", out).current_rows == 2
+    assert current_artworks(out) == [
+        ("5", Decimal("1500.00"), True, ["Oil"]),
+        ("6", Decimal("1000.00"), False, ["Oil", "Acrylic"]),
+    ]
+    schema = pq.read_schema(current_dir(out, "saatchi") / "part-00000.parquet")
+    assert [(f.name, f.type) for f in schema] == [(f.name, f.type) for f in ARTWORK_SCHEMA]
+
+
+def test_artworks_newest_crawl_wins_across_crawls(tmp_path):
+    out = tmp_path / "out"
+    old = make_crawl(tmp_path, "2026-08-01", {"b.html": builders.saatchi_artwork()})
+    new = make_crawl(
+        tmp_path, "2026-09-23", {"a.html": builders.saatchi_artist(artworks=[builders.saatchi_card(5)])}
+    )
+    run_snapshot(artwork_config(old, out))
+    run_snapshot(artwork_config(new, out))
+
+    compact_dataset(ARTWORKS, "saatchi", out)
+    assert current_artworks(out) == [("5", Decimal("1000.00"), False, ["Oil", "Acrylic"])]
+
+
+def test_artwork_cli_run_and_compact(tmp_path):
+    data = make_crawl(tmp_path, "2026-09-23", {"b.html": builders.saatchi_artwork()})
+    out = tmp_path / "out"
+    run = ["run", "--platform", "saatchi", "--data", str(data), "--out", str(out), "--workers", "1"]
+    assert artwork_main(run) == 0
+    assert artwork_main(["compact", "--platform", "saatchi", "--out", str(out)]) == 0
+    assert pq.read_metadata(current_dir(out, "saatchi") / "part-00000.parquet").num_rows == 1
+
+
+def test_resume_of_another_dataset_is_rejected(tmp_path):
+    data = make_crawl(tmp_path, "2026-09-23", saatchi_pages())
+    run_snapshot(config(data, tmp_path / "out", chunk_size=2))
+    with pytest.raises(ValueError, match="cannot resume"):
+        run_snapshot(artwork_config(data, tmp_path / "out", chunk_size=2, resume=True))
 
 
 def test_crawl_log_and_date_detection(tmp_path):

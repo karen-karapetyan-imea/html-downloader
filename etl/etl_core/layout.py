@@ -13,7 +13,7 @@ from pathlib import Path
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from artists.schema import CRAWL_DATE_COLUMN, PLATFORM_COLUMN
+from etl_core.schema import CRAWL_DATE_COLUMN, PLATFORM_COLUMN
 
 MANIFEST_NAME = "_manifest.json"
 ERRORS_NAME = "_errors.parquet"

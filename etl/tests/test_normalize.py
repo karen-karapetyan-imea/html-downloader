@@ -1,18 +1,65 @@
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
-from artists.normalize import (
+from etl_core.normalize import (
     Links,
     classify_social_links,
     clean_text,
     country_name,
+    currency_code,
     normalize_gender,
     plain_text,
     sane_year,
+    str_list,
+    to_float,
+    to_price,
     to_url,
     username_to_url,
 )
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (None, None),
+        (True, None),
+        ("abc", None),
+        (float("nan"), None),
+        (-1, None),
+        (0, Decimal("0.00")),
+        ("1,234.565", Decimal("1234.57")),
+        (19.999, Decimal("20.00")),
+        (10**13, None),
+    ],
+)
+def test_to_price(value, expected):
+    assert to_price(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [(None, None), ("usd", "USD"), (" EUR ", "EUR"), ("$", None), ("EURO", None)],
+)
+def test_currency_code(value, expected):
+    assert currency_code(value) == expected
+
+
+def test_str_list_flattens_cleans_and_dedups():
+    assert str_list(None) is None
+    assert str_list("", []) is None
+    assert str_list(" Oil ", ["Oil", "Acrylic", None]) == ["Oil", "Acrylic"]
+
+
+def test_to_float():
+    assert (to_float("1,250.5"), to_float(3), to_float(False), to_float("x"), to_float(float("inf"))) == (
+        1250.5,
+        3.0,
+        None,
+        None,
+        None,
+    )
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@ import pytest
 
 from artists.mappers import get_mapper
 from artists.schema import ArtistRow
-from artists.sources import PLATFORMS, parse_html
+from etl_core.sources import PLATFORMS, parse_html
 from tests import builders
 
 CRAWLED_AT = datetime(2026, 9, 23, tzinfo=UTC)

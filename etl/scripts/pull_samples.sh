@@ -4,8 +4,8 @@
 #   scripts/pull_samples.sh <ssh-host> <remote-crawl-dir> <platform> [count]
 #   scripts/pull_samples.sh user@crawler /data/saatchi/2026-09-23 saatchi 50
 #
-# Crawl folders mix artist and artwork pages; tests only check the artist pages, so pull
-# enough files to get a few dozen artist pages.
+# Crawl folders mix artist and artwork pages; the artist tests only check artist pages, so pull
+# enough files to get a few dozen of them (artwork tests use both page types).
 set -euo pipefail
 
 if [[ $# -lt 3 ]]; then

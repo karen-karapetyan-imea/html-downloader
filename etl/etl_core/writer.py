@@ -11,8 +11,9 @@ from typing import Any
 
 import pyarrow as pa
 
-from artists.crawl import CrawlFile, file_mtime, parse_timestamp
-from artists.layout import (
+from etl_core.crawl import CrawlFile, file_mtime, parse_timestamp
+from etl_core.dataset import DatasetSpec
+from etl_core.layout import (
     CHUNKS_DIR,
     ERRORS_NAME,
     MANIFEST_NAME,
@@ -21,9 +22,8 @@ from artists.layout import (
     chunk_stats_path,
     part_name,
 )
-from artists.mappers import get_mapper
-from artists.schema import ArtistRow, to_table
-from artists.sources import parse_html
+from etl_core.schema import to_table
+from etl_core.sources import parse_html
 
 ERRORS_SCHEMA = pa.schema([pa.field("filename", pa.string()), pa.field("error", pa.string())])
 MAX_ERROR_LENGTH = 500
@@ -33,39 +33,43 @@ MAX_ERROR_LENGTH = 500
 class ChunkStats:
     index: int
     files: int = 0
-    artist_rows: int = 0
-    skipped: int = 0  # not an artist page
-    no_id: int = 0  # artist page without an artist id
+    rows: int = 0
+    skipped: int = 0  # page not relevant for the dataset
+    no_id: int = 0  # relevant page that produced no row (no usable id)
     errors: list[dict[str, str]] = field(default_factory=list)
 
 
-def process_file(platform: str, file: CrawlFile, stats: ChunkStats) -> ArtistRow | None:
-    mapper = get_mapper(platform)
+def process_file[RowT](
+    dataset: DatasetSpec[RowT], platform: str, file: CrawlFile, stats: ChunkStats
+) -> list[RowT]:
+    mapper = dataset.mapper(platform)
     try:
         with open(file.path, encoding="utf-8", errors="replace") as fh:
             parsed = parse_html(platform, fh.read(), file.url)
-        if not mapper.is_artist_page(parsed):
+        if not mapper.is_relevant(parsed):
             stats.skipped += 1
-            return None
+            return []
         crawled_at = parse_timestamp(parsed.get("crawled_at")) or file.crawled_at or file_mtime(file.path)
-        row = mapper.to_artist(parsed, file.filename, crawled_at)
+        rows = mapper.to_rows(parsed, file.filename, crawled_at)
     except Exception as exc:  # one bad page must not stop the run; it is recorded in _errors.parquet
         stats.errors.append(
             {"filename": file.filename, "error": f"{type(exc).__name__}: {exc}"[:MAX_ERROR_LENGTH]}
         )
-        return None
-    if row is None:
+        return []
+    if not rows:
         stats.no_id += 1
-    return row
+    return rows
 
 
-def process_chunk(platform: str, index: int, files: list[CrawlFile], snapshot: str) -> ChunkStats:
+def process_chunk(
+    dataset: DatasetSpec[Any], platform: str, index: int, files: list[CrawlFile], snapshot: str
+) -> ChunkStats:
     stats = ChunkStats(index=index, files=len(files))
-    rows = [row for f in files if (row := process_file(platform, f, stats)) is not None]
-    stats.artist_rows = len(rows)
+    rows = [row for f in files for row in process_file(dataset, platform, f, stats)]
+    stats.rows = len(rows)
     snapshot_path = Path(snapshot)
     if rows:
-        atomic_write_table(snapshot_path / part_name(index), to_table(rows))
+        atomic_write_table(snapshot_path / part_name(index), to_table(dataset.schema, rows))
     atomic_write_text(chunk_stats_path(snapshot_path, index), json.dumps(asdict(stats)))
     return stats
 
@@ -79,13 +83,13 @@ def completed_chunks(snapshot: Path) -> set[int]:
 
 def finalize_snapshot(snapshot: Path, run_info: dict[str, Any]) -> dict[str, Any]:
     """Aggregate chunk stats into _manifest.json and write all page errors to _errors.parquet."""
-    totals = {"chunks": 0, "files_total": 0, "artist_rows": 0, "skipped": 0, "no_id": 0, "errors": 0}
+    totals = {"chunks": 0, "files_total": 0, "rows": 0, "skipped": 0, "no_id": 0, "errors": 0}
     errors: list[dict[str, str]] = []
     for path in sorted((snapshot / CHUNKS_DIR).glob("part-*.json")):
         stats = json.loads(path.read_text(encoding="utf-8"))
         totals["chunks"] += 1
         totals["files_total"] += stats["files"]
-        totals["artist_rows"] += stats["artist_rows"]
+        totals["rows"] += stats["rows"]
         totals["skipped"] += stats["skipped"]
         totals["no_id"] += stats["no_id"]
         errors += stats["errors"]

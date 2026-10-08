@@ -2,17 +2,19 @@ from collections.abc import Mapping
 from datetime import datetime
 from typing import Any
 
-from artists.mappers._common import as_list, own_artist_row, platform_id
-from artists.normalize import (
+from artists.mappers._common import own_artist_row
+from artists.schema import ArtistRow
+from etl_core.normalize import (
+    as_list,
     classify_social_links,
     clean_text,
     country_name,
     normalize_gender,
     plain_text,
+    platform_id,
     sane_year,
     to_url,
 )
-from artists.schema import ArtistRow
 
 
 def is_artist_page(parsed: Mapping[str, Any]) -> bool:

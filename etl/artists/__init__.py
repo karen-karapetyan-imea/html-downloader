@@ -1,3 +1,1 @@
-"""Unified artist ETL: raw marketplace HTML -> Parquet snapshots + a compacted current dataset."""
-
-__version__ = "0.1.0"
+"""Artists dataset: raw marketplace HTML -> unified artist Parquet (built on etl_core)."""

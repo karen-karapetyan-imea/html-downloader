@@ -1,17 +1,9 @@
-"""The final artist record and its fixed Parquet schema.
+"""The final artist record and its fixed Parquet schema."""
 
-`platform_name` and `crawl_date` are Hive partition columns: they live in the directory
-names (`platform_name=<p>/crawl_date=<d>`), not inside the Parquet files.
-"""
-
-from collections.abc import Sequence
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from datetime import datetime
 
 import pyarrow as pa
-
-PLATFORM_COLUMN = "platform_name"
-CRAWL_DATE_COLUMN = "crawl_date"
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,12 +54,3 @@ ARTIST_SCHEMA = pa.schema(
         pa.field("crawled_at", pa.timestamp("us", tz="UTC")),
     ]
 )
-
-COLUMNS: tuple[str, ...] = tuple(ARTIST_SCHEMA.names)
-
-if tuple(f.name for f in fields(ArtistRow)) != COLUMNS:
-    raise RuntimeError("ArtistRow fields and ARTIST_SCHEMA columns are out of sync")
-
-
-def to_table(rows: Sequence[ArtistRow]) -> pa.Table:
-    return pa.table({name: [getattr(r, name) for r in rows] for name in COLUMNS}, schema=ARTIST_SCHEMA)
