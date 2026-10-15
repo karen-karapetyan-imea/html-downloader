@@ -86,7 +86,12 @@ def flush(conn, batch):
                 pos = e.pop("position")
                 exhibitions[e["exhibition_id"]] = e
                 children["artist_exhibitions"].append({"artist_id": aid, "exhibition_id": e["exhibition_id"], "position": pos})
-            artworks += [dict(w, artist_id=aid) for w in parsed["artworks"] if w["artwork_id"]]
+            # cards by other artists would break the artworks.artist_id foreign key
+            artworks += [
+                {k: v for k, v in dict(w, artist_id=aid).items() if k != "artist_name"}
+                for w in parsed["artworks"]
+                if w["artwork_id"] and w.get("artist_id") in (None, aid)
+            ]
         pages.append(page)
 
     # dedupe rows that share a primary key within the batch

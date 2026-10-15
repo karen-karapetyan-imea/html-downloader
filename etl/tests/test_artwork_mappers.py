@@ -244,6 +244,24 @@ def test_artsper_artist_page_cards():
     assert (sold.platform_artwork_id, sold.is_sold, sold.price, sold.currency) == ("10", True, None, None)
 
 
+def test_artsper_cards_by_other_artists_keep_their_own_artist():
+    rows = map_page(
+        "artsper",
+        builders.artsper_artist(
+            [
+                builders.artsper_card(9),
+                builders.artsper_card(10, gtm={"artist_id": 555, "brand": "Luca Rossi"}),
+                builders.artsper_card(11, gtm={"artist_id": 777, "brand": "Ana Lima"}),
+            ]
+        ),
+    )
+    assert [(r.platform_artwork_id, r.platform_artist_id, r.artist_name) for r in rows] == [
+        ("9", "555", "Luca Rossi"),
+        ("10", "555", "Luca Rossi"),
+        ("11", "777", "Ana Lima"),
+    ]
+
+
 def test_relevant_page_without_artworks_yields_no_rows():
     assert map_page("saatchi", builders.saatchi_artist()) == []
 

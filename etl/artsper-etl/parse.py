@@ -233,6 +233,7 @@ def parse_page(html, url=None):
         f = featured.get(awid)
         artworks.append({
             "artwork_id": awid, "position": pos,
+            "artist_id": g.get("artist_id"), "artist_name": g.get("brand"),
             "title": (card.select_one(".card-artwork__title") or {}).get("title") or txt(card.select_one(".card-artwork__title")) or g.get("name"),
             "url": abs_url(href),
             "category": g.get("artworkCategory") or (img.get("data-category") if img else None) or (cat_m.group(1) if cat_m else None),

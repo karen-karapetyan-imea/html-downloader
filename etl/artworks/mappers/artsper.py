@@ -9,7 +9,7 @@ from etl_core.normalize import clean_text, platform_id, str_list, to_bool, to_fl
 
 
 def is_relevant(parsed: Mapping[str, Any]) -> bool:
-    """Artsper is crawled through artist pages only; their artwork grid is the source."""
+    """Artsper is crawled through artist pages only; their artwork cards are the source."""
     return parsed.get("page_type") == "artist"
 
 
@@ -22,12 +22,13 @@ def _row(w: Record, stamp: dict[str, Any], *, artist: Record) -> ArtworkRow | No
     artwork_id = platform_id(w.get("artwork_id"))
     if artwork_id is None:
         return None
+    artist_id, artist_name = _card_artist(w, artist)
     price, currency = priced((w.get("price_usd"), "USD"), (w.get("price_eur"), "EUR"))
     return ArtworkRow(
         platform_artwork_id=artwork_id,
         title=clean_text(w.get("title")),
-        artist_name=clean_text(artist.get("name")),
-        platform_artist_id=platform_id(artist.get("artist_id")),
+        artist_name=artist_name,
+        platform_artist_id=artist_id,
         artwork_url=to_url(w.get("url")),
         category=clean_text(w.get("category")),
         width_cm=to_float(w.get("width_cm")),
@@ -47,3 +48,12 @@ def _row(w: Record, stamp: dict[str, Any], *, artist: Record) -> ArtworkRow | No
         has_detail=False,
         **stamp,
     )
+
+
+def _card_artist(card: Record, page_artist: Record) -> tuple[str | None, str | None]:
+    """Artist pages also show other artists' works; the card's own artist wins over the page's."""
+    page_id = platform_id(page_artist.get("artist_id"))
+    card_id = platform_id(card.get("artist_id")) or page_id
+    if card_id == page_id:
+        return page_id, clean_text(page_artist.get("name"))
+    return card_id, clean_text(card.get("artist_name"))

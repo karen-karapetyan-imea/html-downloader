@@ -1,7 +1,9 @@
 """Minimal synthetic HTML pages in the shape each platform parser expects, and crawl folders of them."""
 
+import base64
 import json
 from pathlib import Path
+from typing import Any
 
 
 def make_crawl(root: Path, crawl_date: str, pages: dict[str, str], log: list[dict] | None = None) -> Path:
@@ -379,10 +381,11 @@ def artmajeur_artwork() -> str:
     )
 
 
-def artsper_card(artwork_id: int, *, price: str = "$2,557") -> str:
-    """An artwork card from the artwork grid of an Artsper artist page."""
+def artsper_card(artwork_id: int, *, price: str = "$2,557", gtm: dict[str, Any] | None = None) -> str:
+    """An artwork card from an Artsper artist page; `gtm` is its base64 analytics payload."""
+    gtm_attr = f' data-gtm-analytics="{base64.b64encode(json.dumps(gtm).encode()).decode()}"' if gtm else ""
     return (
-        f'<article class="card-artwork" data-id="{artwork_id}" '
+        f'<article class="card-artwork" data-id="{artwork_id}"{gtm_attr} '
         f'data-url="/us/contemporary-artworks/painting/{artwork_id}/red">'
         f'<img class="card-artwork__image" data-src="https://media.artsper.com/{artwork_id}.jpg">'
         '<p class="card-artwork__title" title="Red">Red</p>'
