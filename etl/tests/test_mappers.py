@@ -111,9 +111,49 @@ def test_artsper():
     )
 
 
+def test_fineartamerica():
+    assert map_page("fineartamerica", builders.fineartamerica_artist()) == ArtistRow(
+        platform_artist_id="ana-lima",
+        full_name="Ana Lima",
+        profile_url="https://fineartamerica.com/profiles/ana-lima",
+        avatar="https://images.fineartamerica.com/ana.jpg",
+        city="Monza",
+        state="Lombardy",
+        country="Italy",
+        source_file="page.html",
+        crawled_at=CRAWLED_AT,
+    )
+
+
+def test_fineartamerica_placeholder_avatar_is_dropped():
+    html = builders.fineartamerica_artist(
+        image="https://fineartamerica.com/assets/images/headshotPlaceholder001.jpg"
+    )
+    row = map_page("fineartamerica", html)
+    assert row is not None and row.avatar is None
+
+
+def test_mutualart():
+    assert map_page("mutualart", builders.mutualart_artist()) == ArtistRow(
+        platform_artist_id="30CB41D40A6735E2",
+        full_name="Zadie Xa",
+        profile_url="https://www.mutualart.com/Artist/Zadie-Xa/30CB41D40A6735E2",
+        avatar="https://media.mutualart.com/artist-image/30CB41D40A6735E2_273.webp",
+        birth_year=1983,
+        biography="Zadie Xa is a Korean-Canadian visual artist.",
+        nationality="Canadian",
+        source_file="page.html",
+        crawled_at=CRAWLED_AT,
+    )
+
+
 @pytest.mark.parametrize(
     ("platform", "html"),
-    [("saatchi", builders.saatchi_artwork()), ("artsper", builders.artsper_listing())],
+    [
+        ("saatchi", builders.saatchi_artwork()),
+        ("artsper", builders.artsper_listing()),
+        ("fineartamerica", builders.fineartamerica_artwork()),
+    ],
 )
 def test_non_artist_pages_are_skipped(platform, html):
     assert not get_mapper(platform).is_artist_page(parse_html(platform, html))

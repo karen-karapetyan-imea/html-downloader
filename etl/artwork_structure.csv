@@ -8,3 +8,7 @@ artmajeur,,,,,,,,,,,,,,,,,,,,,
 Artwork Name,Artist,Artwork URL,Year,Category,Medium,Technique,Support,Style,Theme,dimensions,height_in,width_in,depth_in,height_cm,depth_cm,is_ai_generated,has_certificate,is_signed,price,currency,description
 artfinder,,,,,,,,,,,,,,,,,,,,,
 Artwork Name,Artist,Artwork URL,Category,Style,Subject,Description,Year,substrate,materials,signature,dimensions_cm,dimensions_in,width_cm,height_cm,depth_cm,price,currency,,,,
+fineartamerica,,,,,,,,,,,,,,,,,,,,,
+Artwork Name,Artist,Artwork URL,Category,Medium,Description,Price,Currency,is_available_for_sale,Image URL,,,,,,,,,,,,
+mutualart,,,,,,,,,,,,,,,,,,,,,
+Artwork Name,Artist,Artwork URL,Year,Medium,Support,Description,is_available_for_sale,Image URL,,,,,,,,,,,,,

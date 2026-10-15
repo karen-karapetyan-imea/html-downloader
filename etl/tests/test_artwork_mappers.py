@@ -262,13 +262,102 @@ def test_artsper_cards_by_other_artists_keep_their_own_artist():
     ]
 
 
+def test_fineartamerica_artwork_page():
+    assert map_page("fineartamerica", builders.fineartamerica_artwork()) == [
+        ArtworkRow(
+            platform_artwork_id="blue-sea-ana-lima",
+            title="Blue Sea",
+            artist_name="Ana Lima",
+            platform_artist_id="ana-lima",
+            artwork_url="https://fineartamerica.com/featured/blue-sea-ana-lima.html",
+            category="Digital Art",
+            price=Decimal("45.88"),
+            currency="USD",
+            description="Calm waves.",
+            mediums=["Digital Art"],
+            is_available_for_sale=True,
+            image_url="https://images.fineartamerica.com/blue-sea.jpg",
+            has_detail=True,
+            source_file="page.html",
+            crawled_at=CRAWLED_AT,
+        )
+    ]
+
+
+def test_fineartamerica_category_falls_back_to_the_artwork_type():
+    [row] = map_page("fineartamerica", builders.fineartamerica_artwork(ld_type="Painting", art_medium=None))
+    assert (row.category, row.mediums) == ("Painting", None)
+
+
+def test_mutualart_artist_page_lists():
+    rows = map_page(
+        "mutualart",
+        builders.mutualart_artist(
+            for_sale=[builders.mutualart_card("0A3D111E619DAA5E", "Hope,  2022") | {"dateCreated": "2022"}],
+            auction_results=[builders.mutualart_card("4AA4B8488433F233", "Orca")],
+        ),
+    )
+    assert rows == [
+        ArtworkRow(
+            platform_artwork_id="0A3D111E619DAA5E",
+            title="Hope",
+            artist_name="Zadie Xa",
+            platform_artist_id="30CB41D40A6735E2",
+            artwork_url="https://www.mutualart.com/Artwork/Hope/0A3D111E619DAA5E",
+            year=2022,
+            description="oil on canvas. Signed",
+            mediums=["oil on canvas"],
+            is_available_for_sale=True,
+            image_url="https://media.mutualart.com/0A3D111E619DAA5E.jpg",
+            has_detail=False,
+            source_file="page.html",
+            crawled_at=CRAWLED_AT,
+        ),
+        ArtworkRow(
+            platform_artwork_id="4AA4B8488433F233",
+            title="Orca",
+            artist_name="Zadie Xa",
+            platform_artist_id="30CB41D40A6735E2",
+            artwork_url="https://www.mutualart.com/Artwork/Orca/4AA4B8488433F233",
+            description="oil on canvas. Signed",
+            mediums=["oil on canvas"],
+            image_url="https://media.mutualart.com/4AA4B8488433F233.jpg",
+            has_detail=False,
+            source_file="page.html",
+            crawled_at=CRAWLED_AT,
+        ),
+    ]
+
+
+def test_mutualart_cards_keep_their_own_artist():
+    other = "https://www.mutualart.com/Artist/Ana-Lima/AAAABBBBCCCC"
+    rows = map_page(
+        "mutualart",
+        builders.mutualart_artist(
+            for_sale=[
+                builders.mutualart_card("0A3D111E619DAA5E", "Hope", artist_ref=None),
+                builders.mutualart_card("4AA4B8488433F233", "Orca", artist_ref=other),
+            ]
+        ),
+    )
+    assert [(r.platform_artwork_id, r.platform_artist_id, r.artist_name) for r in rows] == [
+        ("0A3D111E619DAA5E", "30CB41D40A6735E2", "Zadie Xa"),
+        ("4AA4B8488433F233", "AAAABBBBCCCC", None),
+    ]
+
+
 def test_relevant_page_without_artworks_yields_no_rows():
     assert map_page("saatchi", builders.saatchi_artist()) == []
 
 
 @pytest.mark.parametrize(
     ("platform", "html"),
-    [("artsper", builders.artsper_listing()), ("saatchi", "<html><body></body></html>")],
+    [
+        ("artsper", builders.artsper_listing()),
+        ("saatchi", "<html><body></body></html>"),
+        ("fineartamerica", builders.fineartamerica_artist()),
+        ("mutualart", "<html><body><h1>Exhibition</h1></body></html>"),
+    ],
 )
 def test_pages_without_artworks_are_skipped(platform, html):
     assert not ARTWORKS.mapper(platform).is_relevant(parse_html(platform, html))

@@ -422,3 +422,119 @@ def artsper_artist(cards: list[str] | None = None) -> str:
 
 def artsper_listing() -> str:
     return '<html><body><div id="catalog-artists"></div></body></html>'
+
+
+def _jsonld_page(*objects: dict[str, Any], head: str = "", body: str = "") -> str:
+    scripts = "".join(f'<script type="application/ld+json">{json.dumps(o)}</script>' for o in objects)
+    return f"<html><head>{scripts}{head}</head><body>{body}</body></html>"
+
+
+FAA = "https://fineartamerica.com"
+
+
+def fineartamerica_artwork(*, ld_type: str = "VisualArtwork", art_medium: str | None = "Digital Art") -> str:
+    art: dict[str, Any] = {
+        "@context": "https://schema.org/",
+        "@type": ld_type,
+        "@id": f"{FAA}/featured/blue-sea-ana-lima.html",
+        "url": f"{FAA}/featured/blue-sea-ana-lima.html",
+        "name": "Blue Sea",
+        "description": "Calm <b>waves</b>.",
+        "image": "https://images.fineartamerica.com/blue-sea.jpg",
+        "category": "Wall Art > Art Prints > sea",
+        "creator": {"@type": "Person", "name": "Ana Lima", "url": f"{FAA}/profiles/Ana-Lima"},
+        "offers": {
+            "@type": "AggregateOffer",
+            "lowPrice": 10.4,
+            "highPrice": 124,
+            "priceCurrency": "USD",
+            "offers": [{"@type": "Offer", "price": 80, "availability": "InStock"}],
+        },
+    }
+    if art_medium:
+        art["artMedium"] = art_medium
+    price = (
+        '<meta property="og:price:amount" content="45.88"><meta property="og:price:currency" content="USD">'
+    )
+    return _jsonld_page({"@type": "BreadcrumbList", "itemListElement": []}, art, head=price)
+
+
+def fineartamerica_artist(*, image: str = "https://images.fineartamerica.com/ana.jpg") -> str:
+    person = {
+        "@context": "http://schema.org",
+        "@type": "Person",
+        "name": "Ana Lima",
+        "image": image,
+        "url": f"{FAA}/profiles/ana-lima",
+        "homeLocation": {
+            "@type": "Place",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Monza",
+                "addressRegion": "Lombardy",
+                "addressCountry": "IT",
+            },
+        },
+    }
+    return _jsonld_page(person)
+
+
+MUTUALART = "https://www.mutualart.com"
+MUTUALART_ARTIST = f"{MUTUALART}/Artist/Zadie-Xa/30CB41D40A6735E2"
+
+
+def mutualart_card(hex_id: str, name: str, *, artist_ref: str | None = MUTUALART_ARTIST) -> dict[str, Any]:
+    item: dict[str, Any] = {
+        "@type": "VisualArtwork",
+        "name": name,
+        "url": f"{MUTUALART}/Artwork/{name.split(',')[0]}/{hex_id}",
+        "image": f"https://media.mutualart.com/{hex_id}.jpg",
+        "artMedium": "oil on canvas",
+        "description": "oil on canvas. Signed",
+    }
+    if artist_ref:
+        item["artist"] = {"@type": "Person", "@id": f"{artist_ref}#artist"}
+    return item
+
+
+def mutualart_artist(
+    for_sale: list[dict[str, Any]] | None = None, auction_results: list[dict[str, Any]] | None = None
+) -> str:
+    def item_list(fragment: str, items: list[dict[str, Any]]) -> dict[str, Any]:
+        elements = [{"@type": "ListItem", "position": i, "item": it} for i, it in enumerate(items, 1)]
+        return {"@type": "ItemList", "@id": f"{MUTUALART_ARTIST}#{fragment}", "itemListElement": elements}
+
+    graph = [
+        {
+            "@type": "ProfilePage",
+            "@id": f"{MUTUALART_ARTIST}#webpage",
+            "url": MUTUALART_ARTIST,
+            "primaryImageOfPage": {
+                "@type": "ImageObject",
+                "contentUrl": "https://media.mutualart.com/artist-image/30CB41D40A6735E2_273.webp",
+            },
+        },
+        {
+            "@type": "Person",
+            "@id": f"{MUTUALART_ARTIST}#artist",
+            "name": "Zadie Xa",
+            "givenName": "Zadie",
+            "familyName": "Xa",
+            "birthDate": "1983",
+            "nationality": "Canadian",
+            "description": "Zadie Xa is a Korean-Canadian visual artist.",
+        },
+        item_list("artworks", for_sale or []),
+        item_list("auction-results", auction_results or []),
+        item_list(
+            "exhibitions",
+            [
+                {
+                    "@type": ["ExhibitionEvent", "Event"],
+                    "name": "Turner Prize",
+                    "url": f"{MUTUALART}/Exhibition/x/AB",
+                }
+            ],
+        ),
+    ]
+    return _jsonld_page({"@context": "https://schema.org", "@graph": graph})

@@ -26,6 +26,7 @@ from typing import Any
 from bs4 import BeautifulSoup, Tag
 
 from etl_core.crawl import LogEntry, html_root, iter_html_files, load_crawl_log
+from etl_core.jsonld import flatten, ld_types
 
 type Pattern = tuple[str, re.Pattern[str]]
 
@@ -169,20 +170,8 @@ def load_json(text: str) -> Any | None:
         return None
 
 
-def jsonld_objects(data: Any) -> Iterator[dict[str, Any]]:
-    if isinstance(data, list):
-        for item in data:
-            yield from jsonld_objects(item)
-    elif isinstance(data, dict):
-        if "@graph" in data:
-            yield from jsonld_objects(data["@graph"])
-        else:
-            yield data
-
-
 def ld_type(obj: dict[str, Any]) -> str:
-    kind = obj.get("@type")
-    return "/".join(map(str, kind)) if isinstance(kind, list) else str(kind or "untyped")
+    return "/".join(sorted(ld_types(obj))) or "untyped"
 
 
 def script_name(script: Tag) -> str:
@@ -222,7 +211,7 @@ def page_features(soup: BeautifulSoup, url: str | None) -> Features:
         "h1": sample_value(h1.get_text(" ", strip=True) if h1 else ""),
     }
     for script in soup.find_all("script", type="application/ld+json"):
-        for obj in jsonld_objects(load_json(script.string or script.get_text() or "")):
+        for obj in flatten(load_json(script.string or script.get_text() or "")):
             kind = ld_type(obj)
             features["json-ld types"][kind] = kind
             features[f"json-ld {kind}"].update(blob_features(obj))

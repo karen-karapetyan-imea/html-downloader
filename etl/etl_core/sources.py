@@ -1,7 +1,7 @@
 """Registry of the per-platform parsers that already live next to this package.
 
-The team parsers are loaded straight from their files: `artsper-etl` is not a valid
-module name and all five files are called `parse.py`, so each one gets a unique name.
+The parsers are loaded straight from their files: `artsper-etl` is not a valid
+module name and every file is called `parse.py`, so each one gets a unique name.
 """
 
 import hashlib
@@ -30,6 +30,8 @@ SOURCES: dict[str, Source] = {
         Source("artmajeur", ETL_ROOT / "artmajeur_etl" / "parse.py"),
         Source("artsper", ETL_ROOT / "artsper-etl" / "parse.py", accepts_url=True),
         Source("artsy", ETL_ROOT / "artsy_etl" / "parse.py"),
+        Source("fineartamerica", ETL_ROOT / "fineartamerica_etl" / "parse.py"),
+        Source("mutualart", ETL_ROOT / "mutualart_etl" / "parse.py"),
         Source("saatchi", ETL_ROOT / "saatchi_etl" / "parse.py"),
     )
 }
