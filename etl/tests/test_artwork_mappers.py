@@ -346,6 +346,62 @@ def test_mutualart_cards_keep_their_own_artist():
     ]
 
 
+def test_ugallery_artwork_page():
+    assert map_page("ugallery", builders.ugallery_artwork()) == [
+        ArtworkRow(
+            platform_artwork_id="acrylic-painting-fusion-pattern",
+            title="Fusion Pattern",
+            artist_name="Terri Bell",
+            platform_artist_id="terri-bell",
+            artwork_url="https://www.ugallery.com/products/acrylic-painting-fusion-pattern",
+            category="acrylic painting",
+            width_in=9.0,
+            height_in=12.0,
+            price=Decimal("350.00"),
+            currency="USD",
+            year=2026,
+            description="A tangle of colors brings together organic shapes.",
+            mediums=["acrylic painting"],
+            is_available_for_sale=True,
+            is_signed=True,
+            image_url="https://cdn.shopify.com/fusion-pattern.jpg",
+            has_detail=True,
+            source_file="page.html",
+            crawled_at=CRAWLED_AT,
+        )
+    ]
+
+
+def test_phaidon_art_edition_page():
+    assert map_page("phaidon", builders.phaidon_art_edition()) == [
+        ArtworkRow(
+            platform_artwork_id="desert-dreams-edition",
+            title="Desert Dreams",
+            artist_name="Cameron Jamie",
+            platform_artist_id="cameron-jamie",
+            artwork_url="https://www.phaidon.com/en-gb/products/desert-dreams-edition",
+            category="Sculpture",
+            width_in=12.0,
+            height_in=16.0,
+            price=Decimal("1200.00"),
+            currency="GBP",
+            year=2013,
+            description="A limited edition sculpture.",
+            mediums=["Sculpture"],
+            is_available_for_sale=True,
+            is_signed=True,
+            image_url="https://www.phaidon.com/cdn/shop/files/desert-dreams.jpg",
+            has_detail=True,
+            source_file="page.html",
+            crawled_at=CRAWLED_AT,
+        )
+    ]
+
+
+def test_phaidon_book_page_is_skipped():
+    assert not ARTWORKS.mapper("phaidon").is_relevant(parse_html("phaidon", builders.phaidon_book()))
+
+
 def test_relevant_page_without_artworks_yields_no_rows():
     assert map_page("saatchi", builders.saatchi_artist()) == []
 
@@ -357,6 +413,8 @@ def test_relevant_page_without_artworks_yields_no_rows():
         ("saatchi", "<html><body></body></html>"),
         ("fineartamerica", builders.fineartamerica_artist()),
         ("mutualart", "<html><body><h1>Exhibition</h1></body></html>"),
+        ("phaidon", builders.phaidon_book()),
+        ("ugallery", builders.ugallery_artist()),
     ],
 )
 def test_pages_without_artworks_are_skipped(platform, html):

@@ -32,7 +32,9 @@ SOURCES: dict[str, Source] = {
         Source("artsy", ETL_ROOT / "artsy_etl" / "parse.py"),
         Source("fineartamerica", ETL_ROOT / "fineartamerica_etl" / "parse.py"),
         Source("mutualart", ETL_ROOT / "mutualart_etl" / "parse.py"),
+        Source("phaidon", ETL_ROOT / "phaidon_etl" / "parse.py"),
         Source("saatchi", ETL_ROOT / "saatchi_etl" / "parse.py"),
+        Source("ugallery", ETL_ROOT / "ugallery_etl" / "parse.py"),
     )
 }
 PLATFORMS: tuple[str, ...] = tuple(sorted(SOURCES))

@@ -10,7 +10,17 @@ from datetime import datetime
 from types import ModuleType
 from typing import Any, Protocol, cast
 
-from artists.mappers import artfinder, artmajeur, artsper, artsy, fineartamerica, mutualart, saatchi
+from artists.mappers import (
+    artfinder,
+    artmajeur,
+    artsper,
+    artsy,
+    fineartamerica,
+    mutualart,
+    phaidon,
+    saatchi,
+    ugallery,
+)
 from artists.schema import ArtistRow
 
 
@@ -29,7 +39,9 @@ _MODULES: dict[str, ModuleType] = {
     "artsy": artsy,
     "fineartamerica": fineartamerica,
     "mutualart": mutualart,
+    "phaidon": phaidon,
     "saatchi": saatchi,
+    "ugallery": ugallery,
 }
 
 

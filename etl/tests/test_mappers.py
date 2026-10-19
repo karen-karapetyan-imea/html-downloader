@@ -147,12 +147,29 @@ def test_mutualart():
     )
 
 
+def test_ugallery():
+    assert map_page("ugallery", builders.ugallery_artist()) == ArtistRow(
+        platform_artist_id="terri-bell",
+        full_name="Terri Bell",
+        profile_url="https://www.ugallery.com/pages/terri-bell",
+        avatar="https://cdn.shopify.com/terri-bell.jpg",
+        biography="Artist Terri Bell creates geometric abstracts with harmonious colors.",
+        city="Denver",
+        state="Colorado",
+        country="United States",
+        source_file="page.html",
+        crawled_at=CRAWLED_AT,
+    )
+
+
 @pytest.mark.parametrize(
     ("platform", "html"),
     [
         ("saatchi", builders.saatchi_artwork()),
         ("artsper", builders.artsper_listing()),
         ("fineartamerica", builders.fineartamerica_artwork()),
+        ("ugallery", builders.ugallery_artwork()),
+        ("phaidon", builders.phaidon_art_edition()),
     ],
 )
 def test_non_artist_pages_are_skipped(platform, html):

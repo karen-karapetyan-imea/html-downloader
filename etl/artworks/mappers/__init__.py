@@ -9,11 +9,31 @@ Mappers only fill a column when the parser exposes that value; they never guess.
 
 from typing import cast
 
-from artworks.mappers import artfinder, artmajeur, artsper, artsy, fineartamerica, mutualart, saatchi
+from artworks.mappers import (
+    artfinder,
+    artmajeur,
+    artsper,
+    artsy,
+    fineartamerica,
+    mutualart,
+    phaidon,
+    saatchi,
+    ugallery,
+)
 from artworks.schema import ArtworkRow
 from etl_core.dataset import Mapper
 
 MAPPERS: dict[str, Mapper[ArtworkRow]] = {
     module.__name__.rsplit(".", 1)[-1]: cast(Mapper[ArtworkRow], module)
-    for module in (artfinder, artmajeur, artsper, artsy, fineartamerica, mutualart, saatchi)
+    for module in (
+        artfinder,
+        artmajeur,
+        artsper,
+        artsy,
+        fineartamerica,
+        mutualart,
+        phaidon,
+        saatchi,
+        ugallery,
+    )
 }

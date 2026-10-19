@@ -538,3 +538,136 @@ def mutualart_artist(
         ),
     ]
     return _jsonld_page({"@context": "https://schema.org", "@graph": graph})
+
+
+UGALLERY = "https://www.ugallery.com"
+
+
+def ugallery_artwork() -> str:
+    product = {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": "Fusion Pattern",
+        "description": "A tangle of colors brings together organic shapes.",
+        "url": f"{UGALLERY}/products/acrylic-painting-fusion-pattern",
+        "image": "https://cdn.shopify.com/fusion-pattern.jpg",
+        "creator": {
+            "@type": "Person",
+            "name": "Terri Bell",
+            "url": f"{UGALLERY}/pages/terri-bell",
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "350.00",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+        },
+    }
+    head = (
+        f'<meta property="og:url" content="{UGALLERY}/products/acrylic-painting-fusion-pattern">'
+        '<meta property="og:price:amount" content="350">'
+        '<meta property="og:price:currency" content="USD">'
+    )
+    body = (
+        '<h1>Fusion Pattern</h1>'
+        f'<a href="{UGALLERY}/pages/terri-bell">Terri Bell</a>'
+        "<p>acrylic painting on paper</p>"
+        "<p>Signed on Front 2026 One-of-a-kind</p>"
+        '<p>12" h x 9" w 5 oz.</p>'
+    )
+    return _jsonld_page(product, head=head, body=body)
+
+
+def ugallery_artist() -> str:
+    person = {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Terri Bell",
+        "url": f"{UGALLERY}/pages/terri-bell",
+        "description": "Artist Terri Bell creates geometric abstracts with harmonious colors.",
+        "image": "https://cdn.shopify.com/terri-bell.jpg",
+        "homeLocation": {
+            "@type": "Place",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Denver",
+                "addressRegion": "Colorado",
+                "addressCountry": "US",
+            },
+        },
+    }
+    head = f'<meta property="og:url" content="{UGALLERY}/pages/terri-bell">'
+    body = "<h1>Terri Bell</h1><p>Denver, Colorado</p>"
+    return _jsonld_page(person, head=head, body=body)
+
+
+PHAIDON = "https://www.phaidon.com"
+
+
+def phaidon_art_edition() -> str:
+    product = {
+        "@context": "https://schema.org/",
+        "@type": "ProductGroup",
+        "name": "Desert Dreams",
+        "description": "A limited edition sculpture.",
+        "url": f"{PHAIDON}/en-gb/products/desert-dreams-edition",
+        "image": ["//www.phaidon.com/cdn/shop/files/desert-dreams.jpg"],
+        "hasVariant": [
+            {
+                "@type": "Product",
+                "name": "Desert Dreams",
+                "image": "//www.phaidon.com/cdn/shop/files/desert-dreams.jpg",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "1200.00",
+                    "priceCurrency": "GBP",
+                    "availability": "https://schema.org/InStock",
+                },
+            }
+        ],
+    }
+    head = (
+        f'<meta property="og:url" content="{PHAIDON}/en-gb/products/desert-dreams-edition">'
+        '<meta property="og:price:amount" content="1200">'
+        '<meta property="og:price:currency" content="GBP">'
+    )
+    body = (
+        '<h1 class="heading-h1">Desert Dreams</h1>'
+        '<div class="artwork">Desert Dreams, 2013</div>'
+        '<div class="product-author"><span class="author">Cameron Jamie</span></div>'
+        f'<a href="{PHAIDON}/en-gb/collections/cameron-jamie">Shop All by Cameron Jamie</a>'
+        '<div class="art-product-details">'
+        '<div class="art-product-details-inner">'
+        "Medium: Sculpture Dimensions: 16.0 x 12.0 inches Edition size: 10 Authentication: Signed"
+        "</div></div>"
+    )
+    return _jsonld_page(product, head=head, body=body)
+
+
+def phaidon_book() -> str:
+    """Book product page: no art-product-details block → parser must skip."""
+    product = {
+        "@context": "https://schema.org/",
+        "@type": "ProductGroup",
+        "name": "Damn Good Advice",
+        "description": "A book.",
+        "url": f"{PHAIDON}/products/damn-good-advice",
+        "image": ["//www.phaidon.com/cdn/shop/files/book.jpg"],
+        "hasVariant": [
+            {
+                "@type": "Product",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "12.95",
+                    "priceCurrency": "GBP",
+                    "availability": "https://schema.org/InStock",
+                },
+            }
+        ],
+    }
+    head = f'<meta property="og:url" content="{PHAIDON}/products/damn-good-advice">'
+    body = (
+        "<h1>Damn Good Advice</h1>"
+        '<div class="product-author"><span class="author">George Lois</span></div>'
+    )
+    return _jsonld_page(product, head=head, body=body)
