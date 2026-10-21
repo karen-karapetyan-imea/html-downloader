@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from html_downloader.discover.sitemap import (
     DEFAULT_ARTFINDER_INDEX,
     DEFAULT_ARTMAJEUR_INDEX,
@@ -210,6 +212,33 @@ def test_diff_sitemap_new_and_updated() -> None:
     assert result.stats.new_entities == 1
     assert result.stats.updated_entities == 1
     assert len(result.to_crawl) == 2
+
+
+def test_artsy_sitemap_rotates_proxy_after_block(monkeypatch: pytest.MonkeyPatch) -> None:
+    from html_downloader.discover.sitemap import artsy_rotating_fetch
+
+    seen: list[dict[str, str] | None] = []
+
+    def fake_fetch(
+        url: str,
+        *,
+        session: object = None,
+        proxy: dict[str, str] | None = None,
+        timeout: float = 60.0,
+    ) -> bytes:
+        seen.append(proxy)
+        if len(seen) == 1:
+            raise RuntimeError(f"sitemap fetch status=403 url={url}")
+        return b"<urlset></urlset>"
+
+    monkeypatch.setattr("html_downloader.discover.sitemap.fetch_sitemap_bytes_stealth", fake_fetch)
+    proxies = [
+        {"http": "http://proxy-a", "https": "http://proxy-a"},
+        {"http": "http://proxy-b", "https": "http://proxy-b"},
+    ]
+    body = artsy_rotating_fetch(proxies)("https://www.artsy.net/sitemap-artists.xml")
+    assert body == b"<urlset></urlset>"
+    assert seen == proxies
 
 
 def test_fetch_artsy_sitemap_entries_nested_and_filters() -> None:

@@ -59,11 +59,14 @@ def run_discover(
 ) -> DiscoverResult:
     spec = get_marketplace(marketplace)
     proxy = _require_proxy_if_needed(spec, proxy_file)
+    proxy_list = load_proxy_list(proxy_file) if spec.name == "artsy" else None
     workers = concurrency if concurrency is not None else spec.default_concurrency
 
     LOGGER.info("discover marketplace=%s concurrency=%s", spec.name, workers)
+    if proxy_list:
+        LOGGER.info("artsy sitemap proxy pool size=%s", len(proxy_list))
     try:
-        entries = fetch_entries(spec, concurrency=workers, proxy=proxy)
+        entries = fetch_entries(spec, concurrency=workers, proxy=proxy, proxies=proxy_list)
         LOGGER.info("fetched entity entries=%s", len(entries))
     except Exception as exc:
         if spec.name == "saatchi" and expand_search:

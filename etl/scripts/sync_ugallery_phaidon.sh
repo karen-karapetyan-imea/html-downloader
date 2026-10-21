@@ -1,38 +1,52 @@
 #!/usr/bin/env bash
-# Deploy this ETL tree to scraper-01 and sync ugallery + phaidon artworks/artists.
-# Requires Twingate (`tg-arty`) and SSH key.
+# Sync ugallery + phaidon artworks/artists.
 #
-#   scripts/sync_ugallery_phaidon.sh
-#   scripts/sync_ugallery_phaidon.sh developer@192.168.244.11
+# On scraper-01 (after git pull), run in place:
+#   ./scripts/sync_ugallery_phaidon.sh
+#
+# From a laptop, deploy then sync remotely:
+#   ./scripts/sync_ugallery_phaidon.sh --deploy developer@192.168.244.11
 set -euo pipefail
 
-HOST="${1:-developer@192.168.244.11}"
-SSH=(ssh -i "${HOME}/.ssh/developer_rsa" -o ConnectTimeout=20 "$HOST")
-RSYNC=(rsync -az --delete --exclude '.venv' --exclude 'output' --exclude '__pycache__' --exclude '.ruff_cache' --exclude 'samples')
-LOCAL_ETL="$(cd "$(dirname "$0")/.." && pwd)"
-REMOTE_ETL="${REMOTE_ETL:-/home/developer/html-downloader/etl}"
-DATA="${DATA:-/home/developer/html-downloader/html-downloader/data}"
+ETL="$(cd "$(dirname "$0")/.." && pwd)"
+DATA="${ETL_DATA_ROOT:-}"
+HOST=""
 
-echo "Deploying $LOCAL_ETL -> $HOST:$REMOTE_ETL"
-"${RSYNC[@]}" -e "ssh -i ${HOME}/.ssh/developer_rsa -o ConnectTimeout=20" \
-  "$LOCAL_ETL/" "$HOST:$REMOTE_ETL/"
+if [[ "${1:-}" == "--deploy" ]]; then
+  HOST="${2:-developer@192.168.244.11}"
+  shift 2 || shift 1 || true
+elif [[ "${1:-}" == -* ]]; then
+  echo "usage: $0 [--deploy [user@host]]" >&2
+  exit 2
+elif [[ -n "${1:-}" ]]; then
+  # Back-compat: bare host still means deploy+remote sync
+  HOST="$1"
+fi
 
-echo "Syncing on $HOST..."
-"${SSH[@]}" bash -s -- "$REMOTE_ETL" "$DATA" <<'REMOTE'
-set -euo pipefail
-ETL=$1
-DATA=$2
-cd "$ETL"
-echo "platforms registered:"
-uv run python -c "from etl_core.sources import PLATFORMS; print(', '.join(PLATFORMS))"
-echo "=== artworks sync ugallery + phaidon ==="
-uv run python -m artworks sync --data-root "$DATA" --platform ugallery --platform phaidon
-echo "=== artists sync ugallery + phaidon ==="
-uv run python -m artists sync --data-root "$DATA" --platform ugallery --platform phaidon
-echo "=== error files (non-empty) ==="
-uv run python <<'PY'
+if [[ -z "$DATA" ]]; then
+  if [[ -d "$ETL/../html-downloader/data" ]]; then
+    DATA="$(cd "$ETL/../html-downloader/data" && pwd)"
+  else
+    DATA="/home/developer/html-downloader/html-downloader/data"
+  fi
+fi
+
+run_sync() {
+  local etl=$1 data=$2
+  cd "$etl"
+  echo "etl=$etl"
+  echo "data=$data"
+  echo "platforms registered:"
+  uv run python -c "from etl_core.sources import PLATFORMS; print(', '.join(PLATFORMS))"
+  echo "=== artworks sync ugallery + phaidon ==="
+  uv run python -m artworks sync --data-root "$data" --platform ugallery --platform phaidon
+  echo "=== artists sync ugallery + phaidon ==="
+  uv run python -m artists sync --data-root "$data" --platform ugallery --platform phaidon
+  echo "=== current row counts / non-empty errors ==="
+  uv run python <<'PY'
 from pathlib import Path
 import pyarrow.parquet as pq
+
 for p in sorted(Path("output").rglob("_errors.parquet")):
     t = pq.read_table(p)
     if t.num_rows:
@@ -47,4 +61,19 @@ for platform in ("ugallery", "phaidon"):
         t = pq.read_table(cur[0])
         print(f"{dataset}/{platform}: {t.num_rows} rows")
 PY
-REMOTE
+}
+
+if [[ -n "$HOST" ]]; then
+  SSH=(ssh -i "${HOME}/.ssh/developer_rsa" -o ConnectTimeout=20 "$HOST")
+  REMOTE_ETL="${REMOTE_ETL:-/home/developer/html-downloader/etl}"
+  REMOTE_DATA="${DATA}"
+  echo "Deploying $ETL -> $HOST:$REMOTE_ETL"
+  rsync -az --delete \
+    --exclude '.venv' --exclude 'output' --exclude '__pycache__' --exclude '.ruff_cache' --exclude 'samples' \
+    -e "ssh -i ${HOME}/.ssh/developer_rsa -o ConnectTimeout=20" \
+    "$ETL/" "$HOST:$REMOTE_ETL/"
+  echo "Syncing on $HOST..."
+  "${SSH[@]}" "ETL_DATA_ROOT=$REMOTE_DATA $REMOTE_ETL/scripts/sync_ugallery_phaidon.sh"
+else
+  run_sync "$ETL" "$DATA"
+fi

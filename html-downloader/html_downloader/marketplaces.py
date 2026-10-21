@@ -125,6 +125,7 @@ def fetch_entries(
     *,
     concurrency: int,
     proxy: dict[str, str] | None = None,
+    proxies: Sequence[dict[str, str]] | None = None,
     indexes: Sequence[str] | None = None,
 ) -> list[SitemapEntry]:
     index_list = tuple(indexes) if indexes else spec.default_indexes
@@ -167,6 +168,8 @@ def fetch_entries(
             kwargs["proxy"] = proxy
         return fetch_mutualart_sitemap_entries(index_list[0], **kwargs)
     kwargs = {"concurrency": concurrency}
-    if proxy is not None:
+    if proxies:
+        kwargs["proxies"] = proxies
+    elif proxy is not None:
         kwargs["proxy"] = proxy
     return fetch_artsy_sitemap_entries(index_list, **kwargs)

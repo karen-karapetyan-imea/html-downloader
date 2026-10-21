@@ -10,12 +10,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Sequence
 from xml.etree import ElementTree as ET
 
 import httpx
 
 from html_downloader.discover.registry import entity_key_from_url, load_entity_keys, load_urls, normalize_url
+from html_downloader.download.proxy_pool import ProxyPool
 from html_downloader.discover.urls import (
     artfinder_entity_from_url,
     artmajeur_entity_from_url,
@@ -569,55 +570,87 @@ def _collect_artsy_urlset_xml(
     return urlsets, child_sitemaps
 
 
+_ARTSY_ROTATE_MARKERS = ("status=403", "status=429", "status=503", "cloudflare/html challenge")
+_ARTSY_PROXY_ATTEMPTS = 8
+
+
+def _artsy_should_rotate(exc: BaseException) -> bool:
+    text = str(exc)
+    return any(marker in text for marker in _ARTSY_ROTATE_MARKERS)
+
+
+def artsy_rotating_fetch(proxies: Sequence[dict[str, str]]) -> FetchBytesFn:
+    """Fetch one sitemap URL, moving to the next proxy after a block.
+
+    Each attempt opens its own Chrome session. A shared session keeps the challenge
+    cookies from the first 403 and then fails every later URL on the same proxy.
+    """
+    pool = ProxyPool(list(proxies))
+
+    def fetch_bytes(url: str) -> bytes:
+        if not proxies:
+            return fetch_sitemap_bytes_stealth(url)
+        last_error: BaseException | None = None
+        attempts = min(_ARTSY_PROXY_ATTEMPTS, len(proxies))
+        for attempt in range(1, attempts + 1):
+            proxy = pool.get_next()
+            try:
+                return fetch_sitemap_bytes_stealth(url, proxy=proxy)
+            except Exception as exc:
+                last_error = exc
+                if not _artsy_should_rotate(exc) or attempt == attempts:
+                    raise
+                LOGGER.warning(
+                    "artsy sitemap blocked, rotating proxy attempt=%s/%s url=%s error=%s",
+                    attempt,
+                    attempts,
+                    url,
+                    exc,
+                )
+        raise RuntimeError(f"artsy sitemap fetch failed url={url}") from last_error
+
+    return fetch_bytes
+
+
 def fetch_artsy_sitemap_entries(
     indexes: Iterable[str] = DEFAULT_ARTSY_INDEXES,
     *,
     concurrency: int = 8,
     proxy: dict[str, str] | None = None,
+    proxies: Sequence[dict[str, str]] | None = None,
     fetch_bytes: FetchBytesFn | None = None,
 ) -> list[SitemapEntry]:
     """Fetch Artsy artist/artwork entity URLs from nested sitemap indexes."""
-    session: Any | None = None
-    owned_session = False
     active_fetch = fetch_bytes
 
     if active_fetch is None:
-        from curl_cffi import Session
+        chosen = list(proxies) if proxies else ([proxy] if proxy else [])
+        active_fetch = artsy_rotating_fetch(chosen)
 
-        session = Session(impersonate="chrome")
-        owned_session = True
+    urlsets, child_count = _collect_artsy_urlset_xml(
+        indexes,
+        fetch_bytes=active_fetch,
+        concurrency=concurrency,
+    )
+    LOGGER.info("artsy sitemap urlsets=%s child_sitemaps=%s", len(urlsets), child_count)
 
-        def active_fetch(url: str, _session: Any = session, _proxy: dict[str, str] | None = proxy) -> bytes:
-            return fetch_sitemap_bytes_stealth(url, session=_session, proxy=_proxy)
-
-    try:
-        urlsets, child_count = _collect_artsy_urlset_xml(
-            indexes,
-            fetch_bytes=active_fetch,
-            concurrency=concurrency,
-        )
-        LOGGER.info("artsy sitemap urlsets=%s child_sitemaps=%s", len(urlsets), child_count)
-
-        entries: list[SitemapEntry] = []
-        for xml_bytes in urlsets:
-            for url, lastmod in parse_url_entries(xml_bytes):
-                normalized = normalize_url(url)
-                key = artsy_entity_from_url(normalized)
-                if key is None:
-                    continue
-                entity_type, entity_id = key
-                entries.append(
-                    SitemapEntry(
-                        url=normalized,
-                        lastmod=lastmod,
-                        entity_type=entity_type,
-                        entity_id=entity_id,
-                    )
+    entries: list[SitemapEntry] = []
+    for xml_bytes in urlsets:
+        for url, lastmod in parse_url_entries(xml_bytes):
+            normalized = normalize_url(url)
+            key = artsy_entity_from_url(normalized)
+            if key is None:
+                continue
+            entity_type, entity_id = key
+            entries.append(
+                SitemapEntry(
+                    url=normalized,
+                    lastmod=lastmod,
+                    entity_type=entity_type,
+                    entity_id=entity_id,
                 )
-        return entries
-    finally:
-        if owned_session and session is not None and hasattr(session, "close"):
-            session.close()
+            )
+    return entries
 
 
 def fetch_artmajeur_sitemap_entries(
