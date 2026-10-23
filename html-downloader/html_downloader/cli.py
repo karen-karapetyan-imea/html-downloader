@@ -22,7 +22,11 @@ LOGGER = logging.getLogger(__name__)
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Sitemap discovery and stealth HTML download (proxies required for download)."
+        description=(
+            "Sitemap discovery and stealth HTML download. "
+            "Marketplace download uses curl_cffi with a proxy file by default. "
+            "Use --provider decodo and DECODO_API_KEY to fetch through the Decodo Web Data API."
+        )
     )
     sub = parser.add_subparsers(dest="command")
 
@@ -84,12 +88,31 @@ def build_parser() -> argparse.ArgumentParser:
     )
     discover.set_defaults(func=_cmd_discover)
 
-    download = sub.add_parser("download", help="Download HTML for a dated job folder")
+    download = sub.add_parser(
+        "download",
+        help=(
+            "Download HTML for a dated marketplace job. "
+            "curl_cffi (default) requires --proxy-file. "
+            "decodo requires DECODO_API_KEY and does not use local proxies."
+        ),
+    )
     _add_shared_job_flags(download)
     download.add_argument(
+        "--provider",
+        choices=("curl_cffi", "decodo"),
+        default=None,
+        help=(
+            "Fetch provider. Defaults to DOWNLOAD_PROVIDER or curl_cffi. "
+            "decodo sends synchronous POST https://data.decodo.com/v1/scrape."
+        ),
+    )
+    download.add_argument(
         "--proxy-file",
-        required=True,
-        help="Proxy list file (host:port:user:pass per line). Required.",
+        default=None,
+        help=(
+            "Proxy list (host:port:user:pass per line). "
+            "Required for curl_cffi. Omit for --provider decodo."
+        ),
     )
     download.add_argument("--urls", type=Path, default=None, help="Override job urls.txt")
     download.add_argument("--workers", type=int, default=None, help="Max worker threads (cap 64)")
@@ -515,12 +538,16 @@ def _cmd_download(args: argparse.Namespace) -> int:
             requests_per_second=args.rps,
             skip_existing=args.skip_existing,
             results_append=not args.no_results_append,
+            provider=args.provider,
         )
     except (ProxyRequiredError, FileNotFoundError, ValueError) as exc:
         LOGGER.error("%s", exc)
         return 1
-    print(f"Download finished job={result.job} urls={result.url_count} status={result.status}")
-    return 0
+    message = f"Download finished job={result.job} urls={result.url_count} status={result.status}"
+    if result.stop_reason:
+        message += f" stop_reason={result.stop_reason}"
+    print(message)
+    return 0 if result.status == "completed" else 1
 
 
 def _cmd_auction_discover(args: argparse.Namespace) -> int:

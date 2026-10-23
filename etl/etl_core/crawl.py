@@ -12,6 +12,7 @@ from pathlib import Path
 log = logging.getLogger(__name__)
 
 _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_MONTH_RE = re.compile(r"\d{4}-\d{2}")
 CRAWL_LOG_NAME = "results.jsonl"
 
 
@@ -94,17 +95,23 @@ def iter_crawl_files(data_dir: Path, crawl_log: Mapping[str, LogEntry]) -> Itera
 
 
 def parse_folder_date(name: str) -> date | None:
-    """The date of a folder named YYYY-MM-DD, else None."""
-    if not _DATE_RE.fullmatch(name):
+    """YYYY-MM-DD as that day, or YYYY-MM as the first of that month (auction jobs)."""
+    if _DATE_RE.fullmatch(name):
+        try:
+            return date.fromisoformat(name)
+        except ValueError:
+            return None
+    if not _MONTH_RE.fullmatch(name):
         return None
     try:
-        return date.fromisoformat(name)
+        year, month = (int(part) for part in name.split("-"))
+        return date(year, month, 1)
     except ValueError:
         return None
 
 
 def detect_crawl_date(data_dir: Path, explicit: str | None = None) -> date:
-    """--crawl-date wins; otherwise the nearest folder named YYYY-MM-DD (the crawl folder or a parent)."""
+    """--crawl-date wins; otherwise the nearest YYYY-MM-DD or YYYY-MM folder (this dir or a parent)."""
     if explicit:
         return date.fromisoformat(explicit)
     for part in (data_dir.resolve(), *data_dir.resolve().parents):

@@ -48,6 +48,7 @@ def test_skip_existing_does_not_fetch(tmp_path: Path) -> None:
 def test_download_requires_proxy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("CRAWLER_PROXY", raising=False)
     monkeypatch.delenv("CRAWLER_PROXY_FILE", raising=False)
+    monkeypatch.delenv("DOWNLOAD_PROVIDER", raising=False)
     empty = tmp_path / "proxy.txt"
     empty.write_text("", encoding="utf-8")
     job = job_dir(tmp_path, "saatchi", date(2026, 8, 19))
@@ -73,6 +74,7 @@ def test_cli_download_proxy_required_returns_error(
 ) -> None:
     monkeypatch.delenv("CRAWLER_PROXY", raising=False)
     monkeypatch.delenv("CRAWLER_PROXY_FILE", raising=False)
+    monkeypatch.delenv("DOWNLOAD_PROVIDER", raising=False)
     empty = tmp_path / "proxy.txt"
     empty.write_text("# none\n", encoding="utf-8")
     job = job_dir(tmp_path, "saatchi", date(2026, 8, 19))
@@ -97,6 +99,7 @@ def test_cli_download_proxy_required_returns_error(
 
 def test_run_download_skip_existing_writes_manifest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("CRAWLER_PROXY", raising=False)
+    monkeypatch.delenv("DOWNLOAD_PROVIDER", raising=False)
     proxy = tmp_path / "proxy.txt"
     proxy.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
     crawl_date = date(2026, 8, 19)

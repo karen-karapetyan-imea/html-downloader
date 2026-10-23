@@ -64,7 +64,9 @@ python -m html_downloader download --marketplace ugallery --proxy-file proxy.txt
 python -m html_downloader download --marketplace mutualart --proxy-file proxy.txt --skip-existing
 ```
 
-Flags: `--date YYYY-MM-DD`, `--workers`, `--rps`, `--skip-existing`, `--urls` (override job `urls.txt`).
+Flags: `--date YYYY-MM-DD`, `--workers`, `--rps`, `--skip-existing`, `--urls` (override job `urls.txt`), `--provider`.
+
+The default provider is `curl_cffi` and still requires `--proxy-file`. `--provider decodo` sends marketplace page requests through the Decodo Web Data API (`DECODO_API_KEY`) and does not use a local proxy file. See [docs/decodo-marketplace-integration.md](docs/decodo-marketplace-integration.md). Auction downloads are unchanged.
 
 ## Weekly runs
 

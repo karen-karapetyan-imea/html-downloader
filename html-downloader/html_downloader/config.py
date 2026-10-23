@@ -59,6 +59,9 @@ class CrawlerConfig:
     skip_existing: bool = False
     results_append: bool = True
 
+    # Marketplace download only. Auction crawls leave this at curl_cffi.
+    provider: str = "curl_cffi"
+
     def __post_init__(self) -> None:
         if self.proxy_file is None:
             self.proxy_file = os.environ.get("CRAWLER_PROXY_FILE")
@@ -105,3 +108,109 @@ def load_config(
     if results_append is not None:
         cfg.results_append = results_append
     return cfg
+
+
+PROVIDERS: tuple[str, ...] = ("curl_cffi", "decodo")
+# Documented synchronous /scrape open-connection limit.
+DECODO_TIMEOUT_CAP_SECONDS = 150.0
+
+
+def resolve_provider(explicit: str | None = None) -> str:
+    """Resolve the marketplace download provider. Default is curl_cffi."""
+    raw = explicit if explicit is not None else os.environ.get("DOWNLOAD_PROVIDER")
+    name = (raw or "curl_cffi").strip().lower()
+    if name not in PROVIDERS:
+        allowed = ", ".join(PROVIDERS)
+        raise ValueError(f"unknown download provider {name!r}; expected one of: {allowed}")
+    return name
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.environ.get(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return float(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a number") from exc
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be an integer") from exc
+
+
+@dataclass(frozen=True, slots=True)
+class DecodoSettings:
+    """Decodo Web Data API settings. The API key is omitted from repr."""
+
+    api_key: str
+    timeout_seconds: float = 60.0
+    connect_timeout_seconds: float = 10.0
+    max_in_flight: int = 4
+    max_retries: int = 1
+    js_rendering: bool = False
+    proxy_pool: str = "premium"
+    requests_per_second: float = 1.0
+
+    def __post_init__(self) -> None:
+        if not self.api_key or not self.api_key.strip():
+            raise ValueError("DECODO_API_KEY is required")
+        if self.proxy_pool not in ("premium", "standard"):
+            raise ValueError("DECODO_PROXY_POOL must be premium or standard")
+        if self.timeout_seconds <= 0 or self.timeout_seconds > DECODO_TIMEOUT_CAP_SECONDS:
+            raise ValueError(
+                f"DECODO_TIMEOUT_SECONDS must be positive and at most {DECODO_TIMEOUT_CAP_SECONDS:g}"
+            )
+        if self.connect_timeout_seconds <= 0:
+            raise ValueError("DECODO_CONNECT_TIMEOUT_SECONDS must be positive")
+        if self.max_in_flight < 1:
+            raise ValueError("DECODO_MAX_IN_FLIGHT must be >= 1")
+        if self.max_retries < 0:
+            raise ValueError("DECODO_MAX_RETRIES must be >= 0")
+        if self.requests_per_second <= 0:
+            raise ValueError("DECODO_REQUESTS_PER_SECOND must be positive")
+
+    def __repr__(self) -> str:
+        return (
+            "DecodoSettings(api_key='[REDACTED]', "
+            f"timeout_seconds={self.timeout_seconds}, "
+            f"connect_timeout_seconds={self.connect_timeout_seconds}, "
+            f"max_in_flight={self.max_in_flight}, "
+            f"max_retries={self.max_retries}, "
+            f"js_rendering={self.js_rendering}, "
+            f"proxy_pool={self.proxy_pool!r}, "
+            f"requests_per_second={self.requests_per_second})"
+        )
+
+    @classmethod
+    def from_env(cls) -> DecodoSettings:
+        """Load Decodo settings. Raises ValueError when the key or a value is invalid."""
+        js_raw = os.environ.get("DECODO_JS_RENDERING", "").strip().lower()
+        if js_raw in ("", "0", "false", "off", "none", "no"):
+            js_rendering = False
+        elif js_raw == "html":
+            js_rendering = True
+        else:
+            raise ValueError("DECODO_JS_RENDERING must be unset or html")
+
+        timeout = _env_float("DECODO_TIMEOUT_SECONDS", 60.0)
+        if timeout <= 0:
+            raise ValueError("DECODO_TIMEOUT_SECONDS must be positive")
+        timeout = min(timeout, DECODO_TIMEOUT_CAP_SECONDS)
+
+        return cls(
+            api_key=os.environ.get("DECODO_API_KEY", "").strip(),
+            timeout_seconds=timeout,
+            connect_timeout_seconds=_env_float("DECODO_CONNECT_TIMEOUT_SECONDS", 10.0),
+            max_in_flight=_env_int("DECODO_MAX_IN_FLIGHT", 4),
+            max_retries=_env_int("DECODO_MAX_RETRIES", 1),
+            js_rendering=js_rendering,
+            proxy_pool=os.environ.get("DECODO_PROXY_POOL", "premium").strip().lower() or "premium",
+            requests_per_second=_env_float("DECODO_REQUESTS_PER_SECOND", 1.0),
+        )

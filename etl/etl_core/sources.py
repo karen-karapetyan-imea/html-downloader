@@ -37,14 +37,33 @@ SOURCES: dict[str, Source] = {
         Source("ugallery", ETL_ROOT / "ugallery_etl" / "parse.py"),
     )
 }
+# Marketplace crawls only. Auction houses live in AUCTION_SOURCES so artist/artwork
+# datasets, which iterate PLATFORMS, do not try to map a lot page as an artist.
 PLATFORMS: tuple[str, ...] = tuple(sorted(SOURCES))
+
+AUCTION_SOURCES: dict[str, Source] = {
+    s.platform: s
+    for s in (
+        Source("artcurial", ETL_ROOT / "artcurial_etl" / "parse.py", accepts_url=True),
+        Source("barnebys", ETL_ROOT / "barnebys_etl" / "parse.py", accepts_url=True),
+        Source("christies", ETL_ROOT / "christies_etl" / "parse.py", accepts_url=True),
+        Source("drouot", ETL_ROOT / "drouot_etl" / "parse.py", accepts_url=True),
+        Source("invaluable", ETL_ROOT / "invaluable_etl" / "parse.py", accepts_url=True),
+        Source("liveauctioneers", ETL_ROOT / "liveauctioneers_etl" / "parse.py", accepts_url=True),
+        Source("saleroom", ETL_ROOT / "saleroom_etl" / "parse.py", accepts_url=True),
+        Source("sothebys", ETL_ROOT / "sothebys_etl" / "parse.py", accepts_url=True),
+    )
+}
+AUCTION_PLATFORMS: tuple[str, ...] = tuple(sorted(AUCTION_SOURCES))
+ALL_SOURCES: dict[str, Source] = {**SOURCES, **AUCTION_SOURCES}
 
 
 def get_source(platform: str) -> Source:
     try:
-        return SOURCES[platform]
+        return ALL_SOURCES[platform]
     except KeyError:
-        raise ValueError(f"unknown platform {platform!r}, expected one of {', '.join(PLATFORMS)}") from None
+        names = ", ".join(sorted(ALL_SOURCES))
+        raise ValueError(f"unknown platform {platform!r}, expected one of {names}") from None
 
 
 @cache

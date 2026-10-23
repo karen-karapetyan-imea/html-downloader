@@ -224,6 +224,9 @@ def test_crawl_log_and_date_detection(tmp_path):
     assert entry.crawled_at.isoformat() == "2026-09-23T09:00:00+00:00"
     assert detect_crawl_date(data / "html") == date(2026, 9, 23)
     assert detect_crawl_date(tmp_path, "2026-01-02") == date(2026, 1, 2)
+    month = tmp_path / "2026-10"
+    month.mkdir()
+    assert detect_crawl_date(month / "html") == date(2026, 10, 1)
     with pytest.raises(ValueError):
         detect_crawl_date(tmp_path / "undated")
 

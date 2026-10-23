@@ -56,6 +56,13 @@ def write_manifest(path: Path, manifest: Manifest) -> None:
     path.write_text(json.dumps(manifest.to_dict(), indent=2) + "\n", encoding="utf-8")
 
 
+def annotate_manifest(path: Path, extras: dict[str, Any]) -> None:
+    """Add marketplace-only keys without changing the auction manifest schema."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data.update(extras)
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
 def finish_manifest(path: Path, manifest: Manifest, *, status: str) -> Manifest:
     updated = Manifest(
         marketplace=manifest.marketplace,

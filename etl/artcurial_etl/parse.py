@@ -1,0 +1,125 @@
+"""Artcurial lot pages: Nuxt `__NUXT_DATA__` on `/en/sales/{ref}/lots/{index}-{sub}`.
+
+`adjudicationPrice` is the hammer. `finalPrice` includes fees, so it is used only when the
+hammer is missing. Lot id is `{saleRef}:{index}-{subIndex}`, matching the downloader.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from lots.embedded import script_json
+from lots.fields import dig, lot_page, sale_status, to_date, unknown_page
+from lots.nuxt import decode_nuxt_data
+
+_LOCALES = ("ENGLISH", "FRENCH", "en", "fr")
+
+
+def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
+    payload = script_json(html, "__NUXT_DATA__")
+    if not isinstance(payload, list):
+        return unknown_page()
+    root = decode_nuxt_data(payload)
+    data = root.get("data") if isinstance(root, dict) else None
+    if not isinstance(data, dict):
+        return unknown_page()
+    lot = _lot_record(data.get("lot"))
+    if lot is None:
+        return unknown_page()
+    sale = data.get("sale-lot-page")
+    sale = sale if isinstance(sale, dict) else {}
+    description = _description(lot.get("descriptions"))
+    sale_ref = _text(lot.get("saleRef")) or _text(sale.get("ref"))
+    index = lot.get("index")
+    sub = _text(lot.get("subIndex"))
+    status = _text(lot.get("status"))
+    sold = status is not None and status.upper() == "SOLD"
+    return lot_page(
+        platform_lot_id=_lot_id(sale_ref, index, sub, _text(lot.get("uuid"))),
+        lot_url=url,
+        lot_number=_lot_number(index, sub),
+        title=description.get("titleWithHtml"),
+        description=description.get("descriptionWithHtml"),
+        category=_text(lot.get("category")),
+        image_url=_image(lot.get("pictures")),
+        currency=_text(lot.get("currency")),
+        low_estimate=lot.get("low"),
+        high_estimate=lot.get("high"),
+        price_realized=_price(lot, sold),
+        sale_status=sale_status(status, sold=sold),
+        sale_id=sale_ref,
+        sale_title=_text(sale.get("name")),
+        sale_date=to_date(sale.get("effectiveDate") or lot.get("adjudicationDate")),
+        sale_url=_sale_url(sale_ref),
+        is_result=sold,
+    )
+
+
+def _lot_record(value: object) -> dict[str, Any] | None:
+    if not isinstance(value, dict):
+        return None
+    inner = value.get("lot")
+    record = inner if isinstance(inner, dict) else value
+    if record.get("uuid") is None and record.get("saleRef") is None:
+        return None
+    return record
+
+
+def _lot_id(sale_ref: str | None, index: object, sub: str | None, uuid: str | None) -> str | None:
+    if sale_ref and isinstance(index, int) and not isinstance(index, bool):
+        suffix = f"{index}-{sub.lower()}" if sub else str(index)
+        return f"{sale_ref}:{suffix}"
+    return uuid
+
+
+def _lot_number(index: object, sub: str | None) -> str | None:
+    if isinstance(index, bool) or not isinstance(index, int):
+        return sub
+    return f"{index}{sub}" if sub else str(index)
+
+
+def _price(lot: dict[str, Any], sold: bool) -> object:
+    if not sold:
+        return None
+    hammer = lot.get("adjudicationPrice")
+    if isinstance(hammer, int | float) and not isinstance(hammer, bool) and hammer > 0:
+        return hammer
+    final = lot.get("finalPrice")
+    if isinstance(final, int | float) and not isinstance(final, bool) and final > 0:
+        return final
+    return None
+
+
+def _description(value: object) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    for key in _LOCALES:
+        block = value.get(key)
+        if isinstance(block, dict):
+            return block
+    for block in value.values():
+        if isinstance(block, dict) and dig(block, "titleWithHtml") is not None:
+            return block
+    return {}
+
+
+def _image(pictures: object) -> str | None:
+    if not isinstance(pictures, list):
+        return None
+    for picture in pictures:
+        url = dig(picture, "document", "servingUrl")
+        if isinstance(url, str) and url:
+            return url
+    return None
+
+
+def _sale_url(sale_ref: str | None) -> str | None:
+    if not sale_ref:
+        return None
+    return f"https://www.artcurial.com/en/sales/{sale_ref}"
+
+
+def _text(value: object) -> str | None:
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None

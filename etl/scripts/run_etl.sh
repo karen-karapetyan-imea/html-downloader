@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
-# Turn newly crawled HTML into the artworks and artists Parquet datasets (`<dataset>-etl sync`).
+# Turn newly crawled HTML into the artworks, artists, and auction-lot Parquet datasets.
 # Every finished crawl folder under the data root without an up-to-date snapshot is processed,
 # then the touched platforms are compacted. With nothing new it exits within seconds.
 #
-#   scripts/run_etl.sh [all|artworks|artists] [extra sync args...]
+#   scripts/run_etl.sh [all|artworks|artists|lots] [extra sync args...]
 #   scripts/run_etl.sh artworks --platform saatchi --dry-run
+#   scripts/run_etl.sh lots --platform christies --dry-run
 #   scripts/run_etl.sh all --include-unmanaged      # also crawls that predate manifest.json
 #
 # Environment:
-#   ETL_DATA_ROOT  crawl folders <root>/<platform>/<YYYY-MM-DD>/ (default: <repo>/html-downloader/data)
+#   ETL_DATA_ROOT  marketplace crawls <root>/<platform>/<YYYY-MM-DD>/ (default: <repo>/html-downloader/data)
+#                  lots read <root>/auctions/<house>/<YYYY-MM>/
 #   ETL_OUT_ROOT   datasets are written to $ETL_OUT_ROOT/<dataset> (default: <etl>/output)
 #   ETL_WORKERS    parser processes (default: CPU count - 1; halve it when artworks and artists overlap)
 #   UV             uv binary (default: uv on PATH, else ~/.local/bin/uv; cron has a minimal PATH)
@@ -31,14 +33,14 @@ UV="${UV:-$(command -v uv || echo "${HOME}/.local/bin/uv")}"
 
 target="${1:-all}"
 case "${target}" in
-  all) datasets=(artworks artists) ;;
-  artworks | artists) datasets=("${target}") ;;
+  all) datasets=(artworks artists lots) ;;
+  artworks | artists | lots) datasets=("${target}") ;;
   -h | --help)
-    sed -n '2,20p' "$0"
+    sed -n '2,22p' "$0"
     exit 0
     ;;
   *)
-    echo "usage: $0 [all|artworks|artists] [extra sync args...]" >&2
+    echo "usage: $0 [all|artworks|artists|lots] [extra sync args...]" >&2
     exit 2
     ;;
 esac
@@ -48,6 +50,14 @@ prog_for() {
   case "$1" in
     artworks) echo artwork-etl ;;
     artists) echo artist-etl ;;
+    lots) echo lot-etl ;;
+  esac
+}
+
+data_root_for() {
+  case "$1" in
+    lots) echo "${DATA_ROOT}/auctions" ;;
+    *) echo "${DATA_ROOT}" ;;
   esac
 }
 
@@ -82,9 +92,9 @@ main() {
       echo "$(date -u -Iseconds) another ${dataset} sync holds ${lock}; skipping"
       continue
     fi
-    echo "=== ${dataset} sync started $(date -u -Iseconds) data=${DATA_ROOT} out=${OUT_ROOT}/${dataset} ==="
+    echo "=== ${dataset} sync started $(date -u -Iseconds) data=$(data_root_for "${dataset}") out=${OUT_ROOT}/${dataset} ==="
     if "${low_priority[@]}" "${UV}" run --frozen --no-dev "$(prog_for "${dataset}")" sync \
-      --data-root "${DATA_ROOT}" \
+      --data-root "$(data_root_for "${dataset}")" \
       --out "${OUT_ROOT}/${dataset}" \
       "${workers_args[@]}" \
       "$@"; then
