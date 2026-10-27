@@ -46,6 +46,26 @@ def test_artcurial_sold_lot():
     assert lot.is_result is True
 
 
+def test_artcurial_revived_date_and_referential_artist():
+    lot = row("artcurial", "artcurial_artist.html")
+    assert lot.sale_date == date(2006, 3, 15)
+    assert lot.artist_name == "Paule GOBILLARD (1869-1946)"
+    assert lot.title == "LE JARDIN AU MESNIL"
+    assert lot.price_realized == Decimal("750.00")
+
+
+def test_barnebys_hammer_price_is_the_realised_price():
+    url = "https://www.barnebys.com/realized-prices/lot/erich-heckel-woodcut-156741098"
+    sold = row("barnebys", "barnebys_hammer.html", url)
+    assert sold.price_realized == Decimal("1601.99")
+    assert sold.low_estimate == Decimal("2136.70")
+    assert sold.sale_status == "sold"
+    unsold = row("barnebys", "barnebys_hammer_zero.html", url)
+    assert unsold.price_realized is None
+    assert unsold.sale_status == "unsold"
+    assert unsold.is_result is True
+
+
 def test_barnebys_live_and_realised_share_the_numeric_id():
     live = row("barnebys", "barnebys_live.html")
     realised = row(
@@ -79,6 +99,14 @@ def test_christies_price_realised():
     assert lot.sale_date == date(2024, 3, 8)
     assert lot.sale_status == "sold"
     assert lot.selling_house_name is None
+
+
+def test_christies_placeholder_artist_and_start_date():
+    lot = row("christies", "christies_placeholder.html")
+    assert lot.artist_name is None
+    assert lot.title is None
+    assert lot.sale_date == date(2004, 6, 14)
+    assert lot.price_realized == Decimal("3450.00")
 
 
 def test_drouot_zero_result_is_not_a_hammer():
@@ -162,6 +190,15 @@ def test_sothebys_final_price():
     assert lot.sale_date == date(2025, 3, 26)
     assert lot.sale_status == "sold"
     assert lot.lot_url == "https://www.sothebys.com/en/buy/auction/2025/arcade-new-york/untitled-pasta-painting"
+
+
+def test_sothebys_hidden_result_is_unknown_and_artist_comes_from_the_title():
+    lot = row("sothebys", "sothebys_hidden.html")
+    assert lot.sale_status is None  # "unknown" is a placeholder that clean_text drops; not "unsold"
+    assert lot.price_realized is None
+    assert lot.is_result is True
+    assert lot.artist_name == "JULES JOSEPH LEFEBVRE (1836 - 1912)"
+    assert lot.title == "WOMAN PLAYING A LUTE"
 
 
 def test_challenge_page_yields_no_row():

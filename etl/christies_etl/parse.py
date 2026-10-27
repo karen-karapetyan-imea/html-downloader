@@ -2,7 +2,9 @@
 
 The lot id is `object_id` (`/en/lot/lot-{objectId}`). Currency is the code in
 `price_realised_txt` / `estimate_txt` (`GBP 44,100`); the payload has no separate currency field.
-`title_primary_txt` is the artist and `title_secondary_txt` is the work.
+`title_primary_txt` is the artist and `title_secondary_txt` is the work. Old lots have
+placeholder primaries ("No Description (2)", "1 ^,,^") and a `0001-01-01` start date, so the
+sale date falls back to `end_date`.
 """
 
 from __future__ import annotations
@@ -16,6 +18,7 @@ from lots.fields import lot_page, sale_status, to_date, unknown_page
 
 _HEADER = re.compile(r"window\.chrComponents\.lotHeader_\d+\s*=\s*")
 _CURRENCY = re.compile(r"\b([A-Z]{3})\b")
+_PLACEHOLDER = re.compile(r"^no description\b|\^,,\^", re.IGNORECASE)
 
 
 def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
@@ -35,7 +38,7 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
         lot_url=_text(lot.get("url")) or url,
         lot_number=_text(lot.get("lot_id_txt")),
         title=_text(lot.get("title_secondary_txt")),
-        artist_name=_text(lot.get("title_primary_txt")),
+        artist_name=_primary(lot.get("title_primary_txt")),
         image_url=_image(lot.get("lot_assets")),
         currency=_currency(lot.get("price_realised_txt"), lot.get("estimate_txt")),
         low_estimate=None if lot.get("estimate_on_request") else lot.get("estimate_low"),
@@ -46,10 +49,17 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
         ),
         sale_id=_text(sale.get("sale_number")) or _text(sale.get("sale_id")),
         sale_title=_text(sale.get("title_txt")),
-        sale_date=to_date(sale.get("start_date")),
+        sale_date=to_date(sale.get("start_date")) or to_date(sale.get("end_date")),
         sale_url=_text(sale.get("url")),
         is_result=over or _positive(price) or unsold,
     )
+
+
+def _primary(value: object) -> str | None:
+    text = _text(value)
+    if text is None or _PLACEHOLDER.search(text):
+        return None
+    return text
 
 
 def _header(html: str) -> dict[str, Any] | None:

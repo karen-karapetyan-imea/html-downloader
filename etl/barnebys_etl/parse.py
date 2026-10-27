@@ -2,7 +2,8 @@
 
 Live and realised pages share the numeric id at the end of `lot.id`. A realised URL
 (`/realized-prices/` or `/realised-prices/`) wins inside one crawl via `is_result`.
-Barnebys publishes a single `estimatePrice`, stored as the low estimate.
+Barnebys publishes a single `estimatePrice`, stored as the low estimate. Realised pages carry
+the hammer as `hammer_price` (USD, like the estimate); 0 there means the lot did not sell.
 """
 
 from __future__ import annotations
@@ -16,7 +17,15 @@ from lots.fields import lot_page, sale_status, to_date, unknown_page
 _ID_SUFFIX = re.compile(r"(\d+)$")
 _FLIGHT_REF = re.compile(r"^\$[0-9a-fA-F]+$")
 _REALISED = ("/realized-prices/", "/realised-prices/")
-_PRICE_KEYS = ("soldPrice", "price", "hammerPrice", "realizedPrice", "realisedPrice", "finalPrice")
+_PRICE_KEYS = (
+    "soldPrice",
+    "hammer_price",
+    "price",
+    "hammerPrice",
+    "realizedPrice",
+    "realisedPrice",
+    "finalPrice",
+)
 
 
 def parse_page(html: str, url: str | None = None) -> dict[str, Any]:

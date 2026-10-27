@@ -83,9 +83,11 @@ def to_date(value: object) -> date | None:
         if text.isdigit() or (text.startswith("-") and text[1:].isdigit()):
             return _from_epoch(int(text))
         try:
-            return datetime.fromisoformat(text.replace("Z", "+00:00")).date()
+            parsed = datetime.fromisoformat(text.replace("Z", "+00:00")).date()
         except ValueError:
             return None
+        # 0001-01-01 is .NET's DateTime.MinValue: a placeholder for "no date", not year 1.
+        return None if parsed.year == 1 else parsed
     return None
 
 

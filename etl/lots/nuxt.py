@@ -28,6 +28,8 @@ def decode_nuxt_data(payload: list[Any]) -> Any:
             resolved = value
         elif isinstance(value, list) and _is_wrapper(value):
             resolved = resolve(value[1])
+        elif isinstance(value, list) and _is_date(value):
+            resolved = value[1]
         elif isinstance(value, list):
             resolved = []
             memo[index] = resolved
@@ -49,6 +51,11 @@ def decode_nuxt_data(payload: list[Any]) -> Any:
         return resolve(item)
 
     return resolve(0)
+
+
+def _is_date(value: list[Any]) -> bool:
+    """A revived Date: `["Date", "2006-03-15T13:00:00.000Z"]`. The string is a literal, not an index."""
+    return len(value) == 2 and value[0] == "Date" and isinstance(value[1], str)
 
 
 def _is_wrapper(value: list[Any]) -> bool:

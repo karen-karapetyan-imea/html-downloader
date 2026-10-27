@@ -2,6 +2,7 @@
 
 `adjudicationPrice` is the hammer. `finalPrice` includes fees, so it is used only when the
 hammer is missing. Lot id is `{saleRef}:{index}-{subIndex}`, matching the downloader.
+Dates arrive as devalue `["Date", iso]` pairs, which `decode_nuxt_data` turns into the iso string.
 """
 
 from __future__ import annotations
@@ -40,6 +41,7 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
         lot_number=_lot_number(index, sub),
         title=description.get("titleWithHtml"),
         description=description.get("descriptionWithHtml"),
+        artist_name=_artist(lot),
         category=_text(lot.get("category")),
         image_url=_image(lot.get("pictures")),
         currency=_text(lot.get("currency")),
@@ -63,6 +65,26 @@ def _lot_record(value: object) -> dict[str, Any] | None:
     if record.get("uuid") is None and record.get("saleRef") is None:
         return None
     return record
+
+
+def _artist(lot: dict[str, Any]) -> str | None:
+    """`Name (dates)` like Christie's: the catalogue's `artistName`/`artistDates`, else the
+    referential artist (`artist.party.fullName`, `yearOfBirth`, `yearOfDeath`)."""
+    name = _text(lot.get("artistName")) or _text(dig(lot, "artist", "party", "fullName"))
+    if name is None:
+        return None
+    dates = (_text(lot.get("artistDates")) or "").strip("() ") or None
+    if dates is None:
+        born, died = dig(lot, "artist", "yearOfBirth"), dig(lot, "artist", "yearOfDeath")
+        if _year(born) and _year(died):
+            dates = f"{born}-{died}"
+        elif _year(born):
+            dates = f"b. {born}"
+    return f"{name} ({dates})" if dates else name
+
+
+def _year(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
 
 
 def _lot_id(sale_ref: str | None, index: object, sub: str | None, uuid: str | None) -> str | None:
