@@ -2,7 +2,9 @@
 
 There is no separate title field; the first line of `description` is the catalogue title.
 `result == 0` is an empty hammer (the lot is not sold yet), not a price of zero.
-The selling house is the auctioneer on the page, which is not Drouot itself.
+The selling house is the auctioneer on the page, which is not Drouot itself. The sale location
+is the sale address's city, empty for online-only sales. There are no structured work fields;
+size, medium and the rest come from the description text.
 """
 
 from __future__ import annotations
@@ -48,6 +50,7 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
         sale_date=to_date(sale.get("date") or lot.get("date")),
         sale_url=_sale_url(sale_id, slug),
         selling_house_name=_text(dig(sale, "auctioneerCard", "link", "auctioneerName")),
+        sale_location=_text(dig(sale, "address", "city")),
         is_result=sold,
     )
 

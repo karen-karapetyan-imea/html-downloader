@@ -5,20 +5,39 @@ The lot id is `object_id` (`/en/lot/lot-{objectId}`). Currency is the code in
 `title_primary_txt` is the artist and `title_secondary_txt` is the work. Old lots have
 placeholder primaries ("No Description (2)", "1 ^,,^") and a `0001-01-01` start date, so the
 sale date falls back to `end_date`.
+
+The description is the server-rendered "Details" section: catalogue lines `Artist (Nationality,
+1860-1954)` / title / `signed ...` / medium / size. Its first line gives the artist's
+nationality and life dates when it starts with the artist. The sale location is `location_txt`
+without the saleroom ("London (South Kensington)" -> "London"); the department sits in the
+page's `AnalyticsDataLayer` on recent lots only.
 """
 
 from __future__ import annotations
 
+import html as html_lib
 import json
 import re
 from typing import Any
 
+from lots import catalogue
 from lots.embedded import loads_balanced
 from lots.fields import lot_page, sale_status, to_date, unknown_page
 
 _HEADER = re.compile(r"window\.chrComponents\.lotHeader_\d+\s*=\s*")
 _CURRENCY = re.compile(r"\b([A-Z]{3})\b")
 _PLACEHOLDER = re.compile(r"^no description\b|\^,,\^", re.IGNORECASE)
+_DETAILS = re.compile(
+    r'<div slot="header">\s*Details\s*</div>\s*<div slot="content"[^>]*>\s*'
+    r'<span class="chr-lot-section__accordion--text">(.*?)</span>',
+    re.DOTALL,
+)
+_BREAK = re.compile(r"[ \t]*<br\s*/?>[ \t]*\n?", re.IGNORECASE)
+_TAG = re.compile(r"<[^>]+>")
+_DEPARTMENT = re.compile(r'var AnalyticsDataLayer\s*=\s*\{"page":\{[^{}]*?"department":"([^"]*)"')
+_SALEROOM = re.compile(r"\s*\([^()]*\)\s*$")
+_SQUASHED = {"NewYorkChristie'sEast": "New York", "UnitedArabEmirates": "United Arab Emirates"}
+_MAX_DEPARTMENTS = 3
 
 
 def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
@@ -33,12 +52,19 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
     unsold = lot.get("is_unsold") is True
     price = None if unsold or lot.get("price_on_request") is True else lot.get("price_realised")
     over = sale.get("is_auction_over") is True
+    artist = _primary(lot.get("title_primary_txt"))
+    description = _details(html)
+    born, died, nationality = _life(artist, description)
     return lot_page(
         platform_lot_id=str(lot.get("object_id")).strip(),
         lot_url=_text(lot.get("url")) or url,
         lot_number=_text(lot.get("lot_id_txt")),
         title=_text(lot.get("title_secondary_txt")),
-        artist_name=_primary(lot.get("title_primary_txt")),
+        description=description,
+        artist_name=artist,
+        artist_birth_year=born,
+        artist_death_year=died,
+        artist_nationality=nationality,
         image_url=_image(lot.get("lot_assets")),
         currency=_currency(lot.get("price_realised_txt"), lot.get("estimate_txt")),
         low_estimate=None if lot.get("estimate_on_request") else lot.get("estimate_low"),
@@ -51,8 +77,51 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
         sale_title=_text(sale.get("title_txt")),
         sale_date=to_date(sale.get("start_date")) or to_date(sale.get("end_date")),
         sale_url=_text(sale.get("url")),
+        sale_location=_location(sale.get("location_txt")),
+        department=_department(html),
         is_result=over or _positive(price) or unsold,
     )
+
+
+def _details(html: str) -> str | None:
+    """The "Details" section as text, one catalogue line per line."""
+    match = _DETAILS.search(html)
+    if match is None:
+        return None
+    text = html_lib.unescape(_TAG.sub("", _BREAK.sub("\n", match.group(1))))
+    return _text("\n".join(" ".join(line.split()) for line in text.splitlines()).strip())
+
+
+def _life(artist: str | None, description: str | None) -> tuple[int | None, int | None, str | None]:
+    """(birth, death, nationality) from the artist's own catalogue line, else from the header's
+    `Name (1887-1985)`. The first Details line is the artist's only when it starts with the name."""
+    if artist is None:
+        return None, None, None
+    first = description.split("\n", 1)[0].strip() if description else ""
+    name = artist.split("(", 1)[0].strip().casefold()
+    if name and first.casefold().startswith(name):
+        born, died, nationality = catalogue.life(first)
+        if born is not None:
+            return born, died, nationality
+    return catalogue.life(artist)
+
+
+def _location(value: object) -> str | None:
+    text = _text(value)
+    if text is None:
+        return None
+    text = _SQUASHED.get(text, text)
+    return _SALEROOM.sub("", text) or None
+
+
+def _department(html: str) -> str | None:
+    match = _DEPARTMENT.search(html)
+    if match is None:
+        return None
+    names = list(dict.fromkeys(n.strip() for n in match.group(1).split(";") if n.strip()))
+    if not names or len(names) > _MAX_DEPARTMENTS:
+        return None
+    return "; ".join(names)
 
 
 def _primary(value: object) -> str | None:

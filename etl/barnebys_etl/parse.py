@@ -4,6 +4,7 @@ Live and realised pages share the numeric id at the end of `lot.id`. A realised 
 (`/realized-prices/` or `/realised-prices/`) wins inside one crawl via `is_result`.
 Barnebys publishes a single `estimatePrice`, stored as the low estimate. Realised pages carry
 the hammer as `hammer_price` (USD, like the estimate); 0 there means the lot did not sell.
+The sale location is the house's country (`country`, ISO2); `city` is a UN/LOCODE ("ITPMO").
 """
 
 from __future__ import annotations
@@ -11,6 +12,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from etl_core.normalize import country_name
 from lots.embedded import first_json_object, next_flight_chunks
 from lots.fields import lot_page, sale_status, to_date, unknown_page
 
@@ -49,6 +51,7 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
         sale_status=sale_status(sold=price is not None, closed=realised and price is None),
         sale_date=end,
         selling_house_name=_text(house.get("name")),
+        sale_location=country_name(lot.get("country")),
         is_result=realised or price is not None,
     )
 

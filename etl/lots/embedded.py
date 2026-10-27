@@ -140,7 +140,7 @@ class JsParser:
             return None
         if char == "-" or char.isdigit():
             return self._number()
-        raise ValueError(f"unexpected JS at {self.text[self.index:self.index + 24]!r}")
+        raise ValueError(f"unexpected JS at {self.text[self.index : self.index + 24]!r}")
 
     def _ident_continues(self, offset: int) -> bool:
         next_index = self.index + offset

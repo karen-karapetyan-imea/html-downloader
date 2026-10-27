@@ -54,10 +54,21 @@ def test_artcurial_revived_date_and_referential_artist():
     assert lot.price_realized == Decimal("750.00")
 
 
+def test_artcurial_work_and_sale_detail():
+    lot = row("artcurial", "artcurial_detail.html")
+    assert (lot.height_cm, lot.width_cm, lot.depth_cm) == (73.0, 92.0, None)  # a zero size is no size
+    assert lot.medium == "Huile sur toile"
+    assert lot.is_signed is True
+    assert (lot.artist_birth_year, lot.artist_death_year) == (1913, 2005)
+    assert lot.sale_location == "Paris"  # "Artcurial, Paris": the saleroom name is dropped
+    assert lot.department == "Post-War & Contemporain"  # the principal specialty
+
+
 def test_barnebys_hammer_price_is_the_realised_price():
     url = "https://www.barnebys.com/realized-prices/lot/erich-heckel-woodcut-156741098"
     sold = row("barnebys", "barnebys_hammer.html", url)
     assert sold.price_realized == Decimal("1601.99")
+    assert sold.sale_location == "Germany"  # the house's ISO2 country
     assert sold.low_estimate == Decimal("2136.70")
     assert sold.sale_status == "sold"
     unsold = row("barnebys", "barnebys_hammer_zero.html", url)
@@ -101,6 +112,21 @@ def test_christies_price_realised():
     assert lot.selling_house_name is None
 
 
+def test_christies_details_section():
+    lot = row("christies", "christies_detail.html")
+    first, second = lot.description.splitlines()[:2]
+    assert (first, second) == ("Joseph Henry Boston (American, 1860-1954)", "In the Adirondacks")
+    assert lot.artist_name == "Joseph Henry Boston (1860-1954)"
+    assert (lot.artist_birth_year, lot.artist_death_year) == (1860, 1954)
+    assert lot.artist_nationality == "American"  # only the Details line has it
+    assert (lot.height_cm, lot.width_cm) == (76.2, 101.6)
+    assert lot.medium == "oil on canvas"
+    assert lot.year == 1898
+    assert lot.is_signed is True
+    assert lot.sale_location == "New York"  # "(Rockefeller Plaza)" is the saleroom
+    assert lot.department == "American Art"
+
+
 def test_christies_placeholder_artist_and_start_date():
     lot = row("christies", "christies_placeholder.html")
     assert lot.artist_name is None
@@ -125,6 +151,7 @@ def test_drouot_zero_result_is_not_a_hammer():
     assert lot.category == "Necklaces"
     assert lot.selling_house_name == "Bertolami Fine Art s.r.l."
     assert lot.image_url == "https://cdn.drouot.com/d/lot/x.jpg"
+    assert lot.sale_location == "Roma"
 
 
 def test_invaluable_open_lot_keeps_a_zero_sold_amount_empty():
@@ -153,6 +180,7 @@ def test_liveauctioneers_price_result():
     assert lot.low_estimate == Decimal("2200.00")
     assert lot.high_estimate == Decimal("2500.00")
     assert lot.currency == "EUR"
+    assert lot.sale_location == "Milano"  # the house, not where the item is stored
     assert lot.sale_status == "sold"
     assert lot.selling_house_name == "Il Ponte Casa d'Aste Srl"
     assert lot.sale_id == "103239"
@@ -199,6 +227,32 @@ def test_sothebys_hidden_result_is_unknown_and_artist_comes_from_the_title():
     assert lot.is_result is True
     assert lot.artist_name == "JULES JOSEPH LEFEBVRE (1836 - 1912)"
     assert lot.title == "WOMAN PLAYING A LUTE"
+    assert lot.artist_nationality == "French"
+
+
+def test_sothebys_work_and_sale_detail():
+    lot = row("sothebys", "sothebys_detail.html")
+    assert lot.artist_name == "Hermann Corrodi (1844 - 1905)"
+    assert (lot.artist_birth_year, lot.artist_death_year) == (1844, 1905)
+    assert lot.artist_nationality == "Italian"
+    assert (lot.height_cm, lot.width_cm) == (61.0, 100.3)  # the cm size, not the inches
+    assert lot.medium == "oil on canvas"
+    assert lot.year == 1874
+    assert lot.is_signed is True
+    assert lot.sale_location == "London"
+    assert lot.department == "19th Century European Paintings"  # deduplicated, "Marketing" dropped
+
+
+def test_sothebys_drops_big_department_lists_and_repeated_artist_lines():
+    html = (FIXTURES / "sothebys_detail.html").read_text(encoding="utf-8")
+    many = ", ".join(f'"Department {i}"' for i in range(4))
+    html = html.replace('"departmentNames": [', f'"departmentNames": [{many}, ')
+    html = html.replace("<p>Italian</p>", "<p>Hermann Corrodi</p>")
+    parsed = parse_html("sothebys", html, None)
+    lot = MAPPERS["sothebys"].to_rows(parsed, "sothebys_detail.html", None)[0]
+    assert lot.department is None
+    assert lot.artist_nationality is None
+    assert lot.artist_birth_year == 1844
 
 
 def test_challenge_page_yields_no_row():
