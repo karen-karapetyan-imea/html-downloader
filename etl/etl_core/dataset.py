@@ -1,13 +1,14 @@
-"""What makes a dataset (artists, artworks, ...): row type, Parquet schema, mappers and dedup rules."""
+"""What makes a dataset (artists, artworks, lots): row type, schema, mappers and dedup rules."""
 
 import importlib
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Protocol
 
 import pyarrow as pa
 
+from etl_core.documents import SortField
 from etl_core.schema import assert_in_sync
 
 
@@ -30,14 +31,16 @@ class DatasetSpec[RowT]:
     schema: pa.Schema
     key_column: str
     mappers: Mapping[str, Mapper[RowT]]
-    snapshot_order: str  # DuckDB ORDER BY picking the winner per key inside one snapshot
-    current_order: str  # same across snapshots; may use the crawl_date partition column
-    default_out: str
+    within_crawl_order: Sequence[SortField]
+    default_out: str = "output"
 
     def __post_init__(self) -> None:
         assert_in_sync(self.row_type, self.schema)
         if self.key_column not in self.schema.names or self.schema.field(self.key_column).nullable:
             raise ValueError(f"{self.name}: key column {self.key_column!r} must be a non-nullable column")
+        for field in self.within_crawl_order:
+            if field.name not in self.schema.names:
+                raise ValueError(f"{self.name}: sort field {field.name!r} is not a schema column")
 
     @property
     def platforms(self) -> tuple[str, ...]:

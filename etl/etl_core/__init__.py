@@ -1,3 +1,3 @@
-"""Dataset-agnostic ETL core: raw marketplace HTML -> Parquet snapshots + a compacted current dataset."""
+"""Dataset-agnostic ETL core: raw marketplace HTML -> MongoDB entity versions and current docs."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"

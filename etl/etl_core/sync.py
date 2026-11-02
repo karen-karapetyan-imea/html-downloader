@@ -1,9 +1,10 @@
-"""`sync`: snapshot every finished crawl folder that has no up-to-date snapshot, then compact.
+"""`sync`: snapshot every finished crawl folder that has no up-to-date Mongo crawl, then compact.
 
 Crawl folders come from the downloader: <data_root>/<platform>/<YYYY-MM-DD>/ with a manifest.json
-whose status is running | completed | failed. All sync state lives in the output tree (snapshot
-_manifest.json / _run.json), so running it again, or after a crash, is safe.
+whose status is running | completed | failed. Crawl state lives in etl_crawls.
 """
+
+from __future__ import annotations
 
 import json
 import logging
@@ -16,13 +17,13 @@ from typing import Any
 from etl_core.compact import compact
 from etl_core.crawl import parse_folder_date, parse_timestamp
 from etl_core.dataset import DatasetSpec
-from etl_core.layout import MANIFEST_NAME, RUN_NAME, snapshot_dir
+from etl_core.documents import crawl_date_str, crawl_ledger_id
 from etl_core.pipeline import ResumeMismatchError, RunConfig, run_snapshot
+from etl_core.store import STATUS_COMPLETED, STATUS_RUNNING, EntityStore, MongoConfig
 
 log = logging.getLogger(__name__)
 
 CRAWL_MANIFEST_NAME = "manifest.json"
-# A failed download still leaves valid pages, and the next cycle writes to a new date folder.
 FINISHED_STATUSES = frozenset({"completed", "failed"})
 
 
@@ -38,11 +39,11 @@ class PendingCrawl:
 @dataclass(frozen=True, slots=True)
 class SyncConfig:
     data_root: Path
-    out: Path
+    mongo: MongoConfig
     platforms: tuple[str, ...] = ()  # empty: every platform of the dataset
     workers: int = 1
     chunk_size: int = 2000
-    include_unmanaged: bool = False  # also crawl folders without a downloader manifest.json
+    include_unmanaged: bool = False
     dry_run: bool = False
 
 
@@ -60,7 +61,9 @@ class SyncResult:
 
 
 def sync(dataset: DatasetSpec[Any], config: SyncConfig) -> SyncResult:
-    pending = find_pending(dataset, config.data_root, config.out, config.platforms, config.include_unmanaged)
+    pending = find_pending(
+        dataset, config.data_root, config.mongo, config.platforms, config.include_unmanaged
+    )
     result = SyncResult(pending=pending)
     log.info("%s: %d crawl folders to process under %s", dataset.name, len(pending), config.data_root)
     for item in pending:
@@ -71,15 +74,16 @@ def sync(dataset: DatasetSpec[Any], config: SyncConfig) -> SyncResult:
     for item in pending:
         try:
             _run(dataset, item, config)
-        except Exception:  # one bad crawl folder must not block the others
+        except Exception:
             log.exception("%s %s %s: run failed", dataset.name, item.platform, item.crawl_date)
             result.failed.append(item)
         else:
             result.processed.append(item)
 
+    # Finalize already published mains; compact is a repair pass for successfully processed sources.
     for platform in sorted({item.platform for item in result.processed}):
         try:
-            compact(dataset, platform, config.out)
+            compact(dataset, platform, config.mongo)
         except Exception:
             log.exception("%s %s: compact failed", dataset.name, platform)
             result.compact_failed.append(platform)
@@ -100,24 +104,30 @@ def sync(dataset: DatasetSpec[Any], config: SyncConfig) -> SyncResult:
 def find_pending(
     dataset: DatasetSpec[Any],
     data_root: Path,
-    out: Path,
+    mongo: MongoConfig,
     platforms: tuple[str, ...] = (),
     include_unmanaged: bool = False,
 ) -> list[PendingCrawl]:
     selected = platforms or dataset.platforms
     for platform in selected:
         dataset.mapper(platform)
-    pending = []
-    for platform in selected:
-        for data_dir, crawl_date in _crawl_dirs(data_root / platform):
-            try:
-                item = _classify(platform, data_dir, crawl_date, out, include_unmanaged)
-            except ValueError as exc:
-                log.warning("skipping %s: %s", data_dir, exc)
-                continue
-            if item is not None:
-                pending.append(item)
-    return pending
+    store = EntityStore(mongo)
+    try:
+        pending = []
+        for platform in selected:
+            for data_dir, crawl_date in _crawl_dirs(data_root / platform):
+                try:
+                    item = _classify(
+                        store, dataset.name, platform, data_dir, crawl_date, include_unmanaged
+                    )
+                except ValueError as exc:
+                    log.warning("skipping %s: %s", data_dir, exc)
+                    continue
+                if item is not None:
+                    pending.append(item)
+        return pending
+    finally:
+        store.close()
 
 
 def _crawl_dirs(platform_dir: Path) -> Iterator[tuple[Path, date]]:
@@ -130,7 +140,12 @@ def _crawl_dirs(platform_dir: Path) -> Iterator[tuple[Path, date]]:
 
 
 def _classify(
-    platform: str, data_dir: Path, crawl_date: date, out: Path, include_unmanaged: bool
+    store: EntityStore,
+    dataset: str,
+    platform: str,
+    data_dir: Path,
+    crawl_date: date,
+    include_unmanaged: bool,
 ) -> PendingCrawl | None:
     crawl = _read_json(data_dir / CRAWL_MANIFEST_NAME)
     if crawl is None:
@@ -147,14 +162,16 @@ def _classify(
     def pending(resume: bool, reason: str) -> PendingCrawl:
         return PendingCrawl(platform, data_dir, crawl_date, resume, reason)
 
-    snapshot = snapshot_dir(out, platform, crawl_date)
-    etl = _read_json(snapshot / MANIFEST_NAME)
-    if etl is not None:
+    crawl_id = crawl_ledger_id(dataset, platform, crawl_date_str(crawl_date))
+    etl = store.get_crawl(crawl_id)
+    if etl is not None and etl.get("status") == STATUS_COMPLETED:
         etl_started = parse_timestamp(etl.get("started_at"))
         if crawl_finished is None or (etl_started is not None and etl_started >= crawl_finished):
             return None
         return pending(False, "crawl finished after the last ETL run")
-    if (snapshot / RUN_NAME).is_file():
+    if etl is not None and etl.get("status") == STATUS_RUNNING:
+        return pending(True, "interrupted ETL run")
+    if etl is not None and etl.get("completed_chunks"):
         return pending(True, "interrupted ETL run")
     return pending(False, "new crawl")
 
@@ -164,8 +181,8 @@ def _run(dataset: DatasetSpec[Any], item: PendingCrawl, config: SyncConfig) -> N
         dataset=dataset,
         platform=item.platform,
         data_dir=item.data_dir,
-        out=config.out,
         crawl_date=item.crawl_date,
+        mongo=config.mongo,
         workers=config.workers,
         chunk_size=config.chunk_size,
         resume=item.resume,
@@ -173,12 +190,11 @@ def _run(dataset: DatasetSpec[Any], item: PendingCrawl, config: SyncConfig) -> N
     try:
         run_snapshot(run_config)
     except ResumeMismatchError as exc:
-        log.warning("%s; starting the snapshot from scratch", exc)
+        log.warning("%s; starting the crawl from scratch", exc)
         run_snapshot(replace(run_config, resume=False))
 
 
 def _read_json(path: Path) -> dict[str, Any] | None:
-    """None if the file is missing; ValueError if it is not a JSON object (e.g. caught mid-write)."""
     try:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:

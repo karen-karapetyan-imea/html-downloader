@@ -1,4 +1,4 @@
-"""The artists dataset: one row per artist page, latest crawl wins."""
+"""The artists dataset: one row per artist page, latest crawl date wins on the main document."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -8,7 +8,7 @@ from typing import Any
 from artists.mappers import ArtistMapper, get_mapper
 from artists.schema import ARTIST_SCHEMA, ArtistRow
 from etl_core.dataset import DatasetSpec
-from etl_core.schema import CRAWL_DATE_COLUMN
+from etl_core.documents import SortField
 from etl_core.sources import PLATFORMS
 
 
@@ -36,7 +36,9 @@ ARTISTS = DatasetSpec[ArtistRow](
     schema=ARTIST_SCHEMA,
     key_column="platform_artist_id",
     mappers={p: _OneRowPerPage(get_mapper(p)) for p in PLATFORMS},
-    snapshot_order="crawled_at DESC NULLS LAST, source_file DESC",
-    current_order=f"crawled_at DESC NULLS LAST, {CRAWL_DATE_COLUMN} DESC, source_file DESC",
+    within_crawl_order=(
+        SortField("crawled_at"),
+        SortField("source_file"),
+    ),
     default_out="output/artists",
 )

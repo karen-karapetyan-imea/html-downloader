@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Turn newly crawled HTML into the artworks, artists, and auction-lot Parquet datasets.
-# Every finished crawl folder under the data root without an up-to-date snapshot is processed,
-# then the touched platforms are compacted. With nothing new it exits within seconds.
+# Turn newly crawled HTML into artist, artwork, and auction-lot MongoDB documents.
+# Every finished crawl folder under the data root without an up-to-date etl_crawls entry is
+# processed. With nothing new it exits within seconds.
 #
 #   scripts/run_etl.sh [all|artworks|artists|lots] [extra sync args...]
 #   scripts/run_etl.sh artworks --platform saatchi --dry-run
@@ -9,11 +9,13 @@
 #   scripts/run_etl.sh all --include-unmanaged      # also crawls that predate manifest.json
 #
 # Environment:
-#   ETL_DATA_ROOT  marketplace crawls <root>/<platform>/<YYYY-MM-DD>/ (default: <repo>/html-downloader/data)
-#                  lots read <root>/auctions/<house>/<YYYY-MM>/
-#   ETL_OUT_ROOT   datasets are written to $ETL_OUT_ROOT/<dataset> (default: <etl>/output)
-#   ETL_WORKERS    parser processes (default: CPU count - 1; halve it when artworks and artists overlap)
-#   UV             uv binary (default: uv on PATH, else ~/.local/bin/uv; cron has a minimal PATH)
+#   MONGODB_URI       required MongoDB connection URI
+#   MONGODB_DATABASE  database name (default: art_market)
+#   ETL_DATA_ROOT     marketplace crawls <root>/<platform>/<YYYY-MM-DD>/ (default: <repo>/html-downloader/data)
+#                     lots read <root>/auctions/<house>/<YYYY-MM>/
+#   ETL_LOCK_ROOT     flock files (default: <etl>/output)
+#   ETL_WORKERS       parser processes (default: CPU count - 1; halve it when artworks and artists overlap)
+#   UV                uv binary (default: uv on PATH, else ~/.local/bin/uv; cron has a minimal PATH)
 #
 # A dataset already being synced is skipped, so overlapping runs are safe; artworks and artists
 # can run in parallel (e.g. one tmux session each). Output goes to logs/etl-<target>-<date>.log.
@@ -27,7 +29,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ETL_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd "${ETL_ROOT}/.." && pwd)"
 DATA_ROOT="${ETL_DATA_ROOT:-${REPO_ROOT}/html-downloader/data}"
-OUT_ROOT="${ETL_OUT_ROOT:-${ETL_ROOT}/output}"
+LOCK_ROOT="${ETL_LOCK_ROOT:-${ETL_ROOT}/output}"
 LOG_DIR="${ETL_ROOT}/logs"
 UV="${UV:-$(command -v uv || echo "${HOME}/.local/bin/uv")}"
 
@@ -36,7 +38,7 @@ case "${target}" in
   all) datasets=(artworks artists lots) ;;
   artworks | artists | lots) datasets=("${target}") ;;
   -h | --help)
-    sed -n '2,22p' "$0"
+    sed -n '2,24p' "$0"
     exit 0
     ;;
   *)
@@ -66,11 +68,15 @@ main() {
     echo "error: uv not found (looked for ${UV}); set UV=/path/to/uv" >&2
     return 1
   fi
+  if [[ -z "${MONGODB_URI:-}" ]]; then
+    echo "error: MONGODB_URI is not set" >&2
+    return 1
+  fi
   if [[ ! -d "${DATA_ROOT}" ]]; then
     echo "error: crawl data root not found: ${DATA_ROOT} (set ETL_DATA_ROOT)" >&2
     return 1
   fi
-  mkdir -p "${OUT_ROOT}"
+  mkdir -p "${LOCK_ROOT}"
 
   local low_priority=(nice -n 10)
   if command -v ionice >/dev/null 2>&1; then
@@ -81,21 +87,25 @@ main() {
   if [[ -n "${ETL_WORKERS:-}" ]]; then
     workers_args=(--workers "${ETL_WORKERS}")
   fi
+  local mongo_args=(--mongo-uri "${MONGODB_URI}")
+  if [[ -n "${MONGODB_DATABASE:-}" ]]; then
+    mongo_args+=(--mongo-db "${MONGODB_DATABASE}")
+  fi
 
   cd "${ETL_ROOT}"
   local rc=0 dataset lock
   for dataset in "${datasets[@]}"; do
     # One lock per dataset: a second sync of the same dataset exits, artworks and artists may overlap.
-    lock="${OUT_ROOT}/.sync-${dataset}.lock"
+    lock="${LOCK_ROOT}/.sync-${dataset}.lock"
     exec 9>"${lock}"
     if ! flock -n 9; then
       echo "$(date -u -Iseconds) another ${dataset} sync holds ${lock}; skipping"
       continue
     fi
-    echo "=== ${dataset} sync started $(date -u -Iseconds) data=$(data_root_for "${dataset}") out=${OUT_ROOT}/${dataset} ==="
+    echo "=== ${dataset} sync started $(date -u -Iseconds) data=$(data_root_for "${dataset}") db=${MONGODB_DATABASE:-art_market} ==="
     if "${low_priority[@]}" "${UV}" run --frozen --no-dev "$(prog_for "${dataset}")" sync \
       --data-root "$(data_root_for "${dataset}")" \
-      --out "${OUT_ROOT}/${dataset}" \
+      "${mongo_args[@]}" \
       "${workers_args[@]}" \
       "$@"; then
       echo "=== ${dataset} sync finished $(date -u -Iseconds) ==="

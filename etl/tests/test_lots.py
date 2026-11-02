@@ -4,13 +4,11 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-import pyarrow.parquet as pq
-
 from etl_core.compact import compact
 from etl_core.crawl import detect_crawl_date, parse_folder_date
-from etl_core.layout import current_dir
 from etl_core.pipeline import RunConfig, run_snapshot
 from etl_core.sources import AUCTION_PLATFORMS, parse_html
+from etl_core.store import EntityStore, MongoConfig
 from etl_core.sync import find_pending
 from lots.mappers import MAPPERS
 from lots.spec import LOTS
@@ -181,7 +179,9 @@ def test_month_folder_is_the_first_of_the_month(tmp_path):
     assert detect_crawl_date(month) == date(2026, 10, 1)
 
 
-def test_realised_barnebys_page_wins_inside_the_month(tmp_path):
+def test_realised_barnebys_page_wins_inside_the_month(
+    store: EntityStore, mongo_config: MongoConfig, tmp_path
+):
     data = make_crawl(
         tmp_path / "barnebys",
         "2026-10",
@@ -198,12 +198,24 @@ def test_realised_barnebys_page_wins_inside_the_month(tmp_path):
         ],
     )
     write_crawl_manifest(data, finished_at="2026-10-02T00:00:00Z")
-    out = tmp_path / "out"
-    assert find_pending(LOTS, tmp_path, out)[0].crawl_date == date(2026, 10, 1)
+    assert find_pending(LOTS, tmp_path, mongo_config)[0].crawl_date == date(2026, 10, 1)
 
-    run_snapshot(RunConfig(LOTS, "barnebys", data, out, date(2026, 10, 1), workers=1, chunk_size=10))
-    compact(LOTS, "barnebys", out)
-    table = pq.read_table(current_dir(out, "barnebys") / "part-00000.parquet")
-    assert table.num_rows == 1
-    assert table.column("platform_lot_id")[0].as_py() == "622510218"
-    assert table.column("price_realized")[0].as_py() == Decimal("400.00")
+    run_snapshot(
+        RunConfig(
+            LOTS,
+            "barnebys",
+            data,
+            date(2026, 10, 1),
+            mongo_config,
+            workers=1,
+            chunk_size=10,
+        )
+    )
+    compact(LOTS, "barnebys", mongo_config)
+    lot = store.find_main("lots", "barnebys", "622510218")
+    assert lot is not None
+    assert lot["latest_version"] == "2026-10-01"
+    assert lot["data"]["price_realized"] == Decimal("400.00")
+    versions = store.list_versions("lots", "barnebys", "622510218")
+    assert [v["crawl_date"] for v in versions] == ["2026-10-01"]
+    assert versions[0]["_id"] == "barnebys:622510218:2026-10-01"
