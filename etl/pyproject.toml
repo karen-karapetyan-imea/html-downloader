@@ -39,3 +39,5 @@ extend-exclude = ["artfinder_etl", "artmajeur_etl", "artsper-etl", "artsy_etl", 
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+# Catalogue text writes sizes with "×", life dates with "–", and "À-ſ" is the Latin letter range.
+allowed-confusables = ["×", "–", "ſ"]

@@ -3,14 +3,33 @@
 The realised price is `premiums.finalPriceV2`. The id is the URL path
 `{year}/{auctionSlug}/{lotSlug}`, which is what the downloader stores, not the Apollo UUID.
 Legacy `/en/auctions/ecatalogue/` pages do not carry this cache and are skipped.
+
+`sold.__typename == "ResultHidden"` (older sales, result behind a login) is an unknown outcome,
+not an unsold lot. When `creatorsDisplayTitle` is empty the title is often `ARTIST | TITLE`.
+The artist is written `Name (life dates)` like Christie's, with the dates taken from the
+description line under the artist's name (`1836 - 1912`, `b. 1962`); a line between the two
+is the nationality (`French`).
+
+`departmentNames` belongs to the sale, not the lot, and big sales list dozens; it is kept only
+when it names a few departments.
 """
 
 from __future__ import annotations
 
+import html as html_lib
+import re
 from typing import Any
 
+from lots import catalogue
 from lots.embedded import script_json
 from lots.fields import lot_page, sale_status, to_date, unknown_page
+
+_PARAGRAPH = re.compile(r"<p>(.*?)</p>", re.DOTALL)
+_TAG = re.compile(r"<[^>]+>")
+_YEAR = re.compile(r"\b(?:1[3-9]\d\d|20[0-2]\d)\b")
+_LIFE = re.compile(r"[-\u2013]|^(?:b\.|born)\s", re.IGNORECASE)
+_NOT_DEPARTMENTS = frozenset({"marketing", "historic department"})
+_MAX_DEPARTMENTS = 3
 
 
 def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
@@ -33,31 +52,73 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
     lot_slug = _text(lot.get("slug"))
     sold_block = bid.get("sold") if isinstance(bid.get("sold"), dict) else {}
     sold = sold_block.get("isSold") is True
+    hidden = sold_block.get("__typename") == "ResultHidden"
     price = _amount(sold_block.get("premiums"), "finalPriceV2") if sold else None
     estimate = lot.get("estimateV2") if isinstance(lot.get("estimateV2"), dict) else {}
     is_withdrawn = _text(withdrawn.get("state")) not in {None, "", "NotAffected"}
     closed = _text(auction.get("state")) == "Closed"
+    title = _text(lot.get("title"))
+    artist = _text(lot.get("creatorsDisplayTitle"))
+    if artist is None and title is not None and " | " in title:
+        artist, title = (part.strip() or None for part in title.split(" | ", 1))
+    description = _text(lot.get("description"))
+    dates, nationality = _artist_lines(artist, description)
+    location = auction.get("locationV2") if isinstance(auction.get("locationV2"), dict) else {}
+    status = sale_status(auction.get("state"), sold=sold, withdrawn=is_withdrawn, closed=closed and not sold)
     return lot_page(
         platform_lot_id=_lot_id(year, auction_slug, lot_slug, _text(lot.get("lotId"))),
         lot_url=_lot_url(year, auction_slug, lot_slug) or url,
         lot_number=_text(_deref_field(lot.get("lotNumber"), "lotDisplayNumber")),
-        title=_text(lot.get("title")),
-        description=_text(lot.get("description")),
-        artist_name=_text(lot.get("creatorsDisplayTitle")),
+        title=title,
+        description=description,
+        artist_name=f"{artist} ({dates})" if artist and dates else artist,
+        artist_nationality=nationality,
         image_url=_image(lot),
         currency=_text(auction.get("currencyV2")) or _text(auction.get("currency")),
         low_estimate=_amount(estimate, "lowEstimate"),
         high_estimate=_amount(estimate, "highEstimate"),
         price_realized=price,
-        sale_status=sale_status(
-            auction.get("state"), sold=sold, withdrawn=is_withdrawn, closed=closed and not sold
-        ),
+        sale_status="unknown" if hidden and status == "unsold" else status,
         sale_id=_text(lot.get("sapAuctionSaleNumber")) or _text(auction.get("sapSaleNumber")),
         sale_title=_text(auction.get("title")),
         sale_date=to_date(_dates(auction).get("closed") or _dates(auction).get("acceptsBids")),
         sale_url=_sale_url(year, auction_slug),
+        sale_location=_text(location.get("name")) or _text(auction.get("location")),
+        department=_department(auction.get("departmentNames")),
         is_result=sold or closed or is_withdrawn,
     )
+
+
+def _artist_lines(artist: str | None, description: str | None) -> tuple[str | None, str | None]:
+    """(life dates, nationality) from the short lines right under the artist's line in the
+    description: a year range or `b. 1962`, with an optional nationality line before it.
+    The artist line may carry a qualifier ("Attributed to ..."). Bracketed lines
+    (`[1952-1959].`) are publication dates of books, not life dates."""
+    if artist is None or not description:
+        return None, None
+    name = " ".join(artist.split()).casefold()
+    lines = [" ".join(html_lib.unescape(_TAG.sub("", p)).split()) for p in _PARAGRAPH.findall(description)]
+    for i, line in enumerate(lines):
+        if name not in line.casefold() or len(line) > len(name) + 30:
+            continue
+        for offset, below in enumerate(lines[i + 1 : i + 3]):
+            dates = below.strip("() ")
+            if len(dates) <= 60 and "[" not in dates and _YEAR.search(dates) and _LIFE.search(dates):
+                between = lines[i + 1] if offset == 1 else None
+                if between and name in between.casefold():
+                    between = None
+                return dates, catalogue.nationality(between)
+        return None, None
+    return None, None
+
+
+def _department(names: object) -> str | None:
+    if not isinstance(names, list):
+        return None
+    kept = list(dict.fromkeys(t for n in names if (t := _text(n)) and t.casefold() not in _NOT_DEPARTMENTS))
+    if not kept or len(kept) > _MAX_DEPARTMENTS:
+        return None
+    return "; ".join(kept)
 
 
 def _cache(payload: object) -> dict[str, Any] | None:

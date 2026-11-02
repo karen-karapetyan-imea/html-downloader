@@ -35,6 +35,19 @@ class LotRow:
     selling_house_name: str | None = None
     is_result: bool | None = None  # realised-price page, so it beats the live twin of the same id
     has_detail: bool | None = None
+    # the work and its artist, named like the artworks/artists datasets; structured fields where
+    # the house has them, else read from the catalogue text (lots/catalogue.py)
+    height_cm: float | None = None
+    width_cm: float | None = None
+    depth_cm: float | None = None
+    medium: str | None = None
+    year: int | None = None
+    is_signed: bool | None = None
+    artist_birth_year: int | None = None
+    artist_death_year: int | None = None
+    artist_nationality: str | None = None
+    sale_location: str | None = None
+    department: str | None = None
     source_file: str | None = None
     crawled_at: datetime | None = None
 
@@ -61,6 +74,17 @@ LOT_SCHEMA = pa.schema(
         pa.field("selling_house_name", pa.string()),
         pa.field("is_result", pa.bool_()),
         pa.field("has_detail", pa.bool_()),
+        pa.field("height_cm", pa.float64()),
+        pa.field("width_cm", pa.float64()),
+        pa.field("depth_cm", pa.float64()),
+        pa.field("medium", pa.string()),
+        pa.field("year", pa.int16()),
+        pa.field("is_signed", pa.bool_()),
+        pa.field("artist_birth_year", pa.int16()),
+        pa.field("artist_death_year", pa.int16()),
+        pa.field("artist_nationality", pa.string()),
+        pa.field("sale_location", pa.string()),
+        pa.field("department", pa.string()),
         pa.field("source_file", pa.string()),
         pa.field("crawled_at", pa.timestamp("us", tz="UTC")),
     ]

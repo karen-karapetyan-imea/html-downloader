@@ -2,7 +2,8 @@
 
 Current pages embed the lot in `<script id="__SERVER_DATA__">`. Older pages assign the same
 shape to `window.__data`. The id is the `/price-result/{slug}` slug. `salePrice` counts only
-when `isSold` is true.
+when `isSold` is true. The sale location is the house's city (`sellerCity`); `lotLocation` is
+where the item is stored.
 """
 
 from __future__ import annotations
@@ -42,6 +43,7 @@ def parse_page(html: str, url: str | None = None) -> dict[str, Any]:
         sale_title=_text(item.get("catalogTitle")),
         sale_date=to_date(item.get("saleStartTs")),
         selling_house_name=_text(item.get("sellerName")),
+        sale_location=_city(item.get("sellerCity")),
         is_result=True,
     )
 
@@ -68,6 +70,12 @@ def _slug(url: str | None) -> str | None:
     if not url or "/price-result/" not in url:
         return None
     return url.split("?", 1)[0].rstrip("/").rsplit("/", 1)[-1] or None
+
+
+def _city(value: object) -> str | None:
+    """Some houses type their city in capitals ("PORT ORANGE")."""
+    text = _text(value)
+    return text.title() if text and text.isupper() else text
 
 
 def _text(value: object) -> str | None:
