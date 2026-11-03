@@ -119,8 +119,9 @@ class EntityStore:
                 [("entity_id", ASCENDING), ("crawl_date", DESCENDING)]
             )
             self.db[versions].create_index([("source", ASCENDING), ("crawl_date", ASCENDING)])
+        # Matches finalize filter+sort so Atlas does not spill a 32MB in-memory sort.
         self.db[STAGE].create_index(
-            [("crawl_id", ASCENDING), ("platform_id", ASCENDING), ("sort_key", ASCENDING)]
+            [("crawl_id", ASCENDING), ("platform_id", ASCENDING), ("chunk_index", ASCENDING)]
         )
         self.db[STAGE].create_index([("crawl_id", ASCENDING), ("chunk_index", ASCENDING)])
         self.db[CRAWLS].create_index([("dataset", ASCENDING), ("source", ASCENDING), ("status", ASCENDING)])
@@ -617,6 +618,29 @@ class EntityStore:
             versions.bulk_write(batch, ordered=False)
         for batch in _batched(main_ops, BULK_SIZE):
             self._bulk_main_updates(main, batch)
+
+        # Mark the crawl ledger so HTML sync does not re-parse this snapshot.
+        crawl_id = crawl_ledger_id(dataset, platform, date_s)
+        self.crawls().update_one(
+            {"_id": crawl_id},
+            {
+                "$set": {
+                    "dataset": dataset,
+                    "platform": platform,
+                    "source": platform,
+                    "crawl_date": date_s,
+                    "status": STATUS_COMPLETED,
+                    "migrated_from": "parquet",
+                    "stats": {"rows": len(winners)},
+                    "etl_version": __version__,
+                    "parser_fingerprint": parser_fingerprint,
+                    "finished_at": now,
+                    "updated_at": now,
+                },
+                "$setOnInsert": {"created_at": now, "started_at": now},
+            },
+            upsert=True,
+        )
         return len(winners)
 
     def find_main(self, dataset: str, source: str, platform_id: str) -> dict[str, Any] | None:
@@ -652,8 +676,11 @@ class EntityStore:
     def _iter_stage_winners(
         self, crawl_id: str, order: Sequence[SortField]
     ) -> Iterator[dict[str, Any]]:
-        cursor = self.stage().find({"crawl_id": crawl_id}).sort(
-            [("platform_id", ASCENDING), ("chunk_index", ASCENDING)]
+        cursor = (
+            self.stage()
+            .find({"crawl_id": crawl_id})
+            .sort([("platform_id", ASCENDING), ("chunk_index", ASCENDING)])
+            .allow_disk_use(True)
         )
         group: list[dict[str, Any]] = []
         current: str | None = None
