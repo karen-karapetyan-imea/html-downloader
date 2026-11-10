@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Long-running monthly loop for a single auction house: discover + download.
+# Long-running monthly loop for a single auction house: full discover + download + ETL.
 # Cadence is anchored to each cycle's start time (calendar month), not finish time.
 #
 # Usage:
@@ -28,6 +28,9 @@
 #   CHUNK_LINES=1000000 # invaluable / liveauctioneers / barnebys / saleroom / drouot / christies / sothebys
 #   WORKERS=8           # chunked download workers
 #
+# After a successful crawl, lots ETL uploads to Mongo and keeps only the two newest
+# fully uploaded HTML folders. Requires MONGODB_URI.
+#
 # Prefer starting via:
 #   ./scripts/start_monthly_auction_tmux.sh
 
@@ -35,6 +38,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${PROJECT_ROOT}/.." && pwd)"
+ETL_SCRIPT="${REPO_ROOT}/etl/scripts/run_etl.sh"
 PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
 auction_house="${1:-}"
@@ -71,7 +76,6 @@ run_discover() {
         --proxy-file proxy.txt \
         --concurrency 1 \
         --algolia-artworks-only \
-        --incremental \
         --update-state
       ;;
     liveauctioneers)
@@ -81,14 +85,12 @@ run_discover() {
         --concurrency 1 \
         --min-urls "${MIN_URLS:-1000000}" \
         --max-sitemaps "${MAX_SITEMAPS:-5000}" \
-        --incremental \
         --update-state
       ;;
     artcurial)
       discover_args=(
         --auction-house artcurial
         --concurrency "${ARTCURIAL_CONCURRENCY:-4}"
-        --incremental
         --update-state
       )
       if [[ -n "${MAX_SALES:-}" ]]; then
@@ -103,7 +105,6 @@ run_discover() {
         --concurrency 1 \
         --min-urls "${MIN_URLS:-0}" \
         --max-sitemaps "${MAX_SITEMAPS:-100}" \
-        --incremental \
         --update-state
       ;;
     saleroom)
@@ -111,7 +112,6 @@ run_discover() {
         --auction-house saleroom \
         --proxy-file proxy.txt \
         --concurrency 1 \
-        --incremental \
         --update-state
       ;;
     drouot)
@@ -121,7 +121,6 @@ run_discover() {
         --concurrency 1 \
         --min-urls "${MIN_URLS:-0}" \
         --max-sitemaps "${MAX_SITEMAPS:-50}" \
-        --incremental \
         --update-state
       ;;
     christies)
@@ -130,7 +129,6 @@ run_discover() {
         --auction-house christies
         --proxy-file proxy.txt
         --concurrency 1
-        --incremental
         --update-state
       )
       if [[ -z "${CHRISTIES_FULL:-}" ]]; then
@@ -145,7 +143,6 @@ run_discover() {
       # Default: full archive (Algolia lots + legacy sales + site-search index).
       discover_args=(
         --auction-house sothebys
-        --incremental
         --update-state
       )
       if [[ -n "${SOTHEBYS_ART_ONLY:-}" ]]; then
@@ -183,12 +180,23 @@ run_download() {
   esac
 }
 
+run_etl() {
+  if [[ ! -x "${ETL_SCRIPT}" ]]; then
+    echo "error: missing ETL script at ${ETL_SCRIPT}" >&2
+    return 1
+  fi
+  echo "--- ${auction_house}: ETL lots $(date -u -Iseconds) ---"
+  "${ETL_SCRIPT}" lots --platform "${auction_house}"
+}
+
 run_cycle() {
-  echo "--- ${auction_house}: auction discover $(date -u -Iseconds) ---"
+  echo "--- ${auction_house}: auction discover (full) $(date -u -Iseconds) ---"
   run_discover
 
   echo "--- ${auction_house}: auction download $(date -u -Iseconds) ---"
   run_download
+
+  run_etl
 }
 
 # Prints: "<seconds> <next_iso>"

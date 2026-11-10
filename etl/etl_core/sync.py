@@ -18,6 +18,7 @@ from etl_core.compact import compact
 from etl_core.crawl import parse_folder_date, parse_timestamp
 from etl_core.dataset import DatasetSpec
 from etl_core.documents import crawl_date_str, crawl_ledger_id
+from etl_core.html_retention import datasets_for_platform, prune_html_folders
 from etl_core.pipeline import ResumeMismatchError, RunConfig, run_snapshot
 from etl_core.store import STATUS_COMPLETED, STATUS_RUNNING, EntityStore, MongoConfig
 
@@ -89,6 +90,30 @@ def sync(dataset: DatasetSpec[Any], config: SyncConfig) -> SyncResult:
             result.compact_failed.append(platform)
         else:
             result.compacted.append(platform)
+
+    # Drop HTML folders older than the two newest fully uploaded crawls for each
+    # platform this sync finished. Incomplete uploads are left alone.
+    for platform in sorted({item.platform for item in result.processed}):
+        if platform in result.compact_failed:
+            continue
+        try:
+            retention = prune_html_folders(
+                config.data_root,
+                platform,
+                config.mongo,
+                datasets=datasets_for_platform(platform, dataset.name),
+            )
+        except Exception:
+            log.exception("%s %s: HTML retention failed", dataset.name, platform)
+            continue
+        if retention.deleted:
+            log.info(
+                "%s %s: deleted %d old HTML folder(s): %s",
+                dataset.name,
+                platform,
+                len(retention.deleted),
+                ", ".join(p.name for p in retention.deleted),
+            )
 
     log.info(
         "%s sync done: %d processed, %d failed, compacted %s, compact failed %s",

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Long-running weekly loop for a single marketplace: discover + download.
+# Long-running weekly loop for a single marketplace: full discover + download + ETL.
 # Cadence is anchored to each cycle's start time (7 days), not finish time.
 #
 # Usage:
@@ -7,11 +7,16 @@
 #
 # Prefer starting all three in parallel via:
 #   ./scripts/start_weekly_tmux.sh
+#
+# After a successful crawl, marketplaces with an ETL parser upload to Mongo and
+# keep only the two newest fully uploaded HTML folders. Requires MONGODB_URI.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${PROJECT_ROOT}/.." && pwd)"
+ETL_SCRIPT="${REPO_ROOT}/etl/scripts/run_etl.sh"
 WEEK_SECS=$((7 * 24 * 60 * 60))
 PYTHON="${PROJECT_ROOT}/.venv/bin/python"
 
@@ -40,11 +45,33 @@ fi
 mkdir -p "${PROJECT_ROOT}/logs"
 LOG_FILE="${PROJECT_ROOT}/logs/weekly-${marketplace}-$(date -u +%Y%m%d-%H%M%S).log"
 
+# Marketplaces that have artworks + artists ETL parsers (singulart / firstdibs crawl only).
+etl_marketplace() {
+  case "${marketplace}" in
+    saatchi|artsper|artsy|artmajeur|artfinder|fineartamerica|phaidon|ugallery|mutualart) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+run_etl() {
+  if ! etl_marketplace; then
+    echo "--- ${marketplace}: no ETL parser; skipping upload ---"
+    return 0
+  fi
+  if [[ ! -x "${ETL_SCRIPT}" ]]; then
+    echo "error: missing ETL script at ${ETL_SCRIPT}" >&2
+    return 1
+  fi
+  echo "--- ${marketplace}: ETL artworks $(date -u -Iseconds) ---"
+  "${ETL_SCRIPT}" artworks --platform "${marketplace}"
+  echo "--- ${marketplace}: ETL artists $(date -u -Iseconds) ---"
+  "${ETL_SCRIPT}" artists --platform "${marketplace}"
+}
+
 run_cycle() {
   local discover_args=(
     discover
     --marketplace "${marketplace}"
-    --incremental
     --update-state
   )
 
@@ -52,7 +79,7 @@ run_cycle() {
     discover_args+=(--proxy-file proxy.txt)
   fi
 
-  echo "--- ${marketplace}: discover $(date -u -Iseconds) ---"
+  echo "--- ${marketplace}: discover (full) $(date -u -Iseconds) ---"
   "${PYTHON}" -m html_downloader "${discover_args[@]}"
 
   echo "--- ${marketplace}: download $(date -u -Iseconds) ---"
@@ -60,6 +87,8 @@ run_cycle() {
     --marketplace "${marketplace}" \
     --proxy-file proxy.txt \
     --skip-existing
+
+  run_etl
 }
 
 main() {

@@ -33,6 +33,10 @@ LOCK_ROOT="${ETL_LOCK_ROOT:-${ETL_ROOT}/output}"
 LOG_DIR="${ETL_ROOT}/logs"
 UV="${UV:-$(command -v uv || echo "${HOME}/.local/bin/uv")}"
 
+# Default Atlas URI when the environment does not set one (! URL-encoded as %21).
+: "${MONGODB_URI:=mongodb+srv://artydata:artydatapwd1226%21@artytraders-data.jtvkmw1.mongodb.net/}"
+: "${MONGODB_DATABASE:=art_market}"
+
 target="${1:-all}"
 case "${target}" in
   all) datasets=(artworks artists lots) ;;
