@@ -128,7 +128,7 @@ class EntityStore:
         self.db[CRAWLS].create_index([("dataset", ASCENDING), ("source", ASCENDING), ("status", ASCENDING)])
         self.db[ERRORS].create_index([("crawl_id", ASCENDING), ("filename", ASCENDING)])
         self.db[PRIVATE_SALES].create_index(
-            [("source", ASCENDING), ("missing_in_crawl", ASCENDING)]
+            [("source", ASCENDING), ("detected_in_crawl", ASCENDING)]
         )
         self.db[PRIVATE_SALES].create_index([("entity_id", ASCENDING)])
         self._indexes_ready = True

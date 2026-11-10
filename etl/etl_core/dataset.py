@@ -33,8 +33,9 @@ class DatasetSpec[RowT]:
     mappers: Mapping[str, Mapper[RowT]]
     within_crawl_order: Sequence[SortField]
     default_out: str = "output"
-    # Diff consecutive full crawls and record vanished entities in `private_sales`.
-    private_sales: bool = False
+    # After a sync, diff consecutive full crawls of this dataset into `private_sales`. The artists
+    # dataset points at artworks too: artwork detection waits for both, whichever finishes last.
+    private_sales_dataset: str | None = None
 
     def __post_init__(self) -> None:
         assert_in_sync(self.row_type, self.schema)

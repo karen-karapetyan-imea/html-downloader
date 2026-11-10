@@ -139,10 +139,23 @@ SELECT * FROM read_parquet('output/lots/current/*/*.parquet', hive_partitioning 
 
 ### Private sales
 
-An artwork that is in one **full** marketplace crawl and missing from the next full crawl is presumed
-sold privately and stored in the MongoDB collection `private_sales`, one document per artwork:
-`_id` `<source>:<platform_id>:<missing_in_crawl>`, `last_seen_crawl`, `missing_in_crawl`,
-`last_seen_at`, and `data` (the artwork's row from the crawl it was last seen in).
+Two consecutive **full** marketplace crawls are compared, and an artwork is stored in the MongoDB
+collection `private_sales` when it:
+
+- is in the earlier crawl and missing from the later one (`reason: "disappeared"`), or
+- is in both, and goes from `is_sold` false to true (`reason: "marked_sold"`). An empty `is_sold`
+  in the earlier crawl doesn't count, since the work may already have been sold. Only ArtMajeur,
+  Artsper, Artsy and Saatchi fill `is_sold`.
+
+Disappearances are skipped when the artist left the platform, since the work was taken down rather
+than sold. An artist counts as gone when none of their artworks are left in the later crawl, or when
+their profile is in the earlier crawl's artists and not in the later one's. The profile check needs
+the artists ETL for both crawls, so automatic detection waits until both `artwork-etl` and
+`artist-etl` have processed them, whichever finishes last.
+
+One document per artwork: `_id` `<source>:<platform_id>:<detected_in_crawl>`, `reason`,
+`previous_crawl`, `detected_in_crawl`, `last_seen_at`, `data` (the artwork's row in the earlier
+crawl, with its asking price) and, for `marked_sold`, `sold_data` (its row in the later crawl).
 
 - Only full crawls are compared. The weekly loop runs incremental crawls, which hold only new or
   changed pages; run `discover` without `--incremental` for a full one. `download` writes
@@ -151,7 +164,8 @@ sold privately and stored in the MongoDB collection `private_sales`, one documen
   previous full crawl of that platform, once. The result is recorded on the crawl's `etl_crawls`
   entry under `private_sales`.
 - If the later crawl has fewer than 80% of the earlier one's artworks, it is treated as a broken
-  crawl and nothing is written (`status: guard_tripped`).
+  crawl and disappearances are not recorded (`status: guard_tripped`). Artworks marked sold are
+  still recorded, since they come from pages that were downloaded.
 - For crawls processed before this existed, or to re-run one by hand:
 
   ```bash

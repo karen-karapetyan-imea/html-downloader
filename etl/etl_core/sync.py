@@ -96,7 +96,7 @@ def sync(dataset: DatasetSpec[Any], config: SyncConfig) -> SyncResult:
         else:
             result.compacted.append(platform)
 
-    if dataset.private_sales:
+    if dataset.private_sales_dataset:
         _detect_private_sales(dataset, result, config.mongo)
 
     # Drop HTML folders older than the two newest fully uploaded crawls for each
@@ -141,7 +141,7 @@ def _detect_private_sales(dataset: DatasetSpec[Any], result: SyncResult, mongo: 
     try:
         for platform in sorted({item.platform for item in result.processed}):
             try:
-                detect_pending_private_sales(store, dataset.name, platform)
+                detect_pending_private_sales(store, dataset.private_sales_dataset, platform)
             except Exception:
                 log.exception("%s %s: private sales detection failed", dataset.name, platform)
                 result.private_sales_failed.append(platform)

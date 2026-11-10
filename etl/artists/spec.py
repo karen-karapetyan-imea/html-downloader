@@ -41,4 +41,5 @@ ARTISTS = DatasetSpec[ArtistRow](
         SortField("source_file"),
     ),
     default_out="output/artists",
+    private_sales_dataset="artworks",
 )

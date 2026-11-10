@@ -85,7 +85,7 @@ def build_parser(dataset: DatasetSpec[Any]) -> argparse.ArgumentParser:
     )
     _add_mongo_args(mig)
 
-    if dataset.private_sales:
+    if dataset.private_sales_dataset == dataset.name:
         ps = sub.add_parser(
             "private-sales",
             help="record what was in one full crawl and is gone from a later full crawl",
