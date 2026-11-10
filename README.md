@@ -137,6 +137,29 @@ SELECT * FROM read_parquet('output/lots/current/*/*.parquet', hive_partitioning 
     where it has them, else from the catalogue text ([`etl/lots/catalogue.py`](etl/lots/catalogue.py)).
   - Money is in the source currency, and a price of 0 is stored as null.
 
+### Private sales
+
+An artwork that is in one **full** marketplace crawl and missing from the next full crawl is presumed
+sold privately and stored in the MongoDB collection `private_sales`, one document per artwork:
+`_id` `<source>:<platform_id>:<missing_in_crawl>`, `last_seen_crawl`, `missing_in_crawl`,
+`last_seen_at`, and `data` (the artwork's row from the crawl it was last seen in).
+
+- Only full crawls are compared. The weekly loop runs incremental crawls, which hold only new or
+  changed pages; run `discover` without `--incremental` for a full one. `download` writes
+  `"crawl_mode": "full"` to `manifest.json` when it downloads every URL in `sitemap_all.txt`.
+- `artwork-etl sync` (and so `run_etl.sh`) diffs each newly processed full crawl against the
+  previous full crawl of that platform, once. The result is recorded on the crawl's `etl_crawls`
+  entry under `private_sales`.
+- If the later crawl has fewer than 80% of the earlier one's artworks, it is treated as a broken
+  crawl and nothing is written (`status: guard_tripped`).
+- For crawls processed before this existed, or to re-run one by hand:
+
+  ```bash
+  uv run artwork-etl private-sales --platform saatchi --previous 2026-10-05 --current 2026-11-02 --dry-run
+  ```
+
+  `--min-ratio` changes the 80% guard. Re-running replaces the earlier result for that crawl.
+
 ### Adding or fixing a source
 
 1. Write `etl/<source>_etl/parse.py` with `parse_page(html[, url]) -> dict`. Return only what the

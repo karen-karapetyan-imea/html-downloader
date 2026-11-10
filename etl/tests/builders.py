@@ -18,7 +18,11 @@ def make_crawl(root: Path, crawl_date: str, pages: dict[str, str], log: list[dic
 
 
 def write_crawl_manifest(
-    data: Path, *, status: str = "completed", finished_at: str | None = "2026-09-23T12:00:00Z"
+    data: Path,
+    *,
+    status: str = "completed",
+    finished_at: str | None = "2026-09-23T12:00:00Z",
+    crawl_mode: str | None = None,
 ) -> None:
     """The downloader's manifest.json next to html/ (only the fields `sync` reads matter)."""
     manifest = {
@@ -28,6 +32,8 @@ def write_crawl_manifest(
         "finished_at": finished_at,
         "status": status,
     }
+    if crawl_mode is not None:
+        manifest["crawl_mode"] = crawl_mode
     data.mkdir(parents=True, exist_ok=True)
     (data / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
 

@@ -8,7 +8,7 @@ import uuid
 import pytest
 
 from etl_core.documents import collections_for
-from etl_core.store import CRAWLS, ERRORS, STAGE, EntityStore, MongoConfig
+from etl_core.store import CRAWLS, ERRORS, PRIVATE_SALES, STAGE, EntityStore, MongoConfig
 
 MONGO_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
 # One DB for the whole session avoids WiredTiger crashes from creating dozens of databases.
@@ -53,7 +53,7 @@ def store(mongo_config: MongoConfig):
 
 
 def _wipe(store: EntityStore) -> None:
-    names = [CRAWLS, STAGE, ERRORS]
+    names = [CRAWLS, STAGE, ERRORS, PRIVATE_SALES]
     for dataset in ("artists", "artworks", "lots"):
         main, versions = collections_for(dataset)
         names.extend((main, versions))

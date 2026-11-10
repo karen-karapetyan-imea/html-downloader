@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _MONTH_RE = re.compile(r"\d{4}-\d{2}")
 CRAWL_LOG_NAME = "results.jsonl"
+CRAWL_MANIFEST_NAME = "manifest.json"
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +59,19 @@ def parse_timestamp(value: object) -> datetime | None:
     else:
         return None
     return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
+
+
+def read_crawl_manifest(data_dir: Path) -> dict | None:
+    """The downloader's manifest.json (status, crawl_mode, ...), or None when the folder has none."""
+    path = data_dir / CRAWL_MANIFEST_NAME
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return None
+    data = json.loads(text)
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: expected a JSON object")
+    return data
 
 
 def load_crawl_log(data_dir: Path) -> dict[str, LogEntry]:

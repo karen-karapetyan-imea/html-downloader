@@ -13,7 +13,13 @@ from itertools import batched
 from pathlib import Path
 from typing import Any
 
-from etl_core.crawl import CrawlFile, html_root, iter_crawl_files, load_crawl_log
+from etl_core.crawl import (
+    CrawlFile,
+    html_root,
+    iter_crawl_files,
+    load_crawl_log,
+    read_crawl_manifest,
+)
 from etl_core.dataset import DatasetSpec
 from etl_core.sources import get_source, parser_fingerprint
 from etl_core.store import (
@@ -60,11 +66,14 @@ def run_snapshot(config: RunConfig) -> dict[str, Any]:
             data_dir=str(config.data_dir.resolve()),
             chunk_size=config.chunk_size,
         )
+        crawl_manifest = read_crawl_manifest(config.data_dir) or {}
         crawl_id, done = store.prepare_crawl(
             identity,
             config.crawl_date,
             resume=config.resume,
             parser={"path": str(source.parser_path), "sha256": parser_fingerprint(config.platform)},
+            crawl_mode=crawl_manifest.get("crawl_mode"),
+            crawl_status=crawl_manifest.get("status"),
         )
 
         started = datetime.now(UTC)

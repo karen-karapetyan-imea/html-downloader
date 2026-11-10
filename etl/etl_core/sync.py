@@ -6,7 +6,6 @@ whose status is running | completed | failed. Crawl state lives in etl_crawls.
 
 from __future__ import annotations
 
-import json
 import logging
 from collections.abc import Iterator
 from dataclasses import dataclass, field, replace
@@ -15,16 +14,21 @@ from pathlib import Path
 from typing import Any
 
 from etl_core.compact import compact
-from etl_core.crawl import parse_folder_date, parse_timestamp
+from etl_core.crawl import (
+    CRAWL_MANIFEST_NAME,
+    parse_folder_date,
+    parse_timestamp,
+    read_crawl_manifest,
+)
 from etl_core.dataset import DatasetSpec
 from etl_core.documents import crawl_date_str, crawl_ledger_id
 from etl_core.html_retention import datasets_for_platform, prune_html_folders
 from etl_core.pipeline import ResumeMismatchError, RunConfig, run_snapshot
+from etl_core.private_sales import detect_pending_private_sales
 from etl_core.store import STATUS_COMPLETED, STATUS_RUNNING, EntityStore, MongoConfig
 
 log = logging.getLogger(__name__)
 
-CRAWL_MANIFEST_NAME = "manifest.json"
 FINISHED_STATUSES = frozenset({"completed", "failed"})
 
 
@@ -55,10 +59,11 @@ class SyncResult:
     failed: list[PendingCrawl] = field(default_factory=list)
     compacted: list[str] = field(default_factory=list)
     compact_failed: list[str] = field(default_factory=list)
+    private_sales_failed: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
-        return not self.failed and not self.compact_failed
+        return not self.failed and not self.compact_failed and not self.private_sales_failed
 
 
 def sync(dataset: DatasetSpec[Any], config: SyncConfig) -> SyncResult:
@@ -91,6 +96,9 @@ def sync(dataset: DatasetSpec[Any], config: SyncConfig) -> SyncResult:
         else:
             result.compacted.append(platform)
 
+    if dataset.private_sales:
+        _detect_private_sales(dataset, result, config.mongo)
+
     # Drop HTML folders older than the two newest fully uploaded crawls for each
     # platform this sync finished. Incomplete uploads are left alone.
     for platform in sorted({item.platform for item in result.processed}):
@@ -116,14 +124,29 @@ def sync(dataset: DatasetSpec[Any], config: SyncConfig) -> SyncResult:
             )
 
     log.info(
-        "%s sync done: %d processed, %d failed, compacted %s, compact failed %s",
+        "%s sync done: %d processed, %d failed, compacted %s, compact failed %s%s",
         dataset.name,
         len(result.processed),
         len(result.failed),
         result.compacted or "none",
         result.compact_failed or "none",
+        f", private sales failed {result.private_sales_failed}" if result.private_sales_failed else "",
     )
     return result
+
+
+def _detect_private_sales(dataset: DatasetSpec[Any], result: SyncResult, mongo: MongoConfig) -> None:
+    """Diff the full crawls of every processed platform that has not been diffed yet."""
+    store = EntityStore(mongo)
+    try:
+        for platform in sorted({item.platform for item in result.processed}):
+            try:
+                detect_pending_private_sales(store, dataset.name, platform)
+            except Exception:
+                log.exception("%s %s: private sales detection failed", dataset.name, platform)
+                result.private_sales_failed.append(platform)
+    finally:
+        store.close()
 
 
 def find_pending(
@@ -172,7 +195,7 @@ def _classify(
     crawl_date: date,
     include_unmanaged: bool,
 ) -> PendingCrawl | None:
-    crawl = _read_json(data_dir / CRAWL_MANIFEST_NAME)
+    crawl = read_crawl_manifest(data_dir)
     if crawl is None:
         if not include_unmanaged:
             log.debug("skipping %s: no %s", data_dir, CRAWL_MANIFEST_NAME)
@@ -217,14 +240,3 @@ def _run(dataset: DatasetSpec[Any], item: PendingCrawl, config: SyncConfig) -> N
     except ResumeMismatchError as exc:
         log.warning("%s; starting the crawl from scratch", exc)
         run_snapshot(replace(run_config, resume=False))
-
-
-def _read_json(path: Path) -> dict[str, Any] | None:
-    try:
-        text = path.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return None
-    data = json.loads(text)
-    if not isinstance(data, dict):
-        raise ValueError(f"{path}: expected a JSON object")
-    return data

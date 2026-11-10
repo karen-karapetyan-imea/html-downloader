@@ -40,6 +40,7 @@ BULK_SIZE = 1000
 CRAWLS = "etl_crawls"
 STAGE = "etl_stage"
 ERRORS = "etl_errors"
+PRIVATE_SALES = "private_sales"
 
 STATUS_RUNNING = "running"
 STATUS_COMPLETED = "completed"
@@ -126,6 +127,10 @@ class EntityStore:
         self.db[STAGE].create_index([("crawl_id", ASCENDING), ("chunk_index", ASCENDING)])
         self.db[CRAWLS].create_index([("dataset", ASCENDING), ("source", ASCENDING), ("status", ASCENDING)])
         self.db[ERRORS].create_index([("crawl_id", ASCENDING), ("filename", ASCENDING)])
+        self.db[PRIVATE_SALES].create_index(
+            [("source", ASCENDING), ("missing_in_crawl", ASCENDING)]
+        )
+        self.db[PRIVATE_SALES].create_index([("entity_id", ASCENDING)])
         self._indexes_ready = True
 
     def crawls(self) -> Collection:
@@ -136,6 +141,9 @@ class EntityStore:
 
     def errors(self) -> Collection:
         return self.db[ERRORS]
+
+    def private_sales(self) -> Collection:
+        return self.db[PRIVATE_SALES]
 
     def main(self, dataset: str) -> Collection:
         return self.db[collections_for(dataset)[0]]
@@ -153,6 +161,8 @@ class EntityStore:
         *,
         resume: bool,
         parser: Mapping[str, Any],
+        crawl_mode: str | None = None,
+        crawl_status: str | None = None,
     ) -> tuple[str, set[int]]:
         """Create or resume a crawl ledger entry. Returns (crawl_id, completed chunk indexes)."""
         self.ensure_indexes()
@@ -177,7 +187,14 @@ class EntityStore:
                 )
             self.crawls().update_one(
                 {"_id": crawl_id},
-                {"$set": {"status": STATUS_RUNNING}, "$unset": {"finished_at": "", "stats": ""}},
+                {
+                    "$set": {
+                        "status": STATUS_RUNNING,
+                        "crawl_mode": crawl_mode,
+                        "crawl_status": crawl_status,
+                    },
+                    "$unset": {"finished_at": "", "stats": ""},
+                },
             )
             return crawl_id, {int(i) for i in existing.get("completed_chunks") or []}
 
@@ -195,6 +212,9 @@ class EntityStore:
                 "completed_chunks": [],
                 "chunk_stats": [],
                 "parser": dict(parser),
+                # From the downloader's manifest.json: only "full" crawls are diffed for private sales.
+                "crawl_mode": crawl_mode,
+                "crawl_status": crawl_status,
                 "etl_version": __version__,
                 "started_at": now,
                 "created_at": existing.get("created_at", now) if existing else now,

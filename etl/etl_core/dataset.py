@@ -33,6 +33,8 @@ class DatasetSpec[RowT]:
     mappers: Mapping[str, Mapper[RowT]]
     within_crawl_order: Sequence[SortField]
     default_out: str = "output"
+    # Diff consecutive full crawls and record vanished entities in `private_sales`.
+    private_sales: bool = False
 
     def __post_init__(self) -> None:
         assert_in_sync(self.row_type, self.schema)

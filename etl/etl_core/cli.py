@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,8 @@ from etl_core.crawl import detect_crawl_date
 from etl_core.dataset import DatasetSpec
 from etl_core.migrate import migrate_parquet
 from etl_core.pipeline import RunConfig, run_snapshot
-from etl_core.store import DEFAULT_DATABASE, DEFAULT_URI, MongoConfig
+from etl_core.private_sales import MIN_RATIO, detect_private_sales
+from etl_core.store import DEFAULT_DATABASE, DEFAULT_URI, EntityStore, MongoConfig
 from etl_core.sync import SyncConfig, sync
 
 USAGE = """\
@@ -23,6 +25,8 @@ USAGE = """\
     {prog} sync --data-root /path/to/html-downloader/data [--platform P ...] [--workers N]
                 [--chunk-size N] [--include-unmanaged] [--dry-run] [--mongo-uri URI] [--mongo-db NAME]
     {prog} migrate --from /path/to/output/artists [--platform P ...] [--mongo-uri URI] [--mongo-db NAME]
+    {prog} private-sales --platform saatchi --previous 2026-10-05 --current 2026-11-02 [--min-ratio 0.8]
+                         [--dry-run] [--mongo-uri URI] [--mongo-db NAME]     (artwork-etl only)
 
 (`python -m {package} ...` from the etl/ folder is equivalent.)
 """
@@ -80,6 +84,23 @@ def build_parser(dataset: DatasetSpec[Any]) -> argparse.ArgumentParser:
         help="repeatable; default: every platform found under snapshots/",
     )
     _add_mongo_args(mig)
+
+    if dataset.private_sales:
+        ps = sub.add_parser(
+            "private-sales",
+            help="record what was in one full crawl and is gone from a later full crawl",
+        )
+        ps.add_argument("--platform", required=True, choices=dataset.platforms)
+        ps.add_argument("--previous", required=True, help="YYYY-MM-DD of the earlier full crawl")
+        ps.add_argument("--current", required=True, help="YYYY-MM-DD of the later full crawl")
+        ps.add_argument(
+            "--min-ratio",
+            type=float,
+            default=MIN_RATIO,
+            help="record nothing if the later crawl has fewer than this share of the earlier one's rows",
+        )
+        ps.add_argument("--dry-run", action="store_true", help="only count, write nothing")
+        _add_mongo_args(ps)
     return parser
 
 
@@ -126,6 +147,20 @@ def main(dataset: DatasetSpec[Any], argv: list[str] | None = None) -> int:
             )
         elif args.command == "compact":
             compact(dataset, args.platform, mongo)
+        elif args.command == "private-sales":
+            store = EntityStore(mongo)
+            try:
+                detect_private_sales(
+                    store,
+                    dataset.name,
+                    args.platform,
+                    date.fromisoformat(args.previous),
+                    date.fromisoformat(args.current),
+                    min_ratio=args.min_ratio,
+                    dry_run=args.dry_run,
+                )
+            finally:
+                store.close()
         elif args.command == "migrate":
             migrate_parquet(
                 dataset,

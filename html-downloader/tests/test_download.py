@@ -14,7 +14,14 @@ from html_downloader.download.crawler import hash_url, worker
 from html_downloader.download.proxy_pool import ProxyPool
 from html_downloader.download.rate_limiter import RateLimiter
 from html_downloader.download.service import ProxyRequiredError, run_download
-from html_downloader.paths import html_dir, job_dir, manifest_file, results_file, urls_file
+from html_downloader.paths import (
+    html_dir,
+    job_dir,
+    manifest_file,
+    results_file,
+    sitemap_all_file,
+    urls_file,
+)
 
 
 def test_skip_existing_does_not_fetch(tmp_path: Path) -> None:
@@ -127,5 +134,50 @@ def test_run_download_skip_existing_writes_manifest(tmp_path: Path, monkeypatch:
     assert manifest["crawl_date"] == "2026-08-19"
     assert manifest["status"] == "completed"
     assert manifest["url_count"] == 1
+    assert manifest["crawl_mode"] == "incremental"  # no sitemap_all.txt
     lines = results_file(job).read_text(encoding="utf-8").strip().splitlines()
     assert json.loads(lines[0])["skipped_existing"] is True
+
+
+@pytest.mark.parametrize(
+    ("sitemap_all", "expected"),
+    [
+        (["A", "B"], "full"),
+        (["B", "A"], "full"),
+        (["A", "B", "C"], "incremental"),
+    ],
+)
+def test_run_download_records_crawl_mode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, sitemap_all: list[str], expected: str
+) -> None:
+    monkeypatch.delenv("CRAWLER_PROXY", raising=False)
+    monkeypatch.delenv("DOWNLOAD_PROVIDER", raising=False)
+    proxy = tmp_path / "proxy.txt"
+    proxy.write_text("127.0.0.1:8080:user:pass\n", encoding="utf-8")
+    crawl_date = date(2026, 8, 19)
+    job = job_dir(tmp_path, "saatchi", crawl_date)
+    html_path = html_dir(job)
+    html_path.mkdir(parents=True)
+    urls = {
+        "A": "https://www.saatchiart.com/account/profile/1",
+        "B": "https://www.saatchiart.com/account/profile/2",
+        "C": "https://www.saatchiart.com/account/profile/3",
+    }
+    for key in ("A", "B"):
+        (html_path / f"{hash_url(urls[key])}.html").write_text("<html>ok</html>", encoding="utf-8")
+    urls_file(job).write_text(f"{urls['A']}\n{urls['B']}\n", encoding="utf-8")
+    sitemap_all_file(job).write_text("".join(urls[k] + "\n" for k in sitemap_all), encoding="utf-8")
+
+    run_download(
+        marketplace="saatchi",
+        data_root=tmp_path,
+        crawl_date=crawl_date,
+        proxy_file=str(proxy),
+        urls_override=None,
+        max_workers=1,
+        requests_per_second=8.0,
+        skip_existing=True,
+        results_append=True,
+    )
+    manifest = json.loads(manifest_file(job).read_text(encoding="utf-8"))
+    assert manifest["crawl_mode"] == expected

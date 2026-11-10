@@ -19,6 +19,7 @@ from html_downloader.paths import (
     job_dir,
     manifest_file,
     results_file,
+    sitemap_all_file,
     urls_file,
 )
 
@@ -47,6 +48,21 @@ def read_url_list(path: Path) -> list[str]:
             if url and not url.startswith("#"):
                 urls.append(url)
     return urls
+
+
+CRAWL_MODE_FULL = "full"
+CRAWL_MODE_INCREMENTAL = "incremental"
+
+
+def crawl_mode(job: Path, urls: list[str], urls_override: Path | None) -> str:
+    """"full" when this job downloads every discovered URL (discover ran without --incremental).
+
+    The ETL only diffs full crawls against each other, e.g. to find artworks that disappeared.
+    """
+    sitemap_all = sitemap_all_file(job)
+    if urls_override is not None or not sitemap_all.is_file():
+        return CRAWL_MODE_INCREMENTAL
+    return CRAWL_MODE_FULL if set(urls) == set(read_url_list(sitemap_all)) else CRAWL_MODE_INCREMENTAL
 
 
 def require_proxies(proxy_file: str) -> list[dict[str, str]]:
@@ -154,6 +170,7 @@ def run_download(
         url_count=len(urls),
     )
     write_manifest(manifest_path, manifest)
+    mode = crawl_mode(job, urls, urls_override)
 
     LOGGER.info(
         "download marketplace=%s date=%s urls=%s html=%s provider=%s",
@@ -188,6 +205,7 @@ def run_download(
     except Exception:
         status = "failed"
         finish_manifest(manifest_path, manifest, status=status)
+        annotate_manifest(manifest_path, {"crawl_mode": mode})
         if stats is not None:
             annotate_manifest(manifest_path, _metrics_payload(stats))
         raise
@@ -196,6 +214,7 @@ def run_download(
             client.close()
 
     finish_manifest(manifest_path, manifest, status=status)
+    annotate_manifest(manifest_path, {"crawl_mode": mode})
     if stats is not None:
         annotate_manifest(manifest_path, _metrics_payload(stats))
     return DownloadResult(
